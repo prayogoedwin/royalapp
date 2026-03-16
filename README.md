@@ -29,11 +29,6 @@ Our internal goal at Laravel Daily is to start using this starter kit for our De
 
 ![](https://laraveldaily.com/uploads/2025/05/ProfilePage.png)
 
-### RBAC - User Management
-
-![Users List with DataTables](screenshots/users-list.png)
-*User management with role badges, search, and pagination*
-
 ### RBAC - Role Management
 
 ![Roles List](screenshots/roles-list.png)
