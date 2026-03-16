@@ -5,20 +5,58 @@ namespace App\Http\Controllers;
 use App\Exports\UsersExport;
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
+use Yajra\DataTables\Facades\DataTables;
 
 class UserController extends Controller
 {
-    public function index(): View
+    public function index(Request $request)
     {
-        $users = User::with('roles')->latest()->paginate(10);
+        if ($request->ajax()) {
+            $users = User::with('roles')->select('users.*');
+            
+            return DataTables::of($users)
+                ->addColumn('roles', function ($user) {
+                    $badges = '';
+                    foreach ($user->roles as $role) {
+                        $badges .= '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 mr-1">' . $role->name . '</span>';
+                    }
+                    return $badges ?: '<span class="text-sm text-gray-500 dark:text-gray-400">No roles</span>';
+                })
+                ->addColumn('actions', function ($user) {
+                    $actions = '';
+                    
+                    if (auth()->user()->hasPermission('show-users')) {
+                        $actions .= '<a href="' . route('users.show', $user) . '" class="text-green-600 dark:text-green-400 hover:underline mr-3">View</a>';
+                    }
+                    
+                    if (auth()->user()->hasPermission('edit-users')) {
+                        $actions .= '<a href="' . route('users.edit', $user) . '" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Edit</a>';
+                    }
+                    
+                    if (auth()->user()->hasPermission('delete-users')) {
+                        $actions .= '<form action="' . route('users.destroy', $user) . '" method="POST" class="inline" onsubmit="return confirm(\'Are you sure?\')">
+                            ' . csrf_field() . method_field('DELETE') . '
+                            <button type="submit" class="text-red-600 dark:text-red-400 hover:underline">Delete</button>
+                        </form>';
+                    }
+                    
+                    return $actions;
+                })
+                ->editColumn('created_at', function ($user) {
+                    return $user->created_at->format('M d, Y');
+                })
+                ->rawColumns(['roles', 'actions'])
+                ->make(true);
+        }
 
-        return view('users.index', compact('users'));
+        return view('users.index');
     }
 
     public function export()

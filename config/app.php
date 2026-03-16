@@ -17,6 +17,30 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Version
+    |--------------------------------------------------------------------------
+    |
+    | This value is the version of your application. This will be used in
+    | footer copyright information and can be useful for tracking releases.
+    |
+    */
+
+    'version' => env('APP_VERSION', '1.0.0'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Application Developer
+    |--------------------------------------------------------------------------
+    |
+    | This value is the name of the developer or company that created this
+    | application. This will be displayed in the footer copyright.
+    |
+    */
+
+    'developer' => env('APP_DEVELOPER', 'Your Company'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

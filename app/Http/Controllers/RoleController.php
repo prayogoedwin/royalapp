@@ -5,18 +5,55 @@ namespace App\Http\Controllers;
 use App\Exports\RolesExport;
 use App\Models\Permission;
 use App\Models\Role;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
+use Yajra\DataTables\Facades\DataTables;
 
 class RoleController extends Controller
 {
-    public function index(): View
+    public function index(Request $request)
     {
-        $roles = Role::withCount('users', 'permissions')->latest()->paginate(10);
+        if ($request->ajax()) {
+            $roles = Role::withCount('users', 'permissions')->select('roles.*');
+            
+            return DataTables::of($roles)
+                ->addColumn('users_count', function ($role) {
+                    return $role->users_count ?? 0;
+                })
+                ->addColumn('permissions_count', function ($role) {
+                    return $role->permissions_count ?? 0;
+                })
+                ->addColumn('actions', function ($role) {
+                    $actions = '';
+                    
+                    if (auth()->user()->hasPermission('show-roles')) {
+                        $actions .= '<a href="' . route('roles.show', $role) . '" class="text-green-600 dark:text-green-400 hover:underline mr-3">View</a>';
+                    }
+                    
+                    if (auth()->user()->hasPermission('edit-roles')) {
+                        $actions .= '<a href="' . route('roles.edit', $role) . '" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Edit</a>';
+                    }
+                    
+                    if (auth()->user()->hasPermission('delete-roles')) {
+                        $actions .= '<form action="' . route('roles.destroy', $role) . '" method="POST" class="inline" onsubmit="return confirm(\'Are you sure?\')">
+                            ' . csrf_field() . method_field('DELETE') . '
+                            <button type="submit" class="text-red-600 dark:text-red-400 hover:underline">Delete</button>
+                        </form>';
+                    }
+                    
+                    return $actions ?: '-';
+                })
+                ->editColumn('created_at', function ($role) {
+                    return $role->created_at->format('M d, Y');
+                })
+                ->rawColumns(['actions'])
+                ->make(true);
+        }
 
-        return view('roles.index', compact('roles'));
+        return view('roles.index');
     }
 
     public function export()

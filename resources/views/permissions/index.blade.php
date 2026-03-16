@@ -34,77 +34,154 @@
     </div>
 
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <div class="p-4">
+            <table id="permissions-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-900">
                     <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            {{ __('Name') }}
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            {{ __('Roles') }}
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            {{ __('Created') }}
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            {{ __('Actions') }}
-                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Name') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Roles') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Created') }}</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    @forelse($permissions as $permission)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                    {{ $permission->name }}
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900 dark:text-gray-100">
-                                    {{ $permission->roles_count }}
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-500 dark:text-gray-400">
-                                    {{ $permission->created_at->format('M d, Y') }}
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                @if(auth()->user()->hasPermission('show-permissions'))
-                                    <a href="{{ route('permissions.show', $permission) }}"
-                                        class="text-green-600 dark:text-green-400 hover:underline mr-3">{{ __('View') }}</a>
-                                @endif
-                                @if(auth()->user()->hasPermission('edit-permissions'))
-                                    <a href="{{ route('permissions.edit', $permission) }}"
-                                        class="text-blue-600 dark:text-blue-400 hover:underline mr-3">{{ __('Edit') }}</a>
-                                @endif
-                                @if(auth()->user()->hasPermission('delete-permissions'))
-                                    <form action="{{ route('permissions.destroy', $permission) }}" method="POST" class="inline"
-                                        onsubmit="return confirm('{{ __('Are you sure you want to delete this permission?') }}')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit"
-                                            class="text-red-600 dark:text-red-400 hover:underline">{{ __('Delete') }}</button>
-                                    </form>
-                                @endif
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="4" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
-                                {{ __('No permissions found.') }}
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
             </table>
         </div>
-
-        @if($permissions->hasPages())
-            <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-                {{ $permissions->links() }}
-            </div>
-        @endif
     </div>
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.tailwindcss.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('#permissions-table').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: '{{ route('permissions.index') }}',
+                columns: [
+                    { data: 'name', name: 'name' },
+                    { data: 'roles_count', name: 'roles_count', orderable: false, searchable: false },
+                    { data: 'created_at', name: 'created_at' },
+                    { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-right whitespace-nowrap' }
+                ],
+                order: [[2, 'desc']],
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search permissions...",
+                    lengthMenu: "Show _MENU_ entries",
+                    info: "Showing _START_ to _END_ of _TOTAL_ permissions",
+                    infoEmpty: "No permissions found",
+                    infoFiltered: "(filtered from _MAX_ total permissions)",
+                    zeroRecords: "No matching permissions found",
+                    emptyTable: "No permissions available"
+                },
+                dom: '<"flex flex-col md:flex-row justify-between items-center mb-4"lf>rt<"flex flex-col md:flex-row justify-between items-center mt-4"ip>',
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+                stripeClasses: ['bg-white dark:bg-gray-800', 'bg-gray-50 dark:bg-gray-900']
+            });
+        });
+    </script>
+
+    <style>
+        /* Table borders and styling */
+        #permissions-table {
+            border-collapse: separate !important;
+            border-spacing: 0;
+        }
+        
+        #permissions-table thead th {
+            border-bottom: 2px solid #e5e7eb;
+            background-color: #f9fafb;
+        }
+        
+        .dark #permissions-table thead th {
+            border-bottom-color: #374151;
+            background-color: #1f2937;
+        }
+        
+        #permissions-table tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .dark #permissions-table tbody tr {
+            border-bottom-color: #374151;
+        }
+        
+        /* Alternating row colors (striping) */
+        #permissions-table tbody tr.odd {
+            background-color: #ffffff;
+        }
+        
+        #permissions-table tbody tr.even {
+            background-color: #f9fafb;
+        }
+        
+        .dark #permissions-table tbody tr.odd {
+            background-color: #1f2937;
+        }
+        
+        .dark #permissions-table tbody tr.even {
+            background-color: #111827;
+        }
+        
+        #permissions-table tbody tr:hover {
+            background-color: #e5e7eb !important;
+        }
+        
+        .dark #permissions-table tbody tr:hover {
+            background-color: #374151 !important;
+        }
+        
+        #permissions-table tbody td {
+            border-right: 1px solid #e5e7eb;
+            padding: 12px 24px;
+        }
+        
+        .dark #permissions-table tbody td {
+            border-right-color: #374151;
+        }
+        
+        #permissions-table tbody td:last-child {
+            border-right: none;
+        }
+        
+        #permissions-table thead th {
+            border-right: 1px solid #e5e7eb;
+        }
+        
+        .dark #permissions-table thead th {
+            border-right-color: #374151;
+        }
+        
+        #permissions-table thead th:last-child {
+            border-right: none;
+        }
+        
+        /* Action links styling - keep inline */
+        #permissions-table tbody td a,
+        #permissions-table tbody td form {
+            display: inline;
+            white-space: nowrap;
+        }
+        
+        /* DataTables controls styling */
+        .dataTables_wrapper .dataTables_filter input,
+        .dataTables_wrapper .dataTables_length select {
+            @apply px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100;
+        }
+        
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            @apply px-3 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 mx-1;
+        }
+        
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            @apply bg-blue-600 text-white border-blue-600;
+        }
+        
+        .dataTables_wrapper .dataTables_info {
+            @apply text-sm text-gray-600 dark:text-gray-400;
+        }
+    </style>
 </x-layouts.app>

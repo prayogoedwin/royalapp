@@ -18,14 +18,20 @@ The menu item expands/collapses and highlights the active page.
 **Page Elements:**
 - Breadcrumb: Dashboard > Roles
 - Page Title: "Roles" with subtitle "Manage roles and their permissions"
+- "Download Excel" button (secondary/gray) - exports to Excel/CSV
 - "Create Role" button (top right, blue/primary)
-- Data table with columns:
-  - Name (role name)
-  - Users (count of users with this role)
-  - Permissions (count of permissions assigned)
-  - Created (formatted date)
-  - Actions (Edit, Delete)
-- Pagination at bottom (if more than 10 roles)
+- **DataTables server-side table** with features:
+  - Search box (real-time search)
+  - Show entries dropdown (10, 25, 50, 100)
+  - Columns:
+    - Name (role name)
+    - Users (count of users with this role)
+    - Permissions (count of permissions assigned)
+    - Created (formatted date)
+    - Actions (View, Edit, Delete)
+  - Server-side pagination
+  - Sorting on columns
+  - "Processing..." indicator during AJAX load
 - Empty state message if no roles exist
 
 ### `/roles/create` - Create Role
@@ -49,6 +55,18 @@ Same as Create, but:
 - Permissions pre-checked based on role's current permissions
 - Button says "Update" instead of "Create"
 
+### `/roles/{id}` - View Role (Show)
+**Page Elements:**
+- Breadcrumb: Dashboard > Roles > View
+- Page Title: "Role Details"
+- Read-only display card showing:
+  - Role name
+  - Created date
+  - Last updated date
+- Permissions section showing all assigned permissions as badges
+- Users section showing all users with this role
+- "Edit" and "Back to List" buttons
+
 ---
 
 ## Permissions Management
@@ -57,13 +75,19 @@ Same as Create, but:
 **Page Elements:**
 - Breadcrumb: Dashboard > Permissions
 - Page Title: "Permissions" with subtitle "Manage system permissions"
+- "Download Excel" button (secondary/gray) - exports to Excel/CSV
 - "Create Permission" button (top right, blue/primary)
-- Data table with columns:
-  - Name (permission name)
-  - Roles (count of roles that have this permission)
-  - Created (formatted date)
-  - Actions (Edit, Delete)
-- Pagination at bottom
+- **DataTables server-side table** with features:
+  - Search box (real-time search)
+  - Show entries dropdown (10, 25, 50, 100)
+  - Columns:
+    - Name (permission name)
+    - Roles (count of roles that have this permission)
+    - Created (formatted date)
+    - Actions (View, Edit, Delete)
+  - Server-side pagination
+  - Sorting on columns
+  - "Processing..." indicator during AJAX load
 - Empty state message if no permissions exist
 
 ### `/permissions/create` - Create Permission
@@ -85,6 +109,17 @@ Same as Create, but:
 - Form pre-filled with permission name
 - Button says "Update" instead of "Create"
 
+### `/permissions/{id}` - View Permission (Show)
+**Page Elements:**
+- Breadcrumb: Dashboard > Permissions > View
+- Page Title: "Permission Details"
+- Read-only display card showing:
+  - Permission name
+  - Created date
+  - Last updated date
+- Roles section showing all roles that have this permission as badges
+- "Edit" and "Back to List" buttons
+
 ---
 
 ## Users Management
@@ -93,16 +128,22 @@ Same as Create, but:
 **Page Elements:**
 - Breadcrumb: Dashboard > Users
 - Page Title: "Users" with subtitle "Manage users and their roles"
+- "Download Excel" button (secondary/gray) - exports to Excel/CSV
 - "Create User" button (top right, blue/primary)
-- Data table with columns:
-  - Name (user's full name)
-  - Email (user's email address)
-  - Roles (badges showing role names in blue)
-    - Multiple role badges if user has multiple roles
-    - "No roles" text if user has no roles
-  - Created (formatted date)
-  - Actions (Edit, Delete)
-- Pagination at bottom
+- **DataTables server-side table** with features:
+  - Search box (real-time search)
+  - Show entries dropdown (10, 25, 50, 100)
+  - Columns:
+    - Name (user's full name)
+    - Email (user's email address)
+    - Roles (badges showing role names in blue)
+      - Multiple role badges if user has multiple roles
+      - "No roles" text if user has no roles
+    - Created (formatted date)
+    - Actions (View, Edit, Delete)
+  - Server-side pagination
+  - Sorting on columns
+  - "Processing..." indicator during AJAX load
 - Empty state message if no users exist
 
 **Role Badges:** Small blue rounded badges with role names
@@ -134,6 +175,19 @@ Same as Create, but:
   - Helper text: "Leave blank to keep current password"
 - Roles pre-checked based on user's current roles
 - Button says "Update" instead of "Create"
+
+### `/users/{id}` - View User (Show)
+**Page Elements:**
+- Breadcrumb: Dashboard > Users > View
+- Page Title: "User Details"
+- Read-only display card showing:
+  - User name
+  - Email address
+  - Created date
+  - Last updated date
+- Roles section showing all assigned roles as badges
+- Permissions section showing all effective permissions from roles
+- "Edit" and "Back to List" buttons
 
 ---
 
@@ -181,11 +235,13 @@ Same as Create, but:
 - Friendly message like "No roles found."
 
 ### Pagination
-- Standard Laravel pagination
-- Shows page numbers
-- Previous/Next links
-- Centered at bottom of table
-- Only appears if there are multiple pages
+- **DataTables server-side pagination** for all listing tables (Users, Roles, Permissions)
+- Real-time search with debounce
+- Page length selector (10, 25, 50, 100 entries)
+- Shows page numbers and previous/next buttons
+- Displays entry information (e.g., "Showing 1 to 10 of 25 roles")
+- Optimized for large datasets with AJAX loading
+- "Processing..." indicator during data fetch
 
 ---
 
@@ -202,3 +258,6 @@ All pages follow these LaravelDaily patterns:
 8. Responsive design for all screen sizes
 9. Dark mode support throughout
 10. FontAwesome icons in sidebar and actions
+11. **DataTables integration** for all listing tables with server-side processing
+12. Export functionality for downloading data as Excel/CSV
+13. "Show" pages for read-only detail views

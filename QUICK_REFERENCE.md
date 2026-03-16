@@ -10,12 +10,18 @@ user@example.com       / password  (user role - no permissions)
 
 ## 🌐 Web Routes
 ```
-/users              - User management
-/roles              - Role management
-/permissions        - Permission management
+/users              - User management (DataTables + export)
+/roles              - Role management (DataTables + export)
+/permissions        - Permission management (DataTables + export)
 /users/create       - Create new user
 /roles/create       - Create new role
 /permissions/create - Create new permission
+/users/{id}         - View user details
+/roles/{id}         - View role details
+/permissions/{id}   - View permission details
+/users/export       - Download users Excel
+/roles/export       - Download roles Excel
+/permissions/export - Download permissions Excel
 ```
 
 ## 🔌 API Endpoints
@@ -77,17 +83,18 @@ Route::middleware(['auth', 'permission:create-posts'])->group(function () {
 
 ## 🎯 Permissions Created by Seeder
 ```
-view-users, create-users, edit-users, download-users, delete-users
-view-roles, create-roles, edit-roles, download-roles, delete-roles
-view-permissions, create-permissions, edit-permissions, download-permissions, delete-permissions
+view-users, show-users, create-users, edit-users, download-users, delete-users
+view-roles, show-roles, create-roles, edit-roles, download-roles, delete-roles
+view-permissions, show-permissions, create-permissions, edit-permissions, download-permissions, delete-permissions
 ```
 
 **Permission Order:**
-1. View (lihat data)
-2. Create (buat baru)
-3. Edit (ubah)
-4. Download (export/unduh)
-5. Delete (hapus)
+1. View (list/index - lihat daftar)
+2. Show (detail - lihat detil)
+3. Create (buat baru)
+4. Edit (ubah)
+5. Download (export/unduh Excel/CSV)
+6. Delete (hapus)
 
 ## 🔥 Quick Commands
 ```bash
@@ -141,6 +148,19 @@ curl -X GET http://localhost:8000/api/users \
 ## 📚 Documentation Files
 - `RBAC_API_GUIDE.md` - Complete documentation
 - `IMPLEMENTATION_SUMMARY.md` - Implementation details
+- `UI_GUIDE.md` - User interface guide with DataTables
+- `DEPLOYMENT_SHARED_HOSTING.md` - Shared hosting guide
 - `postman_collection.json` - Postman import file
 - `api-examples.js` - JavaScript examples
 - `QUICK_REFERENCE.md` - This file
+
+## 📊 DataTables Features
+All listing pages (Users, Roles, Permissions) include:
+- Server-side processing for large datasets
+- Real-time search
+- Column sorting
+- Pagination (10, 25, 50, 100 per page)
+- Processing indicator
+- Responsive design
+- Export to Excel/CSV
+- Permission-based action buttons

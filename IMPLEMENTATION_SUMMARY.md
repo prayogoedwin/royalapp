@@ -44,26 +44,48 @@
 
 **Both registered in** `bootstrap/app.php`
 
+### 3a. External Dependencies
+
+**Composer Packages:**
+- `laravel/sanctum` - API authentication with tokens
+- `maatwebsite/excel` - Excel/CSV export functionality
+- `yajra/laravel-datatables-oracle` - Server-side DataTables processing
+
+**Frontend Dependencies (CDN):**
+- jQuery 3.7.0 - Required for DataTables
+- DataTables 1.13.7 - Table enhancement with pagination, search, sorting
+- Tailwind CSS - Styling framework
+- Alpine.js - Reactive components
+- Font Awesome - Icons
+
+**Note:** All frontend assets loaded via CDN for easy shared hosting deployment (no NPM required).
+
 ### 4. Controllers (LaravelDaily Style)
 
-**RoleController** - Complete CRUD
-- `index()` - List all roles with counts
+**RoleController** - Complete CRUD with DataTables
+- `index()` - List all roles with counts (AJAX DataTables support)
+- `export()` - Export roles to Excel/CSV
+- `show()` - View single role details (read-only)
 - `create()` - Show create form
 - `store()` - Save new role
 - `edit()` - Show edit form
 - `update()` - Update existing role
 - `destroy()` - Delete role
 
-**PermissionController** - Complete CRUD
-- `index()` - List all permissions with counts
+**PermissionController** - Complete CRUD with DataTables
+- `index()` - List all permissions with counts (AJAX DataTables support)
+- `export()` - Export permissions to Excel/CSV
+- `show()` - View single permission details (read-only)
 - `create()` - Show create form
 - `store()` - Save new permission
 - `edit()` - Show edit form
 - `update()` - Update existing permission
 - `destroy()` - Delete permission
 
-**UserController** - User management with role assignment
-- `index()` - List all users with their roles
+**UserController** - User management with role assignment and DataTables
+- `index()` - List all users with their roles (AJAX DataTables support)
+- `export()` - Export users to Excel/CSV
+- `show()` - View single user details (read-only)
 - `create()` - Show create user form
 - `store()` - Create new user with roles
 - `edit()` - Show edit user form
@@ -83,24 +105,30 @@
 ### 6. Blade Views (LaravelDaily Style)
 
 **Roles Management:**
-- `resources/views/roles/index.blade.php` - List with table, pagination
-- `resources/views/roles/create.blade.php` - Create form with permission checkboxes
-- `resources/views/roles/edit.blade.php` - Edit form with permission checkboxes
+- `resources/views/roles/index.blade.php` - DataTables server-side list with search, pagination, export
+- `resources/views/roles/create.blade.php` - Create form with grouped permission checkboxes
+- `resources/views/roles/edit.blade.php` - Edit form with grouped permission checkboxes
+- `resources/views/roles/show.blade.php` - Read-only role details view
 
 **Permissions Management:**
-- `resources/views/permissions/index.blade.php` - List with table, pagination
+- `resources/views/permissions/index.blade.php` - DataTables server-side list with search, pagination, export
 - `resources/views/permissions/create.blade.php` - Simple create form
 - `resources/views/permissions/edit.blade.php` - Simple edit form
+- `resources/views/permissions/show.blade.php` - Read-only permission details view
 
 **Users Management:**
-- `resources/views/users/index.blade.php` - List with roles displayed as badges
+- `resources/views/users/index.blade.php` - DataTables server-side list with roles badges, search, pagination, export
 - `resources/views/users/create.blade.php` - Create form with role checkboxes
 - `resources/views/users/edit.blade.php` - Edit form with role checkboxes
+- `resources/views/users/show.blade.php` - Read-only user details view
 
 **All views include:**
 - Breadcrumb navigation
 - Clean card-based layouts
-- Responsive tables
+- Responsive tables with DataTables
+- Server-side processing for large datasets
+- Real-time search functionality
+- Export to Excel/CSV buttons
 - Dark mode support
 - Success message notifications
 - Validation error display
@@ -140,19 +168,35 @@ Updated `resources/views/components/layouts/app/sidebar.blade.php` with:
 **RolePermissionSeeder** creates:
 
 **Permissions:**
-- view-users, create-users, edit-users, delete-users
-- view-roles, create-roles, edit-roles, delete-roles
-- view-permissions, create-permissions, edit-permissions, delete-permissions
+- view-users, show-users, create-users, edit-users, download-users, delete-users
+- view-roles, show-roles, create-roles, edit-roles, download-roles, delete-roles
+- view-permissions, show-permissions, create-permissions, edit-permissions, download-permissions, delete-permissions
 
 **Roles:**
-- `admin` - All permissions
-- `editor` - View-only permissions
+- `super-admin` - All permissions (created first)
+- `admin` - All permissions except super-admin specific ones
+- `editor` - View and show permissions only
 - `user` - No permissions
 
 **Demo Users:**
+- superadmin@example.com / password (super-admin role)
 - admin@example.com / password (admin role)
 - editor@example.com / password (editor role)
 - user@example.com / password (user role)
+
+### 9a. Export Classes
+
+**UsersExport** (`app/Exports/UsersExport.php`)
+- Exports users with name, email, roles, and timestamps
+- Implements: `FromCollection`, `WithHeadings`, `WithMapping`
+
+**RolesExport** (`app/Exports/RolesExport.php`)
+- Exports roles with name, user count, permission count, and timestamps
+- Implements: `FromCollection`, `WithHeadings`, `WithMapping`
+
+**PermissionsExport** (`app/Exports/PermissionsExport.php`)
+- Exports permissions with name, role count, and timestamps
+- Implements: `FromCollection`, `WithHeadings`, `WithMapping`
 
 ### 10. Documentation
 
@@ -258,8 +302,14 @@ All views follow LaravelDaily design patterns:
 - Clean, minimal design
 - Card-based layouts
 - Breadcrumb navigation
-- Responsive tables
+- Responsive tables with DataTables
+- Server-side processing for optimal performance
+- Real-time search across all listing pages
+- Export functionality for data download
 - Dark mode support
 - Consistent styling
 - FontAwesome icons
 - Proper spacing and typography
+- Dynamic favicon based on app name
+- Footer with app info, version, and developer
+- Show/detail pages for read-only viewing

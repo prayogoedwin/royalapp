@@ -118,8 +118,8 @@
             <x-layouts.app.sidebar />
 
             <!-- Main Content -->
-            <main class="flex-1 overflow-auto bg-gray-100 dark:bg-gray-900 content-transition">
-                <div class="p-6">
+            <main class="flex-1 flex flex-col overflow-auto bg-gray-100 dark:bg-gray-900 content-transition">
+                <div class="flex-1 p-6">
                     <!-- Success Message -->
                     @session('status')
                         <div x-data="{ showStatusMessage: true }" x-show="showStatusMessage"
@@ -163,6 +163,8 @@
                     {{ $slot }}
 
                 </div>
+                
+                <x-layouts.app.footer />
             </main>
         </div>
     </div>
