@@ -31,26 +31,65 @@
                 </div>
 
                 <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        {{ __('Permissions') }}
-                    </label>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gray-50 dark:bg-gray-900 p-4 rounded-md">
-                        @forelse($permissions as $permission)
-                            <div>
-                                <x-forms.checkbox 
-                                    name="permissions[]" 
-                                    value="{{ $permission->id }}" 
-                                    label="{{ $permission->name }}"
-                                    :checked="in_array($permission->id, old('permissions', $role->permissions->pluck('id')->toArray()))" />
+                    <div class="flex justify-between items-center mb-3">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            {{ __('Permissions') }}
+                        </label>
+                        <button type="button" onclick="toggleAllPermissions()" 
+                            class="text-xs px-3 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800">
+                            {{ __('Select All / Deselect All') }}
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        @forelse($groupedPermissions as $resource => $group)
+                            <div class="bg-gray-50 dark:bg-gray-900 p-4 rounded-md border border-gray-200 dark:border-gray-700">
+                                <div class="flex justify-between items-center mb-3">
+                                    <h3 class="font-semibold text-gray-800 dark:text-gray-200">
+                                        {{ $group['name'] }}
+                                    </h3>
+                                    <button type="button" 
+                                        onclick="toggleGroupPermissions('{{ $resource }}')" 
+                                        class="text-xs px-2 py-1 bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600">
+                                        {{ __('Select All') }}
+                                    </button>
+                                </div>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    @foreach($group['permissions'] as $permission)
+                                        <div>
+                                            <x-forms.checkbox 
+                                                name="permissions[]" 
+                                                value="{{ $permission['id'] }}" 
+                                                label="{{ $permission['label'] }}"
+                                                data-group="{{ $resource }}"
+                                                :checked="in_array($permission['id'], old('permissions', $role->permissions->pluck('id')->toArray()))" />
+                                        </div>
+                                    @endforeach
+                                </div>
                             </div>
                         @empty
                             <p class="text-sm text-gray-500 dark:text-gray-400">{{ __('No permissions available.') }}</p>
                         @endforelse
                     </div>
+                    
                     @error('permissions')
                         <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                     @enderror
                 </div>
+
+                <script>
+                    function toggleAllPermissions() {
+                        const checkboxes = document.querySelectorAll('input[name="permissions[]"]');
+                        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+                        checkboxes.forEach(cb => cb.checked = !allChecked);
+                    }
+
+                    function toggleGroupPermissions(group) {
+                        const checkboxes = document.querySelectorAll(`input[data-group="${group}"]`);
+                        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+                        checkboxes.forEach(cb => cb.checked = !allChecked);
+                    }
+                </script>
 
                 <div class="flex gap-3">
                     <x-button type="primary">{{ __('Update') }}</x-button>

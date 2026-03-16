@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\PermissionsExport;
 use App\Models\Permission;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PermissionController extends Controller
 {
@@ -14,6 +16,11 @@ class PermissionController extends Controller
         $permissions = Permission::withCount('roles')->latest()->paginate(10);
 
         return view('permissions.index', compact('permissions'));
+    }
+
+    public function export()
+    {
+        return Excel::download(new PermissionsExport, 'permissions-' . date('Y-m-d') . '.xlsx');
     }
 
     public function create(): View
@@ -30,6 +37,13 @@ class PermissionController extends Controller
         Permission::create($validated);
 
         return to_route('permissions.index')->with('status', 'Permission created successfully.');
+    }
+
+    public function show(Permission $permission): View
+    {
+        $permission->load('roles');
+        
+        return view('permissions.show', compact('permission'));
     }
 
     public function edit(Permission $permission): View

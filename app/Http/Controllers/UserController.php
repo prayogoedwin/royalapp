@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\UsersExport;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -9,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
 
 class UserController extends Controller
 {
@@ -17,6 +19,11 @@ class UserController extends Controller
         $users = User::with('roles')->latest()->paginate(10);
 
         return view('users.index', compact('users'));
+    }
+
+    public function export()
+    {
+        return Excel::download(new UsersExport, 'users-' . date('Y-m-d') . '.xlsx');
     }
 
     public function create(): View
@@ -47,6 +54,13 @@ class UserController extends Controller
         }
 
         return to_route('users.index')->with('status', 'User created successfully.');
+    }
+
+    public function show(User $user): View
+    {
+        $user->load('roles.permissions');
+        
+        return view('users.show', compact('user'));
     }
 
     public function edit(User $user): View

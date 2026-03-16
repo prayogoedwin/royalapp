@@ -14,9 +14,23 @@
             <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ __('Permissions') }}</h1>
             <p class="text-gray-600 dark:text-gray-400 mt-1">{{ __('Manage system permissions') }}</p>
         </div>
-        <a href="{{ route('permissions.create') }}">
-            <x-button type="primary">{{ __('Create Permission') }}</x-button>
-        </a>
+        <div class="flex gap-2">
+            @if(auth()->user()->hasPermission('download-permissions'))
+                <a href="{{ route('permissions.export') }}">
+                    <x-button type="secondary">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        {{ __('Download Excel') }}
+                    </x-button>
+                </a>
+            @endif
+            @if(auth()->user()->hasPermission('create-permissions'))
+                <a href="{{ route('permissions.create') }}">
+                    <x-button type="primary">{{ __('Create Permission') }}</x-button>
+                </a>
+            @endif
+        </div>
     </div>
 
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -57,15 +71,23 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <a href="{{ route('permissions.edit', $permission) }}"
-                                    class="text-blue-600 dark:text-blue-400 hover:underline mr-3">{{ __('Edit') }}</a>
-                                <form action="{{ route('permissions.destroy', $permission) }}" method="POST" class="inline"
-                                    onsubmit="return confirm('{{ __('Are you sure you want to delete this permission?') }}')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit"
-                                        class="text-red-600 dark:text-red-400 hover:underline">{{ __('Delete') }}</button>
-                                </form>
+                                @if(auth()->user()->hasPermission('show-permissions'))
+                                    <a href="{{ route('permissions.show', $permission) }}"
+                                        class="text-green-600 dark:text-green-400 hover:underline mr-3">{{ __('View') }}</a>
+                                @endif
+                                @if(auth()->user()->hasPermission('edit-permissions'))
+                                    <a href="{{ route('permissions.edit', $permission) }}"
+                                        class="text-blue-600 dark:text-blue-400 hover:underline mr-3">{{ __('Edit') }}</a>
+                                @endif
+                                @if(auth()->user()->hasPermission('delete-permissions'))
+                                    <form action="{{ route('permissions.destroy', $permission) }}" method="POST" class="inline"
+                                        onsubmit="return confirm('{{ __('Are you sure you want to delete this permission?') }}')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                            class="text-red-600 dark:text-red-400 hover:underline">{{ __('Delete') }}</button>
+                                    </form>
+                                @endif
                             </td>
                         </tr>
                     @empty

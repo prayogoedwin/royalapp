@@ -14,16 +14,22 @@ class RolePermissionSeeder extends Seeder
     {
         $permissions = [
             'view-users',
+            'show-users',
             'create-users',
             'edit-users',
+            'download-users',
             'delete-users',
             'view-roles',
+            'show-roles',
             'create-roles',
             'edit-roles',
+            'download-roles',
             'delete-roles',
             'view-permissions',
+            'show-permissions',
             'create-permissions',
             'edit-permissions',
+            'download-permissions',
             'delete-permissions',
         ];
 
@@ -40,7 +46,11 @@ class RolePermissionSeeder extends Seeder
         $adminRole->permissions()->sync(Permission::all());
 
         $editorRole->permissions()->sync(
-            Permission::whereIn('name', ['view-users', 'view-roles', 'view-permissions'])->pluck('id')
+            Permission::whereIn('name', [
+                'view-users', 'show-users',
+                'view-roles', 'show-roles',
+                'view-permissions', 'show-permissions'
+            ])->pluck('id')
         );
 
         $superAdmin = User::firstOrCreate(

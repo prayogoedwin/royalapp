@@ -2,9 +2,10 @@
 
 ## 🔑 Demo Users
 ```
-admin@example.com    / password  (admin role - full access)
-editor@example.com   / password  (editor role - view only)
-user@example.com     / password  (user role - no permissions)
+superadmin@example.com / password  (super-admin role - highest access)
+admin@example.com      / password  (admin role - full access)
+editor@example.com     / password  (editor role - view only)
+user@example.com       / password  (user role - no permissions)
 ```
 
 ## 🌐 Web Routes
@@ -76,10 +77,17 @@ Route::middleware(['auth', 'permission:create-posts'])->group(function () {
 
 ## 🎯 Permissions Created by Seeder
 ```
-view-users, create-users, edit-users, delete-users
-view-roles, create-roles, edit-roles, delete-roles
-view-permissions, create-permissions, edit-permissions, delete-permissions
+view-users, create-users, edit-users, download-users, delete-users
+view-roles, create-roles, edit-roles, download-roles, delete-roles
+view-permissions, create-permissions, edit-permissions, download-permissions, delete-permissions
 ```
+
+**Permission Order:**
+1. View (lihat data)
+2. Create (buat baru)
+3. Edit (ubah)
+4. Download (export/unduh)
+5. Delete (hapus)
 
 ## 🔥 Quick Commands
 ```bash
