@@ -88,6 +88,7 @@ class OrderController extends Controller
         $validated = $request->validate([
             'division_id' => ['required', 'exists:divisions,id'],
             'order_status_id' => ['required', 'exists:order_statuses,id'],
+            'unit_code' => ['nullable', 'string', 'max:255'],
             'customer_name' => ['required', 'string', 'max:255'],
             'customer_phone' => ['required', 'string', 'max:255'],
             'pickup_address' => ['required', 'string'],
@@ -139,7 +140,7 @@ class OrderController extends Controller
             // Create order
             $order = Order::create([
                 'order_number' => $orderNumber,
-                'unit_code' => $validated['unit_code'],
+                'unit_code' => $validated['unit_code'] ?? null,
                 'division_id' => $validated['division_id'],
                 'order_status_id' => $validated['order_status_id'],
                 'customer_name' => $validated['customer_name'],
@@ -234,8 +235,9 @@ class OrderController extends Controller
         $divisions = Division::orderBy('nama')->get();
         $orderStatuses = OrderStatus::orderBy('name')->get();
         $employees = Employee::with('position')->where('status', 'active')->orderBy('full_name')->get();
+        $units = Unit::with('division')->orderBy('division_id')->orderBy('code')->get();
 
-        return view('orders.edit', compact('order', 'divisions', 'orderStatuses', 'employees'));
+        return view('orders.edit', compact('order', 'divisions', 'orderStatuses', 'employees', 'units'));
     }
 
     public function update(Request $request, Order $order): RedirectResponse
