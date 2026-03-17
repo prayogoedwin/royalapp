@@ -1,8 +1,8 @@
 # Deployment ke Shared Hosting
 
-## ✅ Sistem Sudah Diubah ke CDN
+## ✅ Sistem Diubah ke CDN
 
-Sistem sudah dimodifikasi untuk **tidak memerlukan npm/Vite**. Semua asset dimuat dari CDN:
+Sistem dimodifikasi untuk **tidak memerlukan npm/Vite**. Semua asset dimuat dari CDN:
 
 ### CDN yang Digunakan:
 - **Tailwind CSS** - `cdn.tailwindcss.com`

@@ -41,6 +41,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Unit Notification Days
+    |--------------------------------------------------------------------------
+    |
+    | Number of days before tax/plate renewal to show notifications.
+    | H-X days will show notification for upcoming renewals.
+    |
+    */
+
+    'unit_notification_days' => env('UNIT_NOTIFICATION_DAYS', 10),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

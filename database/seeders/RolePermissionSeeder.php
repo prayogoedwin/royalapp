@@ -31,66 +31,122 @@ class RolePermissionSeeder extends Seeder
             'edit-permissions',
             'download-permissions',
             'delete-permissions',
+            'view-positions',
+            'show-positions',
+            'create-positions',
+            'edit-positions',
+            'delete-positions',
+            'view-divisions',
+            'show-divisions',
+            'create-divisions',
+            'edit-divisions',
+            'delete-divisions',
+            'view-employee-types',
+            'show-employee-types',
+            'create-employee-types',
+            'edit-employee-types',
+            'delete-employee-types',
+            'view-employees',
+            'show-employees',
+            'create-employees',
+            'edit-employees',
+            'delete-employees',
+            'view-orders',
+            'show-orders',
+            'create-orders',
+            'edit-orders',
+            'delete-orders',
+            'view-units',
+            'show-units',
+            'create-units',
+            'edit-units',
+            'delete-units',
+            // order vehicle issues
+            'view-order-vehicle-issues',
+            'show-order-vehicle-issues',
+            'create-order-vehicle-issues',
+            'edit-order-vehicle-issues',
+            'delete-order-vehicle-issues',
         ];
 
         foreach ($permissions as $permissionName) {
             Permission::firstOrCreate(['name' => $permissionName]);
         }
 
-        $superAdminRole = Role::firstOrCreate(['name' => 'super-admin']);
-        $adminRole = Role::firstOrCreate(['name' => 'admin']);
-        $editorRole = Role::firstOrCreate(['name' => 'editor']);
-        $userRole = Role::firstOrCreate(['name' => 'user']);
+        $roles = [
+            'Super Admin',
+            'Admin IT',
+            'Editor',
+            'User',
+            'Owner',
+            'Direksi',
+            'Managerial',
+            'Administration',
+            'Supervisor',
+            'Coordinator',
+            'Operational',
+        ];
 
-        $superAdminRole->permissions()->sync(Permission::all());
-        $adminRole->permissions()->sync(Permission::all());
+        $createdRoles = [];
+        foreach ($roles as $roleName) {
+            $createdRoles[$roleName] = Role::firstOrCreate(['name' => $roleName]);
+        }
 
-        $editorRole->permissions()->sync(
+        $createdRoles['Super Admin']->permissions()->sync(Permission::all());
+        $createdRoles['Admin IT']->permissions()->sync(Permission::all());
+
+        $createdRoles['Editor']->permissions()->sync(
             Permission::whereIn('name', [
                 'view-users', 'show-users',
                 'view-roles', 'show-roles',
-                'view-permissions', 'show-permissions'
+                'view-permissions', 'show-permissions',
+                'view-positions', 'show-positions',
+                'view-divisions', 'show-divisions',
+                'view-employee-types', 'show-employee-types',
+                'view-employees', 'show-employees',
+                'view-orders', 'show-orders',
+                'view-units', 'show-units',
+                'view-order-vehicle-issues', 'show-order-vehicle-issues',
             ])->pluck('id')
         );
 
-        $superAdmin = User::firstOrCreate(
-            ['email' => 'superadmin@example.com'],
+        $defaultUsers = [
             [
                 'name' => 'Super Admin',
+                'email' => 'superadmin@royalapp.com',
                 'password' => Hash::make('password'),
-            ]
-        );
-
-        $superAdmin->roles()->sync([$superAdminRole->id]);
-
-        $admin = User::firstOrCreate(
-            ['email' => 'admin@example.com'],
+                'role' => 'Super Admin'
+            ],
             [
-                'name' => 'Admin User',
+                'name' => 'Admin IT',
+                'email' => 'adminit@royalapp.com',
                 'password' => Hash::make('password'),
-            ]
-        );
-
-        $admin->roles()->sync([$adminRole->id]);
-
-        $editor = User::firstOrCreate(
-            ['email' => 'editor@example.com'],
+                'role' => 'Admin IT'
+            ],
             [
-                'name' => 'Editor User',
+                'name' => 'Editor',
+                'email' => 'editor@royalapp.com',
                 'password' => Hash::make('password'),
-            ]
-        );
-
-        $editor->roles()->sync([$editorRole->id]);
-
-        $user = User::firstOrCreate(
-            ['email' => 'user@example.com'],
+                'role' => 'Editor'
+            ],
             [
-                'name' => 'Regular User',
+                'name' => 'User',
+                'email' => 'user@royalapp.com',
                 'password' => Hash::make('password'),
-            ]
-        );
+                'role' => 'User'
+            ],
+        ];
 
-        $user->roles()->sync([$userRole->id]);
+        foreach ($defaultUsers as $userData) {
+            $user = User::firstOrCreate(
+                ['email' => $userData['email']],
+                [
+                    'name' => $userData['name'],
+                    'password' => $userData['password'],
+                ]
+            );
+
+            $user->roles()->sync([$createdRoles[$userData['role']]->id]);
+        }
     }
 }
