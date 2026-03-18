@@ -26,6 +26,7 @@
     @endif
 
     {{-- Form 1: Basic Information --}}
+    @if(auth()->user()->hasPermission('edit-orders'))
     <form action="{{ route('orders.update', $order) }}" method="POST" class="space-y-6 mb-8">
         @csrf
         @method('PUT')
@@ -149,8 +150,15 @@
             </div>
         </div>
     </form>
+    @else
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8">
+            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">{{ __('Basic Information') }}</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Anda tidak punya akses untuk mengubah data order. (Hanya bisa isi section driver di bawah.)</p>
+        </div>
+    @endif
 
     {{-- Form 2: Crew --}}
+    @if(auth()->user()->hasPermission('edit-orders'))
     <form id="form-crew" action="{{ route('orders.update', $order) }}" method="POST" class="mb-8">
         @csrf
         @method('PUT')
@@ -187,8 +195,10 @@
             </div>
         </div>
     </form>
+    @endif
 
     {{-- Form 3: New Photos --}}
+    @if(auth()->user()->hasPermission('create-order-photos') || auth()->user()->hasPermission('edit-orders'))
     <form id="form-photos" action="{{ route('orders.update', $order) }}" method="POST" enctype="multipart/form-data" class="mb-8">
         @csrf
         @method('PUT')
@@ -208,7 +218,9 @@
                             @if($photo->description)
                                 <p class="text-xs text-gray-500 dark:text-gray-400">{{ $photo->description }}</p>
                             @endif
-                            <button type="submit" form="delete-photo-{{ $photo->id }}" class="text-xs text-red-600 dark:text-red-400 hover:underline">Delete</button>
+                            @if(auth()->user()->hasPermission('delete-order-photos') || auth()->user()->hasPermission('edit-orders'))
+                                <button type="submit" form="delete-photo-{{ $photo->id }}" class="text-xs text-red-600 dark:text-red-400 hover:underline">Delete</button>
+                            @endif
                         </div>
                     @endforeach
                 </div>
@@ -218,11 +230,15 @@
             <div id="photo-list" class="space-y-3 mb-4"></div>
             <button type="button" onclick="addPhoto()" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs mb-4">+ Add Photo</button>
 
-            <x-button type="primary">Simpan Foto</x-button>
+            @if(auth()->user()->hasPermission('create-order-photos') || auth()->user()->hasPermission('edit-orders'))
+                <x-button type="primary">Simpan Foto</x-button>
+            @endif
         </div>
     </form>
+    @endif
 
     {{-- Form 4: Order Report --}}
+    @if(auth()->user()->hasPermission('edit-order-report') || auth()->user()->hasPermission('edit-orders'))
     <form action="{{ route('orders.update', $order) }}" method="POST" class="mb-8">
         @csrf
         @method('PUT')
@@ -269,11 +285,22 @@
                 >{{ old('notes', $order->orderReport->notes ?? null) }}</textarea>
             </div>
 
-            <x-button type="primary">Update Order Report</x-button>
+            <div class="flex items-center gap-3">
+                <x-button type="primary">Update Order Report</x-button>
+                @if(($order->orderReport ?? null) && (auth()->user()->hasPermission('delete-order-report') || auth()->user()->hasPermission('edit-orders')))
+                    <button type="submit"
+                            form="delete-order-report"
+                            class="text-xs text-red-600 dark:text-red-400 hover:underline">
+                        Hapus
+                    </button>
+                @endif
+            </div>
         </div>
     </form>
+    @endif
 
     {{-- Form 5: Order Expenses (tambah baris baru + upload foto) --}}
+    @if(auth()->user()->hasPermission('create-order-expenses') || auth()->user()->hasPermission('edit-orders'))
     <form action="{{ route('orders.update', $order) }}" method="POST" enctype="multipart/form-data" class="mb-8" id="form-expenses">
         @csrf
         @method('PUT')
@@ -291,6 +318,7 @@
                                 <th class="py-2 pr-4 text-left">Deskripsi</th>
                                 <th class="py-2 pr-4 text-right">Jumlah</th>
                                 <th class="py-2 pr-4 text-left">Foto</th>
+                                <th class="py-2 pr-4 text-right">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -312,6 +340,17 @@
                                             <span class="text-gray-400 text-xs">-</span>
                                         @endif
                                     </td>
+                                    <td class="py-2 pr-4 text-right">
+                                        @if(auth()->user()->hasPermission('delete-order-expenses') || auth()->user()->hasPermission('edit-orders'))
+                                            <button type="submit"
+                                                    form="delete-expense-{{ $expense->id }}"
+                                                    class="text-xs text-red-600 dark:text-red-400 hover:underline">
+                                                Hapus
+                                            </button>
+                                        @else
+                                            <span class="text-gray-400 text-xs">-</span>
+                                        @endif
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -326,8 +365,10 @@
             <x-button type="primary">Simpan Expenses</x-button>
         </div>
     </form>
+    @endif
 
     {{-- Form 6: E-Toll (tambah baris baru + upload foto) --}}
+    @if(auth()->user()->hasPermission('create-order-etoll') || auth()->user()->hasPermission('edit-orders'))
     <form action="{{ route('orders.update', $order) }}" method="POST" enctype="multipart/form-data" class="mb-8" id="form-etoll">
         @csrf
         @method('PUT')
@@ -344,6 +385,7 @@
                                 <th class="py-2 pr-4 text-right">Saldo Sebelum</th>
                                 <th class="py-2 pr-4 text-right">Saldo Sesudah</th>
                                 <th class="py-2 pr-4 text-left">Foto</th>
+                                <th class="py-2 pr-4 text-right">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -362,6 +404,17 @@
                                             <span class="text-gray-400 text-xs">-</span>
                                         @endif
                                     </td>
+                                    <td class="py-2 pr-4 text-right">
+                                        @if(auth()->user()->hasPermission('delete-order-etoll') || auth()->user()->hasPermission('edit-orders'))
+                                            <button type="submit"
+                                                    form="delete-etoll-{{ $trx->id }}"
+                                                    class="text-xs text-red-600 dark:text-red-400 hover:underline">
+                                                Hapus
+                                            </button>
+                                        @else
+                                            <span class="text-gray-400 text-xs">-</span>
+                                        @endif
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -376,8 +429,10 @@
             <x-button type="primary">Simpan E-Toll</x-button>
         </div>
     </form>
+    @endif
 
     {{-- Section: Vehicle Issues (paling bawah) + form tambah dengan upload foto --}}
+    @if(auth()->user()->hasPermission('view-order-vehicle-issues') || auth()->user()->hasPermission('show-order-vehicle-issues') || auth()->user()->hasPermission('create-order-vehicle-issues') || auth()->user()->hasPermission('edit-order-vehicle-issues') || auth()->user()->hasPermission('edit-orders'))
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8">
         <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Vehicle Issues</h2>
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Daftar vehicle issue untuk order ini. Tambah baru dengan form di bawah (termasuk upload foto).</p>
@@ -390,12 +445,15 @@
                     <li class="flex items-center gap-3 py-2 border-b border-gray-200 dark:border-gray-700 last:border-0">
                         <span class="text-gray-700 dark:text-gray-300">{{ \App\Models\OrderVehicleIssue::getCategoryLabel($issue->issue_category ?? '') }} – {{ \Illuminate\Support\Str::limit($issue->description, 40) }}</span>
                         <a href="{{ route('order-vehicle-issues.show', $issue) }}" class="text-blue-600 dark:text-blue-400 hover:underline text-sm">Lihat</a>
-                        <a href="{{ route('order-vehicle-issues.edit', $issue) }}" class="text-gray-600 dark:text-gray-400 hover:underline text-sm">Edit</a>
+                        @if(auth()->user()->hasPermission('edit-order-vehicle-issues') || auth()->user()->hasPermission('edit-orders'))
+                            <a href="{{ route('order-vehicle-issues.edit', $issue) }}" class="text-gray-600 dark:text-gray-400 hover:underline text-sm">Edit</a>
+                        @endif
                     </li>
                 @endforeach
             </ul>
         @endif
 
+        @if(auth()->user()->hasPermission('create-order-vehicle-issues') || auth()->user()->hasPermission('edit-orders'))
         <form action="{{ route('order-vehicle-issues.store', $order) }}?from=edit" method="POST" enctype="multipart/form-data" class="border-t border-gray-200 dark:border-gray-700 pt-6">
             @csrf
             <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Tambah Vehicle Issue (dengan upload foto)</p>
@@ -437,10 +495,33 @@
             </div>
             <x-button type="primary">Tambah Vehicle Issue</x-button>
         </form>
+        @endif
     </div>
+    @endif
 
     @foreach($order->orderPhotos as $photo)
         <form id="delete-photo-{{ $photo->id }}" action="{{ route('order-photos.destroy', $photo) }}" method="POST" class="hidden">
+            @csrf
+            @method('DELETE')
+        </form>
+    @endforeach
+
+    @if($order->orderReport ?? null)
+        <form id="delete-order-report" action="{{ route('order-report.destroy', $order) }}" method="POST" class="hidden">
+            @csrf
+            @method('DELETE')
+        </form>
+    @endif
+
+    @foreach($order->orderExpenses as $expense)
+        <form id="delete-expense-{{ $expense->id }}" action="{{ route('order-expenses.destroy', $expense) }}" method="POST" class="hidden">
+            @csrf
+            @method('DELETE')
+        </form>
+    @endforeach
+
+    @foreach($order->orderEtollTransactions as $trx)
+        <form id="delete-etoll-{{ $trx->id }}" action="{{ route('order-etoll.destroy', $trx) }}" method="POST" class="hidden">
             @csrf
             @method('DELETE')
         </form>

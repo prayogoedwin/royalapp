@@ -17,9 +17,20 @@
             <p class="text-gray-600 dark:text-gray-400 mt-1">Detail order dan kendaraan.</p>
         </div>
         <div class="flex gap-2">
-            @if(auth()->user()->hasPermission('edit-orders'))
+            @php
+                $canAccessEdit = auth()->user()->hasPermission('edit-orders')
+                    || auth()->user()->hasPermission('edit-order-report')
+                    || auth()->user()->hasPermission('create-order-expenses')
+                    || auth()->user()->hasPermission('create-order-etoll')
+                    || auth()->user()->hasPermission('create-order-photos')
+                    || auth()->user()->hasPermission('create-order-vehicle-issues')
+                    || auth()->user()->hasPermission('edit-order-vehicle-issues');
+            @endphp
+            @if($canAccessEdit)
                 <a href="{{ route('orders.edit', $order) }}">
-                    <x-button type="secondary">Edit Order</x-button>
+                    <x-button type="secondary">
+                        {{ auth()->user()->hasPermission('edit-orders') ? 'Edit Order' : 'Input Data Driver' }}
+                    </x-button>
                 </a>
             @endif
         </div>

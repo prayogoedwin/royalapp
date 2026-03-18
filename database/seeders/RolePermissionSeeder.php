@@ -56,6 +56,15 @@ class RolePermissionSeeder extends Seeder
             'create-orders',
             'edit-orders',
             'delete-orders',
+            // order section permissions (driver vs managerial)
+            'edit-order-report',
+            'delete-order-report',
+            'create-order-expenses',
+            'delete-order-expenses',
+            'create-order-etoll',
+            'delete-order-etoll',
+            'create-order-photos',
+            'delete-order-photos',
             'view-units',
             'show-units',
             'create-units',
@@ -107,6 +116,41 @@ class RolePermissionSeeder extends Seeder
                 'view-orders', 'show-orders',
                 'view-units', 'show-units',
                 'view-order-vehicle-issues', 'show-order-vehicle-issues',
+            ])->pluck('id')
+        );
+
+        // Managerial & Supervisor: full order management + vehicle issues management
+        $createdRoles['Managerial']->permissions()->sync(
+            Permission::whereIn('name', [
+                'view-orders', 'show-orders', 'create-orders', 'edit-orders', 'delete-orders',
+                'edit-order-report', 'delete-order-report',
+                'create-order-expenses', 'delete-order-expenses',
+                'create-order-etoll', 'delete-order-etoll',
+                'create-order-photos', 'delete-order-photos',
+                'view-order-vehicle-issues', 'show-order-vehicle-issues', 'create-order-vehicle-issues', 'edit-order-vehicle-issues', 'delete-order-vehicle-issues',
+            ])->pluck('id')
+        );
+
+        $createdRoles['Supervisor']->permissions()->sync(
+            Permission::whereIn('name', [
+                'view-orders', 'show-orders', 'create-orders', 'edit-orders',
+                'edit-order-report', 'delete-order-report',
+                'create-order-expenses', 'delete-order-expenses',
+                'create-order-etoll', 'delete-order-etoll',
+                'create-order-photos', 'delete-order-photos',
+                'view-order-vehicle-issues', 'show-order-vehicle-issues', 'create-order-vehicle-issues', 'edit-order-vehicle-issues',
+            ])->pluck('id')
+        );
+
+        // Operational (Driver): can access driver sections but cannot edit order basic
+        $createdRoles['Operational']->permissions()->sync(
+            Permission::whereIn('name', [
+                'view-orders', 'show-orders',
+                'edit-order-report',
+                'create-order-expenses', 'delete-order-expenses',
+                'create-order-etoll', 'delete-order-etoll',
+                'create-order-photos',
+                'view-order-vehicle-issues', 'show-order-vehicle-issues', 'create-order-vehicle-issues',
             ])->pluck('id')
         );
 

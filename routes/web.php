@@ -97,33 +97,42 @@ Route::middleware(['auth'])->group(function () {
     Route::get('orders/create', [\App\Http\Controllers\OrderController::class, 'create'])->name('orders.create')->middleware('permission:create-orders');
     Route::post('orders', [\App\Http\Controllers\OrderController::class, 'store'])->name('orders.store')->middleware('permission:create-orders');
     Route::get('orders/{order}', [\App\Http\Controllers\OrderController::class, 'show'])->name('orders.show')->middleware('permission:show-orders');
-    Route::get('orders/{order}/edit', [\App\Http\Controllers\OrderController::class, 'edit'])->name('orders.edit')->middleware('permission:edit-orders');
-    Route::put('orders/{order}', [\App\Http\Controllers\OrderController::class, 'update'])->name('orders.update')->middleware('permission:edit-orders');
+    Route::get('orders/{order}/edit', [\App\Http\Controllers\OrderController::class, 'edit'])->name('orders.edit')
+        ->middleware('permission:edit-orders|edit-order-report|create-order-expenses|create-order-etoll|create-order-photos|create-order-vehicle-issues|edit-order-vehicle-issues');
+    Route::put('orders/{order}', [\App\Http\Controllers\OrderController::class, 'update'])->name('orders.update')
+        ->middleware('permission:edit-orders|edit-order-report|create-order-expenses|create-order-etoll|create-order-photos');
+    Route::delete('orders/{order}/report', [\App\Http\Controllers\OrderController::class, 'deleteOrderReport'])->name('order-report.destroy')
+        ->middleware('permission:delete-order-report');
+    Route::delete('order-expenses/{expense}', [\App\Http\Controllers\OrderController::class, 'deleteExpense'])->name('order-expenses.destroy')
+        ->middleware('permission:delete-order-expenses');
+    Route::delete('order-etoll/{trx}', [\App\Http\Controllers\OrderController::class, 'deleteEtoll'])->name('order-etoll.destroy')
+        ->middleware('permission:delete-order-etoll');
     Route::delete('orders/{order}', [\App\Http\Controllers\OrderController::class, 'destroy'])->name('orders.destroy')->middleware('permission:delete-orders');
-    Route::delete('order-photos/{photo}', [\App\Http\Controllers\OrderController::class, 'deletePhoto'])->name('order-photos.destroy')->middleware('permission:edit-orders');
+    Route::delete('order-photos/{photo}', [\App\Http\Controllers\OrderController::class, 'deletePhoto'])->name('order-photos.destroy')
+        ->middleware('permission:delete-order-photos');
 
     // Order Vehicle Issues
     Route::get('order-vehicle-issues', [\App\Http\Controllers\OrderVehicleIssueController::class, 'index'])
         ->name('order-vehicle-issues.index')
-        ->middleware('permission:view-orders');
+        ->middleware('permission:view-order-vehicle-issues');
     Route::get('orders/{order}/vehicle-issues/create', [\App\Http\Controllers\OrderVehicleIssueController::class, 'create'])
         ->name('order-vehicle-issues.create')
-        ->middleware('permission:edit-orders');
+        ->middleware('permission:create-order-vehicle-issues');
     Route::post('orders/{order}/vehicle-issues', [\App\Http\Controllers\OrderVehicleIssueController::class, 'store'])
         ->name('order-vehicle-issues.store')
-        ->middleware('permission:edit-orders');
+        ->middleware('permission:create-order-vehicle-issues');
     Route::get('order-vehicle-issues/{orderVehicleIssue}', [\App\Http\Controllers\OrderVehicleIssueController::class, 'show'])
         ->name('order-vehicle-issues.show')
-        ->middleware('permission:view-orders');
+        ->middleware('permission:show-order-vehicle-issues');
     Route::get('order-vehicle-issues/{orderVehicleIssue}/edit', [\App\Http\Controllers\OrderVehicleIssueController::class, 'edit'])
         ->name('order-vehicle-issues.edit')
-        ->middleware('permission:edit-orders');
+        ->middleware('permission:edit-order-vehicle-issues');
     Route::put('order-vehicle-issues/{orderVehicleIssue}', [\App\Http\Controllers\OrderVehicleIssueController::class, 'update'])
         ->name('order-vehicle-issues.update')
-        ->middleware('permission:edit-orders');
+        ->middleware('permission:edit-order-vehicle-issues');
     Route::delete('order-vehicle-issues/{orderVehicleIssue}', [\App\Http\Controllers\OrderVehicleIssueController::class, 'destroy'])
         ->name('order-vehicle-issues.destroy')
-        ->middleware('permission:delete-orders');
+        ->middleware('permission:delete-order-vehicle-issues');
 
     // Units Management
     Route::get('units', [\App\Http\Controllers\UnitController::class, 'index'])->name('units.index')->middleware('permission:view-units');

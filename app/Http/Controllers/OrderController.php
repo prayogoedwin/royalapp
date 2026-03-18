@@ -261,6 +261,9 @@ class OrderController extends Controller
         $section = $request->input('update_section', 'basic');
 
         if ($section === 'order_report') {
+            if (! $request->user()->hasPermission('edit-order-report')) {
+                abort(403, 'Unauthorized action.');
+            }
             $validated = $request->validate([
                 'km_awal' => ['nullable', 'numeric', 'min:0'],
                 'km_akhir' => ['nullable', 'numeric', 'min:0'],
@@ -289,6 +292,9 @@ class OrderController extends Controller
         }
 
         if ($section === 'order_expenses') {
+            if (! $request->user()->hasPermission('create-order-expenses')) {
+                abort(403, 'Unauthorized action.');
+            }
             $validated = $request->validate([
                 'expenses' => ['nullable', 'array'],
                 'expenses.*.expense_category' => ['required_with:expenses.*.amount', 'string', 'max:50'],
@@ -325,6 +331,9 @@ class OrderController extends Controller
         }
 
         if ($section === 'order_etoll') {
+            if (! $request->user()->hasPermission('create-order-etoll')) {
+                abort(403, 'Unauthorized action.');
+            }
             $validated = $request->validate([
                 'etolls' => ['nullable', 'array'],
                 'etolls.*.balance_before' => ['nullable', 'numeric', 'min:0'],
@@ -364,6 +373,9 @@ class OrderController extends Controller
         }
 
         if ($section === 'crew') {
+            if (! $request->user()->hasPermission('edit-orders')) {
+                abort(403, 'Unauthorized action.');
+            }
             $validated = $request->validate([
                 'crew_ids' => ['nullable', 'array'],
                 'crew_ids.*' => ['exists:employees,id'],
@@ -393,6 +405,9 @@ class OrderController extends Controller
         }
 
         if ($section === 'photos') {
+            if (! $request->user()->hasPermission('create-order-photos')) {
+                abort(403, 'Unauthorized action.');
+            }
             $validated = $request->validate([
                 'photos' => ['nullable', 'array'],
                 'photos.*' => ['image', 'mimes:jpeg,png,jpg', 'max:2048'],
@@ -422,6 +437,9 @@ class OrderController extends Controller
         }
 
         // default: basic
+        if (! $request->user()->hasPermission('edit-orders')) {
+            abort(403, 'Unauthorized action.');
+        }
         $validated = $request->validate([
             'division_id' => ['required', 'exists:divisions,id'],
             'order_status_id' => ['required', 'exists:order_statuses,id'],
@@ -542,5 +560,48 @@ class OrderController extends Controller
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Failed to delete photo: ' . $e->getMessage()]);
         }
+    }
+
+    public function deleteOrderReport(Request $request, Order $order): RedirectResponse
+    {
+        if (! $request->user()->hasPermission('delete-order-report')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if ($order->orderReport) {
+            $order->orderReport()->delete();
+        }
+
+        return redirect()->route('orders.edit', $order)->with('status', 'Order report berhasil dihapus.');
+    }
+
+    public function deleteExpense(Request $request, OrderExpense $expense): RedirectResponse
+    {
+        if (! $request->user()->hasPermission('delete-order-expenses')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $orderId = $expense->order_id;
+        if ($expense->receipt_photo) {
+            Storage::disk('public')->delete($expense->receipt_photo);
+        }
+        $expense->delete();
+
+        return redirect()->route('orders.edit', $orderId)->with('status', 'Expense berhasil dihapus.');
+    }
+
+    public function deleteEtoll(Request $request, OrderEtollTransaction $trx): RedirectResponse
+    {
+        if (! $request->user()->hasPermission('delete-order-etoll')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $orderId = $trx->order_id;
+        if ($trx->receipt_photo) {
+            Storage::disk('public')->delete($trx->receipt_photo);
+        }
+        $trx->delete();
+
+        return redirect()->route('orders.edit', $orderId)->with('status', 'Transaksi e-toll berhasil dihapus.');
     }
 }
