@@ -27,7 +27,7 @@ class OrderVehicleIssueController extends Controller
     public function store(Request $request, Order $order): RedirectResponse
     {
         $validated = $request->validate([
-            'issue_category' => ['required', 'in:mechanical,body,interior,safety,medical_equipment'],
+            'issue_category' => ['required', 'in:mechanical,body,interior,safety,medical_equipment,other'],
             'description' => ['required', 'string'],
             'priority' => ['required', 'in:low,medium,high,urgent'],
             'issue_photo' => ['nullable', 'image', 'max:2048'],
@@ -49,6 +49,9 @@ class OrderVehicleIssueController extends Controller
 
         OrderVehicleIssue::create($data);
 
+        if (request()->has('from') && request('from') === 'edit') {
+            return redirect()->route('orders.edit', $order)->with('status', 'Vehicle issue berhasil ditambah.');
+        }
         return to_route('orders.show', $order)->with('status', 'Vehicle issue created successfully.');
     }
 
@@ -69,7 +72,7 @@ class OrderVehicleIssueController extends Controller
     public function update(Request $request, OrderVehicleIssue $orderVehicleIssue): RedirectResponse
     {
         $validated = $request->validate([
-            'issue_category' => ['required', 'in:mechanical,body,interior,safety,medical_equipment'],
+            'issue_category' => ['required', 'in:mechanical,body,interior,safety,medical_equipment,other'],
             'description' => ['required', 'string'],
             'priority' => ['required', 'in:low,medium,high,urgent'],
             'issue_photo' => ['nullable', 'image', 'max:2048'],

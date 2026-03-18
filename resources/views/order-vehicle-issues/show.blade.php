@@ -113,7 +113,7 @@
                 </div>
                 <div class="p-4">
                     @if($orderVehicleIssue->issue_photo)
-                        <img src="{{ Storage::disk('public')->url($orderVehicleIssue->issue_photo) }}" alt="Issue photo" class="rounded-md max-h-64 w-full object-contain bg-gray-100 dark:bg-gray-900">
+                        <img src="{{ asset('storage/'.$orderVehicleIssue->issue_photo) }}" alt="Issue photo" class="rounded-md max-h-64 w-full object-contain bg-gray-100 dark:bg-gray-900">
                     @else
                         <p class="text-sm text-gray-500 dark:text-gray-400">No issue photo uploaded.</p>
                     @endif
@@ -126,7 +126,7 @@
                 </div>
                 <div class="p-4">
                     @if($orderVehicleIssue->repair_photo)
-                        <img src="{{ Storage::disk('public')->url($orderVehicleIssue->repair_photo) }}" alt="Repair photo" class="rounded-md max-h-64 w-full object-contain bg-gray-100 dark:bg-gray-900">
+                        <img src="{{ asset('storage/'.$orderVehicleIssue->repair_photo) }}" alt="Repair photo" class="rounded-md max-h-64 w-full object-contain bg-gray-100 dark:bg-gray-900">
                     @else
                         <p class="text-sm text-gray-500 dark:text-gray-400">No repair photo uploaded.</p>
                     @endif

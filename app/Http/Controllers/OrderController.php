@@ -9,6 +9,9 @@ use App\Models\OrderAmbulance;
 use App\Models\OrderCrew;
 use App\Models\OrderPhoto;
 use App\Models\OrderStatus;
+use App\Models\OrderReport;
+use App\Models\OrderExpense;
+use App\Models\OrderEtollTransaction;
 use App\Models\OrderTowing;
 use App\Models\Unit;
 use Illuminate\Http\RedirectResponse;
@@ -222,6 +225,10 @@ class OrderController extends Controller
             'orderTowing', 
             'orderCrews.employee.position',
             'orderPhotos',
+            'orderReport',
+            'orderExpenses',
+            'orderEtollTransactions',
+            'orderVehicleIssues',
             'createdBy',
             'updatedBy'
         ]);
@@ -231,7 +238,16 @@ class OrderController extends Controller
 
     public function edit(Order $order): View
     {
-        $order->load(['orderAmbulance', 'orderTowing', 'orderCrews', 'orderPhotos']);
+        $order->load([
+            'orderAmbulance',
+            'orderTowing',
+            'orderCrews',
+            'orderPhotos',
+            'orderReport',
+            'orderExpenses',
+            'orderEtollTransactions',
+            'orderVehicleIssues',
+        ]);
         $divisions = Division::orderBy('nama')->get();
         $orderStatuses = OrderStatus::orderBy('name')->get();
         $employees = Employee::with('position')->where('status', 'active')->orderBy('full_name')->get();
@@ -242,9 +258,174 @@ class OrderController extends Controller
 
     public function update(Request $request, Order $order): RedirectResponse
     {
+        $section = $request->input('update_section', 'basic');
+
+        if ($section === 'order_report') {
+            $validated = $request->validate([
+                'km_awal' => ['nullable', 'numeric', 'min:0'],
+                'km_akhir' => ['nullable', 'numeric', 'min:0'],
+                'status' => ['nullable', 'string', 'max:50'],
+                'notes' => ['nullable', 'string'],
+            ]);
+            DB::beginTransaction();
+            try {
+                OrderReport::updateOrCreate(
+                    ['order_id' => $order->id],
+                    [
+                        'km_awal' => $validated['km_awal'] ?? 0,
+                        'km_akhir' => $validated['km_akhir'] ?? 0,
+                        'status' => $validated['status'] ?? 'draft',
+                        'notes' => $validated['notes'] ?? null,
+                        'updated_by' => auth()->id(),
+                        'created_by' => $order->orderReport->created_by ?? auth()->id(),
+                    ]
+                );
+                DB::commit();
+                return redirect()->route('orders.edit', $order)->with('status', 'Order report berhasil diupdate.');
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return back()->withErrors(['error' => 'Gagal update order report: ' . $e->getMessage()]);
+            }
+        }
+
+        if ($section === 'order_expenses') {
+            $validated = $request->validate([
+                'expenses' => ['nullable', 'array'],
+                'expenses.*.expense_category' => ['required_with:expenses.*.amount', 'string', 'max:50'],
+                'expenses.*.description' => ['nullable', 'string'],
+                'expenses.*.amount' => ['nullable', 'numeric', 'min:0'],
+            ]);
+            DB::beginTransaction();
+            try {
+                $items = $validated['expenses'] ?? [];
+                foreach ($items as $i => $item) {
+                    if (!isset($item['amount']) || $item['amount'] === null) {
+                        continue;
+                    }
+                    $receiptPath = null;
+                    if ($request->hasFile('expenses.'.$i.'.receipt_photo')) {
+                        $receiptPath = $request->file('expenses.'.$i.'.receipt_photo')
+                            ->store('order-expenses/'.$order->id, 'public');
+                    }
+                    OrderExpense::create([
+                        'order_id' => $order->id,
+                        'expense_category' => $item['expense_category'] ?? 'lainnya',
+                        'description' => $item['description'] ?? null,
+                        'amount' => $item['amount'],
+                        'receipt_photo' => $receiptPath,
+                        'created_by' => auth()->id(),
+                    ]);
+                }
+                DB::commit();
+                return redirect()->route('orders.edit', $order)->with('status', 'Order expenses berhasil disimpan.');
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return back()->withErrors(['error' => 'Gagal menyimpan order expenses: ' . $e->getMessage()]);
+            }
+        }
+
+        if ($section === 'order_etoll') {
+            $validated = $request->validate([
+                'etolls' => ['nullable', 'array'],
+                'etolls.*.balance_before' => ['nullable', 'numeric', 'min:0'],
+                'etolls.*.balance_after' => ['nullable', 'numeric', 'min:0'],
+            ]);
+            DB::beginTransaction();
+            try {
+                $rows = $validated['etolls'] ?? [];
+                foreach ($rows as $i => $row) {
+                    $balanceBefore = $row['balance_before'] ?? null;
+                    $balanceAfter = $row['balance_after'] ?? null;
+                    $hasFile = $request->hasFile('etolls.'.$i.'.receipt_photo');
+                    if ($balanceBefore === null && $balanceAfter === null && !$hasFile) {
+                        continue;
+                    }
+                    $receiptPath = null;
+                    if ($hasFile) {
+                        $receiptPath = $request->file('etolls.'.$i.'.receipt_photo')
+                            ->store('order-etoll/'.$order->id, 'public');
+                    }
+                    OrderEtollTransaction::create([
+                        'order_id' => $order->id,
+                        'topup_amount' => null,
+                        'usage_amount' => null,
+                        'balance_before' => $balanceBefore ?? 0,
+                        'balance_after' => $balanceAfter ?? 0,
+                        'receipt_photo' => $receiptPath,
+                        'created_by' => auth()->id(),
+                    ]);
+                }
+                DB::commit();
+                return redirect()->route('orders.edit', $order)->with('status', 'Data e-toll berhasil disimpan.');
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return back()->withErrors(['error' => 'Gagal menyimpan data e-toll: ' . $e->getMessage()]);
+            }
+        }
+
+        if ($section === 'crew') {
+            $validated = $request->validate([
+                'crew_ids' => ['nullable', 'array'],
+                'crew_ids.*' => ['exists:employees,id'],
+            ]);
+            DB::beginTransaction();
+            try {
+                $order->orderCrews()->delete();
+                $crewIds = $validated['crew_ids'] ?? [];
+                if (!empty($crewIds)) {
+                    foreach ($crewIds as $employeeId) {
+                        $employee = Employee::with('position')->find($employeeId);
+                        if (!$employee) continue;
+                        OrderCrew::create([
+                            'order_id' => $order->id,
+                            'employee_id' => $employeeId,
+                            'role' => $employee->position->nama ?? null,
+                            'created_by' => auth()->id(),
+                        ]);
+                    }
+                }
+                DB::commit();
+                return redirect()->route('orders.edit', $order)->with('status', 'Crew berhasil diupdate.');
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return back()->withErrors(['error' => 'Gagal update crew: ' . $e->getMessage()]);
+            }
+        }
+
+        if ($section === 'photos') {
+            $validated = $request->validate([
+                'photos' => ['nullable', 'array'],
+                'photos.*' => ['image', 'mimes:jpeg,png,jpg', 'max:2048'],
+                'photo_titles' => ['nullable', 'array'],
+                'photo_descriptions' => ['nullable', 'array'],
+            ]);
+            DB::beginTransaction();
+            try {
+                if ($request->hasFile('photos')) {
+                    foreach ($request->file('photos') as $index => $photo) {
+                        $path = $photo->store('orders/' . $order->id, 'public');
+                        OrderPhoto::create([
+                            'order_id' => $order->id,
+                            'title' => $validated['photo_titles'][$index] ?? 'Photo ' . ($index + 1),
+                            'description' => $validated['photo_descriptions'][$index] ?? null,
+                            'path' => $path,
+                            'created_by' => auth()->id(),
+                        ]);
+                    }
+                }
+                DB::commit();
+                return redirect()->route('orders.edit', $order)->with('status', 'Foto berhasil ditambah.');
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return back()->withErrors(['error' => 'Gagal menambah foto: ' . $e->getMessage()]);
+            }
+        }
+
+        // default: basic
         $validated = $request->validate([
             'division_id' => ['required', 'exists:divisions,id'],
             'order_status_id' => ['required', 'exists:order_statuses,id'],
+            'unit_code' => ['nullable', 'string', 'max:255'],
             'customer_name' => ['required', 'string', 'max:255'],
             'customer_phone' => ['required', 'string', 'max:255'],
             'pickup_address' => ['required', 'string'],
@@ -253,22 +434,12 @@ class OrderController extends Controller
             'price' => ['required', 'numeric', 'min:0'],
             'payment_method' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string'],
-            
             'patient_condition' => ['nullable', 'string'],
             'medical_needs' => ['nullable', 'string'],
-            
             'car_type' => ['nullable', 'string'],
             'car_condition' => ['nullable', 'string'],
             'receiver_phone' => ['nullable', 'string'],
             'payment_requirement' => ['nullable', 'string'],
-            
-            'crew_ids' => ['nullable', 'array'],
-            'crew_ids.*' => ['exists:employees,id'],
-            
-            'photos' => ['nullable', 'array'],
-            'photos.*' => ['image', 'mimes:jpeg,png,jpg', 'max:2048'],
-            'photo_titles' => ['nullable', 'array'],
-            'photo_descriptions' => ['nullable', 'array'],
         ]);
 
         DB::beginTransaction();
@@ -276,6 +447,7 @@ class OrderController extends Controller
             $order->update([
                 'division_id' => $validated['division_id'],
                 'order_status_id' => $validated['order_status_id'],
+                'unit_code' => $validated['unit_code'] ?? null,
                 'customer_name' => $validated['customer_name'],
                 'customer_phone' => $validated['customer_phone'],
                 'pickup_address' => $validated['pickup_address'],
@@ -288,67 +460,34 @@ class OrderController extends Controller
             ]);
 
             $division = Division::find($validated['division_id']);
-
-            // Update or create ambulance details
             if ($division->nama === 'Royal Ambulance') {
                 OrderAmbulance::updateOrCreate(
                     ['order_id' => $order->id],
                     [
-                        'patient_condition' => $validated['patient_condition'],
-                        'medical_needs' => $validated['medical_needs'],
+                        'patient_condition' => $validated['patient_condition'] ?? null,
+                        'medical_needs' => $validated['medical_needs'] ?? null,
                         'updated_by' => auth()->id(),
                     ]
                 );
             }
-
-            // Update or create towing details
             if ($division->nama === 'Royal Towing') {
                 OrderTowing::updateOrCreate(
                     ['order_id' => $order->id],
                     [
-                        'car_type' => $validated['car_type'],
-                        'car_condition' => $validated['car_condition'],
-                        'receiver_phone' => $validated['receiver_phone'],
-                        'payment_requirement' => $validated['payment_requirement'],
+                        'car_type' => $validated['car_type'] ?? null,
+                        'car_condition' => $validated['car_condition'] ?? null,
+                        'receiver_phone' => $validated['receiver_phone'] ?? null,
+                        'payment_requirement' => $validated['payment_requirement'] ?? null,
                         'updated_by' => auth()->id(),
                     ]
                 );
             }
 
-            // Update crews
-            $order->orderCrews()->delete();
-            if (!empty($validated['crew_ids'])) {
-                foreach ($validated['crew_ids'] as $index => $employeeId) {
-                    OrderCrew::create([
-                        'order_id' => $order->id,
-                        'employee_id' => $employeeId,
-                        'role' => $validated['crew_roles'][$index] ?? null,
-                        'created_by' => auth()->id(),
-                    ]);
-                }
-            }
-
-            // Add new photos
-            if ($request->hasFile('photos')) {
-                foreach ($request->file('photos') as $index => $photo) {
-                    $path = $photo->store('orders/' . $order->id, 'public');
-                    
-                    OrderPhoto::create([
-                        'order_id' => $order->id,
-                        'title' => $validated['photo_titles'][$index] ?? 'Photo ' . ($index + 1),
-                        'description' => $validated['photo_descriptions'][$index] ?? null,
-                        'path' => $path,
-                        'created_by' => auth()->id(),
-                    ]);
-                }
-            }
-
             DB::commit();
-
-            return to_route('orders.index')->with('status', 'Order updated successfully.');
+            return redirect()->route('orders.edit', $order)->with('status', 'Order berhasil diupdate.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withInput()->withErrors(['error' => 'Failed to update order: ' . $e->getMessage()]);
+            return back()->withInput()->withErrors(['error' => 'Gagal update order: ' . $e->getMessage()]);
         }
     }
 

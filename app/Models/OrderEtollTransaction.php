@@ -13,6 +13,7 @@ class OrderEtollTransaction extends Model
         'usage_amount',
         'balance_before',
         'balance_after',
+        'receipt_photo',
         'created_by',
     ];
 

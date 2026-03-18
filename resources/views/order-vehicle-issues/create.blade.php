@@ -35,6 +35,7 @@
                         <option value="interior" @selected(old('issue_category') === 'interior')>Interior</option>
                         <option value="safety" @selected(old('issue_category') === 'safety')>Safety Equipment</option>
                         <option value="medical_equipment" @selected(old('issue_category') === 'medical_equipment')>Medical Equipment</option>
+                        <option value="other" @selected(old('issue_category') === 'other')>Other</option>
                     </select>
                     @error('issue_category')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>

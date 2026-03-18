@@ -22,16 +22,11 @@
                     <x-button type="secondary">Edit Order</x-button>
                 </a>
             @endif
-            @if(auth()->user()->hasPermission('edit-orders'))
-                <a href="{{ route('order-vehicle-issues.create', $order) }}">
-                    <x-button type="primary">Tambah Vehicle Issue</x-button>
-                </a>
-            @endif
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 space-y-6">
+    <div class="space-y-6">
+        <div class="space-y-6">
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div class="p-6">
                     <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Informasi Order</h2>
@@ -86,6 +81,53 @@
                 </div>
             </div>
 
+            {{-- Order Report --}}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="p-6">
+                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Order Report</h2>
+                    @if(!$order->orderReport)
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada order report untuk order ini.</p>
+                    @else
+                        <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">KM Awal</dt>
+                                <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->orderReport->km_awal }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">KM Akhir</dt>
+                                <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->orderReport->km_akhir }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Total KM</dt>
+                                <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->orderReport->km_total }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</dt>
+                                <dd class="text-base text-gray-900 dark:text-gray-100 capitalize">{{ $order->orderReport->status }}</dd>
+                            </div>
+                            @if($order->orderReport->submitted_at)
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Submitted At</dt>
+                                    <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->orderReport->submitted_at?->format('d M Y H:i') }}</dd>
+                                </div>
+                            @endif
+                            @if($order->orderReport->approved_at)
+                                <div>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Approved At</dt>
+                                    <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->orderReport->approved_at?->format('d M Y H:i') }}</dd>
+                                </div>
+                            @endif
+                            @if($order->orderReport->notes)
+                                <div class="md:col-span-2">
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Notes</dt>
+                                    <dd class="text-base text-gray-900 dark:text-gray-100 whitespace-pre-line">{{ $order->orderReport->notes }}</dd>
+                                </div>
+                            @endif
+                        </dl>
+                    @endif
+                </div>
+            </div>
+
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div class="p-6">
                     <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Crew</h2>
@@ -105,33 +147,134 @@
                     @endif
                 </div>
             </div>
-        </div>
 
-        <div class="space-y-6">
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-                    <h2 class="text-sm font-semibold text-gray-800 dark:text-gray-100">Vehicle Issues</h2>
-                </div>
-                <div class="p-4 space-y-2">
-                    @php
-                        $issues = $order->orderVehicleIssues()->latest()->take(5)->get();
-                    @endphp
-                    @if($issues->isEmpty())
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada vehicle issue untuk order ini.</p>
+                <div class="p-6">
+                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Photos</h2>
+                    @if($order->orderPhotos->isEmpty())
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada foto untuk order ini.</p>
                     @else
-                        <ul class="space-y-2">
-                            @foreach($issues as $issue)
-                                <li class="text-sm">
-                                    <a href="{{ route('order-vehicle-issues.show', $issue) }}" class="text-blue-600 dark:text-blue-400 hover:underline font-medium">
-                                        {{ \App\Models\OrderVehicleIssue::getCategoryLabel($issue->issue_category) }} - {{ \App\Models\OrderVehicleIssue::getPriorityLabel($issue->priority) }}
-                                    </a>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ $issue->created_at->format('d M Y H:i') }}</p>
-                                </li>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            @foreach($order->orderPhotos as $photo)
+                                <div class="space-y-2">
+                                    <img src="{{ asset('storage/'.$photo->path) }}"
+                                         alt="{{ $photo->title }}"
+                                         class="rounded-md w-full object-cover max-h-40 bg-gray-100 dark:bg-gray-900">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $photo->title }}</p>
+                                        @if($photo->description)
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ $photo->description }}</p>
+                                        @endif
+                                    </div>
+                                </div>
                             @endforeach
-                        </ul>
-                        <a href="{{ route('order-vehicle-issues.index') }}" class="inline-block mt-2 text-xs text-blue-600 dark:text-blue-400 hover:underline">Lihat semua vehicle issues</a>
+                        </div>
                     @endif
                 </div>
+            </div>
+
+            {{-- Order Expenses --}}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="p-6">
+                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Order Expenses</h2>
+                    @if($order->orderExpenses->isEmpty())
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada pengeluaran untuk order ini.</p>
+                    @else
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-gray-200 dark:border-gray-700 text-xs uppercase text-gray-500 dark:text-gray-400">
+                                        <th class="py-2 pr-4 text-left">Kategori</th>
+                                        <th class="py-2 pr-4 text-left">Deskripsi</th>
+                                        <th class="py-2 pr-4 text-right">Jumlah</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                    @foreach($order->orderExpenses as $expense)
+                                        <tr>
+                                            <td class="py-2 pr-4 text-gray-900 dark:text-gray-100">
+                                                {{ \App\Models\OrderExpense::getCategoryLabel($expense->expense_category) }}
+                                            </td>
+                                            <td class="py-2 pr-4 text-gray-900 dark:text-gray-100">
+                                                {{ $expense->description ?? '-' }}
+                                            </td>
+                                            <td class="py-2 pr-4 text-right text-gray-900 dark:text-gray-100">
+                                                Rp {{ number_format($expense->amount, 0, ',', '.') }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- E-Toll Transactions --}}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="p-6">
+                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">E-Toll</h2>
+                    @if($order->orderEtollTransactions->isEmpty())
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada transaksi e-toll untuk order ini.</p>
+                    @else
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-gray-200 dark:border-gray-700 text-xs uppercase text-gray-500 dark:text-gray-400">
+                                        <th class="py-2 pr-4 text-right">Saldo Sebelum</th>
+                                        <th class="py-2 pr-4 text-right">Saldo Sesudah</th>
+                                        <th class="py-2 pr-4 text-left">Foto</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                    @foreach($order->orderEtollTransactions as $trx)
+                                        <tr>
+                                            <td class="py-2 pr-4 text-right text-gray-900 dark:text-gray-100">
+                                                Rp {{ number_format($trx->balance_before ?? 0, 0, ',', '.') }}
+                                            </td>
+                                            <td class="py-2 pr-4 text-right text-gray-900 dark:text-gray-100">
+                                                Rp {{ number_format($trx->balance_after ?? 0, 0, ',', '.') }}
+                                            </td>
+                                            <td class="py-2 pr-4">
+                                                @if($trx->receipt_photo ?? null)
+                                                    <a href="{{ asset('storage/'.$trx->receipt_photo) }}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline text-xs">Lihat foto</a>
+                                                @else
+                                                    <span class="text-gray-400 text-xs">-</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        {{-- Vehicle Issues, susunan sama seperti di halaman edit, ditaruh di bawah --}}
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="p-6">
+                <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Vehicle Issues</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Daftar vehicle issue untuk order ini.</p>
+
+                @if($order->orderVehicleIssues->isEmpty())
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada vehicle issue.</p>
+                @else
+                    <ul class="space-y-2">
+                        @foreach($order->orderVehicleIssues as $issue)
+                            <li class="flex items-center gap-3 py-2 border-b border-gray-200 dark:border-gray-700 last:border-0">
+                                <span class="text-gray-700 dark:text-gray-300">
+                                    {{ \App\Models\OrderVehicleIssue::getCategoryLabel($issue->issue_category ?? '') }} – {{ \Illuminate\Support\Str::limit($issue->description, 40) }}
+                                </span>
+                                <a href="{{ route('order-vehicle-issues.show', $issue) }}" class="text-blue-600 dark:text-blue-400 hover:underline text-sm">Lihat</a>
+                                @if(auth()->user()->hasPermission('edit-orders'))
+                                    <a href="{{ route('order-vehicle-issues.edit', $issue) }}" class="text-gray-600 dark:text-gray-400 hover:underline text-sm">Edit</a>
+                                @endif
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
             </div>
         </div>
     </div>

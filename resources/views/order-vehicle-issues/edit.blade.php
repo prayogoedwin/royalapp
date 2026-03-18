@@ -36,6 +36,7 @@
                         <option value="interior" @selected(old('issue_category', $orderVehicleIssue->issue_category) === 'interior')>Interior</option>
                         <option value="safety" @selected(old('issue_category', $orderVehicleIssue->issue_category) === 'safety')>Safety Equipment</option>
                         <option value="medical_equipment" @selected(old('issue_category', $orderVehicleIssue->issue_category) === 'medical_equipment')>Medical Equipment</option>
+                        <option value="other" @selected(old('issue_category', $orderVehicleIssue->issue_category) === 'other')>Other</option>
                     </select>
                     @error('issue_category')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
@@ -63,7 +64,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Issue Photo</label>
                     @if($orderVehicleIssue->issue_photo)
-                        <img src="{{ Storage::disk('public')->url($orderVehicleIssue->issue_photo) }}" alt="Issue photo" class="mb-2 rounded-md max-h-40">
+                        <img src="{{ asset('storage/'.$orderVehicleIssue->issue_photo) }}" alt="Issue photo" class="mb-2 rounded-md max-h-40 w-full object-contain bg-gray-100 dark:bg-gray-900">
                     @endif
                     <input type="file" name="issue_photo" accept="image/*" class="block w-full text-sm text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Upload untuk mengganti foto kerusakan (opsional).</p>
@@ -73,7 +74,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Repair Photo</label>
                     @if($orderVehicleIssue->repair_photo)
-                        <img src="{{ Storage::disk('public')->url($orderVehicleIssue->repair_photo) }}" alt="Repair photo" class="mb-2 rounded-md max-h-40">
+                        <img src="{{ asset('storage/'.$orderVehicleIssue->repair_photo) }}" alt="Repair photo" class="mb-2 rounded-md max-h-40 w-full object-contain bg-gray-100 dark:bg-gray-900">
                     @endif
                     <input type="file" name="repair_photo" accept="image/*" class="block w-full text-sm text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Upload foto setelah perbaikan (opsional).</p>

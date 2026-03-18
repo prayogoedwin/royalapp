@@ -53,6 +53,7 @@ class OrderVehicleIssue extends Model
             'interior' => 'Interior',
             'safety' => 'Safety Equipment',
             'medical_equipment' => 'Medical Equipment',
+            'other' => 'Other',
             default => $category,
         };
     }
