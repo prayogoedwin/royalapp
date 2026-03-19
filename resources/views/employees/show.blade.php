@@ -26,6 +26,25 @@
                     <x-button type="primary">{{ __('Edit Employee') }}</x-button>
                 </a>
             @endif
+            @php
+                $myEmployeeId = auth()->user()?->employee?->id;
+                $presensiHref = ($myEmployeeId && (int)$myEmployeeId === (int)$employee->id)
+                    ? route('presensi.my')
+                    : route('employees.presensi', $employee);
+            @endphp
+            @if($myEmployeeId && (int)$myEmployeeId === (int)$employee->id)
+                @if(auth()->user()->hasPermission('view-presensi'))
+                    <a href="{{ $presensiHref }}">
+                        <x-button type="secondary">{{ __('Lihat Presensi') }}</x-button>
+                    </a>
+                @endif
+            @else
+                @if(auth()->user()->hasPermission('view-presensi-all'))
+                    <a href="{{ $presensiHref }}">
+                        <x-button type="secondary">{{ __('Lihat Presensi') }}</x-button>
+                    </a>
+                @endif
+            @endif
             <a href="{{ route('employees.index') }}">
                 <x-button type="secondary">{{ __('Back') }}</x-button>
             </a>
@@ -118,6 +137,15 @@
                             </label>
                             <div class="text-gray-900 dark:text-gray-100">
                                 {{ $employee->division->nama }}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                {{ __('Pool') }}
+                            </label>
+                            <div class="text-gray-900 dark:text-gray-100">
+                                {{ $employee->pool->pool_name ?? '-' }}
                             </div>
                         </div>
 

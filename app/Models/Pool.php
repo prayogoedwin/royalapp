@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Pool extends Model
 {
@@ -21,8 +21,8 @@ class Pool extends Model
     ];
 
     protected $casts = [
-        'lat' => 'decimal:6',
-        'lng' => 'decimal:6',
+        'lat' => 'decimal:8',
+        'lng' => 'decimal:8',
     ];
 
     public function createdBy(): BelongsTo

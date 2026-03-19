@@ -92,6 +92,35 @@ Route::middleware(['auth'])->group(function () {
     Route::put('employees/{employee}', [\App\Http\Controllers\EmployeeController::class, 'update'])->name('employees.update')->middleware('permission:edit-employees');
     Route::delete('employees/{employee}', [\App\Http\Controllers\EmployeeController::class, 'destroy'])->name('employees.destroy')->middleware('permission:delete-employees');
 
+    // Presensi / Absensi
+    Route::get('employees/{employee}/presensi', [\App\Http\Controllers\AbsensiController::class, 'showEmployeePresensi'])
+        ->name('employees.presensi')
+        ->middleware('permission:view-presensi-all|edit-absensi-status');
+    Route::get('employees/{employee}/presensi/print', [\App\Http\Controllers\AbsensiController::class, 'exportEmployeePresensiPdf'])
+        ->name('employees.presensi.print')
+        ->middleware('permission:view-presensi-all|edit-absensi-status');
+    Route::get('presensi', [\App\Http\Controllers\AbsensiController::class, 'showMyPresensi'])
+        ->name('presensi.my')
+        ->middleware('permission:view-presensi');
+    Route::get('presensi/print', [\App\Http\Controllers\AbsensiController::class, 'exportMyPresensiPdf'])
+        ->name('presensi.print')
+        ->middleware('permission:view-presensi');
+    Route::get('absensi/today', [\App\Http\Controllers\AbsensiController::class, 'showAllEmployeesToday'])
+        ->name('absensi.today.all')
+        ->middleware('permission:view-presensi-all');
+    Route::post('presensi/masuk', [\App\Http\Controllers\AbsensiController::class, 'storeMasuk'])
+        ->name('presensi.masuk')
+        ->middleware('permission:create-absensi-masuk');
+    Route::post('presensi/pulang', [\App\Http\Controllers\AbsensiController::class, 'storePulang'])
+        ->name('presensi.pulang')
+        ->middleware('permission:create-absensi-pulang');
+    Route::put('absensis/{absensi}/status', [\App\Http\Controllers\AbsensiController::class, 'adminUpdateStatus'])
+        ->name('absensis.status.update')
+        ->middleware('permission:edit-absensi-status');
+    Route::post('employees/{employee}/presensi/status', [\App\Http\Controllers\AbsensiController::class, 'adminUpsertStatusForDate'])
+        ->name('absensis.status.upsert-by-date')
+        ->middleware('permission:edit-absensi-status');
+
     // Orders Management
     Route::get('orders', [\App\Http\Controllers\OrderController::class, 'index'])->name('orders.index')->middleware('permission:view-orders');
     Route::get('orders/create', [\App\Http\Controllers\OrderController::class, 'create'])->name('orders.create')->middleware('permission:create-orders');
@@ -142,6 +171,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('units/{unit}/edit', [\App\Http\Controllers\UnitController::class, 'edit'])->name('units.edit')->middleware('permission:edit-units');
     Route::put('units/{unit}', [\App\Http\Controllers\UnitController::class, 'update'])->name('units.update')->middleware('permission:edit-units');
     Route::delete('units/{unit}', [\App\Http\Controllers\UnitController::class, 'destroy'])->name('units.destroy')->middleware('permission:delete-units');
+
+    // Pools Management
+    Route::get('pools', [\App\Http\Controllers\PoolController::class, 'index'])->name('pools.index')->middleware('permission:view-pools');
+    Route::get('pools/create', [\App\Http\Controllers\PoolController::class, 'create'])->name('pools.create')->middleware('permission:create-pools');
+    Route::post('pools', [\App\Http\Controllers\PoolController::class, 'store'])->name('pools.store')->middleware('permission:create-pools');
+    Route::get('pools/{pool}', [\App\Http\Controllers\PoolController::class, 'show'])->name('pools.show')->middleware('permission:show-pools');
+    Route::get('pools/{pool}/edit', [\App\Http\Controllers\PoolController::class, 'edit'])->name('pools.edit')->middleware('permission:edit-pools');
+    Route::put('pools/{pool}', [\App\Http\Controllers\PoolController::class, 'update'])->name('pools.update')->middleware('permission:edit-pools');
+    Route::delete('pools/{pool}', [\App\Http\Controllers\PoolController::class, 'destroy'])->name('pools.destroy')->middleware('permission:delete-pools');
 });
 
 require __DIR__.'/auth.php';

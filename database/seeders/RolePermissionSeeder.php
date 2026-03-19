@@ -70,6 +70,20 @@ class RolePermissionSeeder extends Seeder
             'create-units',
             'edit-units',
             'delete-units',
+            // pools
+            'view-pools',
+            'show-pools',
+            'create-pools',
+            'edit-pools',
+            'delete-pools',
+            // absensi (status admin)
+            'edit-absensi-status',
+            // presensi views permissions
+            'view-presensi',
+            'view-presensi-all',
+            // absensi input permissions
+            'create-absensi-masuk',
+            'create-absensi-pulang',
             // order vehicle issues
             'view-order-vehicle-issues',
             'show-order-vehicle-issues',
@@ -115,6 +129,7 @@ class RolePermissionSeeder extends Seeder
                 'view-employees', 'show-employees',
                 'view-orders', 'show-orders',
                 'view-units', 'show-units',
+                'view-pools', 'show-pools',
                 'view-order-vehicle-issues', 'show-order-vehicle-issues',
             ])->pluck('id')
         );
@@ -127,6 +142,12 @@ class RolePermissionSeeder extends Seeder
                 'create-order-expenses', 'delete-order-expenses',
                 'create-order-etoll', 'delete-order-etoll',
                 'create-order-photos', 'delete-order-photos',
+                'view-pools', 'show-pools', 'create-pools', 'edit-pools', 'delete-pools',
+                'edit-absensi-status',
+                'view-presensi',
+                'view-presensi-all',
+                'create-absensi-masuk',
+                'create-absensi-pulang',
                 'view-order-vehicle-issues', 'show-order-vehicle-issues', 'create-order-vehicle-issues', 'edit-order-vehicle-issues', 'delete-order-vehicle-issues',
             ])->pluck('id')
         );
@@ -138,6 +159,12 @@ class RolePermissionSeeder extends Seeder
                 'create-order-expenses', 'delete-order-expenses',
                 'create-order-etoll', 'delete-order-etoll',
                 'create-order-photos', 'delete-order-photos',
+                'view-pools', 'show-pools', 'create-pools', 'edit-pools', 'delete-pools',
+                'edit-absensi-status',
+                'view-presensi',
+                'view-presensi-all',
+                'create-absensi-masuk',
+                'create-absensi-pulang',
                 'view-order-vehicle-issues', 'show-order-vehicle-issues', 'create-order-vehicle-issues', 'edit-order-vehicle-issues',
             ])->pluck('id')
         );
@@ -147,6 +174,9 @@ class RolePermissionSeeder extends Seeder
             Permission::whereIn('name', [
                 'view-orders', 'show-orders',
                 'edit-order-report',
+                'view-presensi',
+                'create-absensi-masuk',
+                'create-absensi-pulang',
                 'create-order-expenses', 'delete-order-expenses',
                 'create-order-etoll', 'delete-order-etoll',
                 'create-order-photos',

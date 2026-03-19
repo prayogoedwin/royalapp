@@ -13,7 +13,7 @@ class PoolController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $pools = Pool::query()->select('pools.*');
+            $pools = Pool::select('pools.*');
 
             return DataTables::of($pools)
                 ->addColumn('actions', function (Pool $pool) {
@@ -28,16 +28,16 @@ class PoolController extends Controller
                     }
 
                     if (auth()->user()->hasPermission('delete-pools')) {
-                        $actions .= '<form action="' . route('pools.destroy', $pool) . '" method="POST" class="inline" onsubmit="return confirm(\'Are you sure?\')">
-                            ' . csrf_field() . method_field('DELETE') . '
-                            <button type="submit" class="text-red-600 dark:text-red-400 hover:underline">Delete</button>
-                        </form>';
+                        $actions .= '<form action="' . route('pools.destroy', $pool) . '" method="POST" class="inline" onsubmit="return confirm(\'Are you sure?\')">'
+                            . csrf_field() . method_field('DELETE')
+                            . '<button type="submit" class="text-red-600 dark:text-red-400 hover:underline">Delete</button>'
+                            . '</form>';
                     }
 
                     return $actions ?: '-';
                 })
                 ->editColumn('created_at', function (Pool $pool) {
-                    return $pool->created_at?->format('M d, Y') ?? '-';
+                    return $pool->created_at?->format('M d, Y');
                 })
                 ->rawColumns(['actions'])
                 ->make(true);
@@ -56,14 +56,14 @@ class PoolController extends Controller
         $validated = $request->validate([
             'pool_name' => ['required', 'string', 'max:255'],
             'address' => ['nullable', 'string'],
-            'lat' => ['nullable', 'numeric', 'min:-90', 'max:90'],
-            'lng' => ['nullable', 'numeric', 'min:-180', 'max:180'],
+            'lat' => ['nullable', 'numeric', 'between:-90,90'],
+            'lng' => ['nullable', 'numeric', 'between:-180,180'],
         ]);
 
-        Pool::create([
-            ...$validated,
-            'created_by' => auth()->id(),
-        ]);
+        $validated['created_by'] = auth()->id();
+        $validated['updated_by'] = auth()->id();
+
+        Pool::create($validated);
 
         return to_route('pools.index')->with('status', 'Pool created successfully.');
     }
@@ -76,7 +76,6 @@ class PoolController extends Controller
 
     public function edit(Pool $pool): View
     {
-        $pool->load(['createdBy', 'updatedBy', 'deletedBy']);
         return view('pools.edit', compact('pool'));
     }
 
@@ -85,19 +84,18 @@ class PoolController extends Controller
         $validated = $request->validate([
             'pool_name' => ['required', 'string', 'max:255'],
             'address' => ['nullable', 'string'],
-            'lat' => ['nullable', 'numeric', 'min:-90', 'max:90'],
-            'lng' => ['nullable', 'numeric', 'min:-180', 'max:180'],
+            'lat' => ['nullable', 'numeric', 'between:-90,90'],
+            'lng' => ['nullable', 'numeric', 'between:-180,180'],
         ]);
 
-        $pool->update([
-            ...$validated,
-            'updated_by' => auth()->id(),
-        ]);
+        $validated['updated_by'] = auth()->id();
+
+        $pool->update($validated);
 
         return to_route('pools.index')->with('status', 'Pool updated successfully.');
     }
 
-    public function destroy(Request $request, Pool $pool): RedirectResponse
+    public function destroy(Pool $pool): RedirectResponse
     {
         $pool->update(['deleted_by' => auth()->id()]);
         $pool->delete();

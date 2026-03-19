@@ -14,6 +14,7 @@ class Employee extends Model
         'user_id',
         'position_id',
         'division_id',
+        'pool_id',
         'employee_type_id',
         'nik',
         'full_name',
@@ -49,5 +50,10 @@ class Employee extends Model
     public function employeeType(): BelongsTo
     {
         return $this->belongsTo(EmployeeType::class);
+    }
+
+    public function pool(): BelongsTo
+    {
+        return $this->belongsTo(Pool::class);
     }
 }

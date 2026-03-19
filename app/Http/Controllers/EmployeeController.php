@@ -6,6 +6,7 @@ use App\Models\Division;
 use App\Models\Employee;
 use App\Models\EmployeeType;
 use App\Models\Position;
+use App\Models\Pool;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -47,6 +48,10 @@ class EmployeeController extends Controller
                 })
                 ->addColumn('actions', function ($employee) {
                     $actions = '';
+
+                    $myEmployeeId = auth()->user()?->employee?->id;
+                    $canViewPresensi = auth()->user()->hasPermission('view-presensi');
+                    $canViewPresensiAll = auth()->user()->hasPermission('view-presensi-all');
                     
                     if (auth()->user()->hasPermission('show-employees')) {
                         $actions .= '<a href="' . route('employees.show', $employee) . '" class="text-green-600 dark:text-green-400 hover:underline mr-3">View</a>';
@@ -61,6 +66,15 @@ class EmployeeController extends Controller
                             ' . csrf_field() . method_field('DELETE') . '
                             <button type="submit" class="text-red-600 dark:text-red-400 hover:underline">Delete</button>
                         </form>';
+                    }
+
+                    // Presensi button: allow self, or admin with edit-absensi-status permission
+                    if ($myEmployeeId && (int) $employee->id === (int) $myEmployeeId) {
+                        if ($canViewPresensi) {
+                            $actions .= '<a href="' . route('presensi.my') . '" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Presensi</a>';
+                        }
+                    } elseif ($canViewPresensiAll) {
+                        $actions .= '<a href="' . route('employees.presensi', $employee) . '" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Presensi</a>';
                     }
                     
                     return $actions ?: '-';
@@ -81,8 +95,9 @@ class EmployeeController extends Controller
         $divisions = Division::orderBy('nama')->get();
         $employeeTypes = EmployeeType::orderBy('nama')->get();
         $roles = Role::orderBy('name')->get();
+        $pools = Pool::orderBy('pool_name')->get();
 
-        return view('employees.create', compact('positions', 'divisions', 'employeeTypes', 'roles'));
+        return view('employees.create', compact('positions', 'divisions', 'employeeTypes', 'roles', 'pools'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -104,6 +119,7 @@ class EmployeeController extends Controller
             'phone' => ['nullable', 'string', 'max:255'],
             'address' => ['nullable', 'string'],
             'birth_date' => ['nullable', 'date'],
+            'pool_id' => ['nullable', 'exists:pools,id'],
             'status' => ['required', 'in:active,inactive,resigned'],
             'join_date' => ['required', 'date'],
             'resign_date' => ['nullable', 'date', 'after:join_date'],
@@ -128,6 +144,7 @@ class EmployeeController extends Controller
                 'user_id' => $user->id,
                 'position_id' => $validated['position_id'],
                 'division_id' => $validated['division_id'],
+                'pool_id' => $validated['pool_id'] ?? null,
                 'employee_type_id' => $validated['employee_type_id'],
                 'nik' => $validated['nik'],
                 'full_name' => $validated['full_name'],
@@ -162,8 +179,9 @@ class EmployeeController extends Controller
         $divisions = Division::orderBy('nama')->get();
         $employeeTypes = EmployeeType::orderBy('nama')->get();
         $roles = Role::orderBy('name')->get();
+        $pools = Pool::orderBy('pool_name')->get();
 
-        return view('employees.edit', compact('employee', 'positions', 'divisions', 'employeeTypes', 'roles'));
+        return view('employees.edit', compact('employee', 'positions', 'divisions', 'employeeTypes', 'roles', 'pools'));
     }
 
     public function update(Request $request, Employee $employee): RedirectResponse
@@ -185,6 +203,7 @@ class EmployeeController extends Controller
             'phone' => ['nullable', 'string', 'max:255'],
             'address' => ['nullable', 'string'],
             'birth_date' => ['nullable', 'date'],
+            'pool_id' => ['nullable', 'exists:pools,id'],
             'status' => ['required', 'in:active,inactive,resigned'],
             'join_date' => ['required', 'date'],
             'resign_date' => ['nullable', 'date', 'after:join_date'],
@@ -226,6 +245,7 @@ class EmployeeController extends Controller
             $employee->update([
                 'position_id' => $validated['position_id'],
                 'division_id' => $validated['division_id'],
+                'pool_id' => $validated['pool_id'] ?? null,
                 'employee_type_id' => $validated['employee_type_id'],
                 'nik' => $validated['nik'],
                 'full_name' => $validated['full_name'],

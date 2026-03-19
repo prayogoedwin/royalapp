@@ -118,6 +118,24 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                {{ __('Pool') }}
+                            </label>
+                            <select name="pool_id"
+                                class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                                <option value="">{{ __('No Pool') }}</option>
+                                @foreach($pools as $pool)
+                                    <option value="{{ $pool->id }}" {{ old('pool_id', $employee->pool_id) == $pool->id ? 'selected' : '' }}>
+                                        {{ $pool->pool_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('pool_id')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 {{ __('Employee Type') }} <span class="text-red-500">*</span>
                             </label>
                             <select name="employee_type_id" required
