@@ -81,6 +81,9 @@ class RolePermissionSeeder extends Seeder
             // presensi views permissions
             'view-presensi',
             'view-presensi-all',
+            // upload folders management
+            'view-upload-folders',
+            'delete-upload-folders',
             // absensi input permissions
             'create-absensi-masuk',
             'create-absensi-pulang',
@@ -146,6 +149,7 @@ class RolePermissionSeeder extends Seeder
                 'edit-absensi-status',
                 'view-presensi',
                 'view-presensi-all',
+                'view-upload-folders', 'delete-upload-folders',
                 'create-absensi-masuk',
                 'create-absensi-pulang',
                 'view-order-vehicle-issues', 'show-order-vehicle-issues', 'create-order-vehicle-issues', 'edit-order-vehicle-issues', 'delete-order-vehicle-issues',
@@ -163,6 +167,7 @@ class RolePermissionSeeder extends Seeder
                 'edit-absensi-status',
                 'view-presensi',
                 'view-presensi-all',
+                'view-upload-folders', 'delete-upload-folders',
                 'create-absensi-masuk',
                 'create-absensi-pulang',
                 'view-order-vehicle-issues', 'show-order-vehicle-issues', 'create-order-vehicle-issues', 'edit-order-vehicle-issues',

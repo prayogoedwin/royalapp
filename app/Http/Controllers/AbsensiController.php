@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Absensi;
 use App\Models\Employee;
+use App\Support\UploadPath;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -381,7 +382,7 @@ class AbsensiController extends Controller
         }
 
         if ($request->hasFile('foto_masuk')) {
-            $path = $request->file('foto_masuk')->store('absensi/'.$employee->id, 'public');
+            $path = $request->file('foto_masuk')->store(UploadPath::dir('absensi'), 'public');
             $absensi->foto_masuk = $path;
             $absensi->save();
         }
@@ -490,7 +491,7 @@ class AbsensiController extends Controller
 
         after_absensi_save:
         if ($request->hasFile('foto_pulang')) {
-            $path = $request->file('foto_pulang')->store('absensi/'.$employee->id, 'public');
+            $path = $request->file('foto_pulang')->store(UploadPath::dir('absensi'), 'public');
             $absensi->foto_pulang = $path;
             $absensi->save();
         }

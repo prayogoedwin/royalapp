@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\OrderVehicleIssue;
+use App\Support\UploadPath;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -40,11 +41,11 @@ class OrderVehicleIssueController extends Controller
         $data['created_by'] = auth()->id();
 
         if ($request->hasFile('issue_photo')) {
-            $data['issue_photo'] = $request->file('issue_photo')->store('order-issues', 'public');
+            $data['issue_photo'] = $request->file('issue_photo')->store(UploadPath::dir('order-issues'), 'public');
         }
 
         if ($request->hasFile('repair_photo')) {
-            $data['repair_photo'] = $request->file('repair_photo')->store('order-issues', 'public');
+            $data['repair_photo'] = $request->file('repair_photo')->store(UploadPath::dir('order-issues'), 'public');
         }
 
         OrderVehicleIssue::create($data);
@@ -87,14 +88,14 @@ class OrderVehicleIssueController extends Controller
             if ($orderVehicleIssue->issue_photo) {
                 \Storage::disk('public')->delete($orderVehicleIssue->issue_photo);
             }
-            $data['issue_photo'] = $request->file('issue_photo')->store('order-issues', 'public');
+            $data['issue_photo'] = $request->file('issue_photo')->store(UploadPath::dir('order-issues'), 'public');
         }
 
         if ($request->hasFile('repair_photo')) {
             if ($orderVehicleIssue->repair_photo) {
                 \Storage::disk('public')->delete($orderVehicleIssue->repair_photo);
             }
-            $data['repair_photo'] = $request->file('repair_photo')->store('order-issues', 'public');
+            $data['repair_photo'] = $request->file('repair_photo')->store(UploadPath::dir('order-issues'), 'public');
         }
 
         $isResolved = (bool) ($data['is_resolved'] ?? $orderVehicleIssue->is_resolved);

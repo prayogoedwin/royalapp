@@ -60,6 +60,11 @@
                                     :active="request()->routeIs('absensi.today.all')">Absensi All</x-layouts.sidebar-link>
                             @endif
 
+                            @if(auth()->user()->hasPermission('view-upload-folders'))
+                                <x-layouts.sidebar-link href="{{ route('upload-folders.index') }}" icon='fas-folder-open'
+                                    :active="request()->routeIs('upload-folders.*')">Upload Folders</x-layouts.sidebar-link>
+                            @endif
+
                             @php
                                 $hasMasterData =
                                     auth()->user()->hasPermission('view-positions') ||

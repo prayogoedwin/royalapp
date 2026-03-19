@@ -13,6 +13,7 @@ use App\Models\OrderReport;
 use App\Models\OrderExpense;
 use App\Models\OrderEtollTransaction;
 use App\Models\OrderTowing;
+use App\Support\UploadPath;
 use App\Models\Unit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -195,7 +196,7 @@ class OrderController extends Controller
             // Upload photos
             if ($request->hasFile('photos')) {
                 foreach ($request->file('photos') as $index => $photo) {
-                    $path = $photo->store('orders/' . $order->id, 'public');
+                    $path = $photo->store(UploadPath::dir('orders'), 'public');
                     
                     OrderPhoto::create([
                         'order_id' => $order->id,
@@ -311,7 +312,7 @@ class OrderController extends Controller
                     $receiptPath = null;
                     if ($request->hasFile('expenses.'.$i.'.receipt_photo')) {
                         $receiptPath = $request->file('expenses.'.$i.'.receipt_photo')
-                            ->store('order-expenses/'.$order->id, 'public');
+                            ->store(UploadPath::dir('order-expenses'), 'public');
                     }
                     OrderExpense::create([
                         'order_id' => $order->id,
@@ -352,7 +353,7 @@ class OrderController extends Controller
                     $receiptPath = null;
                     if ($hasFile) {
                         $receiptPath = $request->file('etolls.'.$i.'.receipt_photo')
-                            ->store('order-etoll/'.$order->id, 'public');
+                            ->store(UploadPath::dir('order-etoll'), 'public');
                     }
                     OrderEtollTransaction::create([
                         'order_id' => $order->id,
@@ -418,7 +419,7 @@ class OrderController extends Controller
             try {
                 if ($request->hasFile('photos')) {
                     foreach ($request->file('photos') as $index => $photo) {
-                        $path = $photo->store('orders/' . $order->id, 'public');
+                        $path = $photo->store(UploadPath::dir('orders'), 'public');
                         OrderPhoto::create([
                             'order_id' => $order->id,
                             'title' => $validated['photo_titles'][$index] ?? 'Photo ' . ($index + 1),

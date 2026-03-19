@@ -121,6 +121,14 @@ Route::middleware(['auth'])->group(function () {
         ->name('absensis.status.upsert-by-date')
         ->middleware('permission:edit-absensi-status');
 
+    // Upload folders by year/month
+    Route::get('upload-folders', [\App\Http\Controllers\UploadFolderController::class, 'index'])
+        ->name('upload-folders.index')
+        ->middleware('permission:view-upload-folders');
+    Route::delete('upload-folders/{year}/{month}', [\App\Http\Controllers\UploadFolderController::class, 'destroy'])
+        ->name('upload-folders.destroy')
+        ->middleware('permission:delete-upload-folders');
+
     // Orders Management
     Route::get('orders', [\App\Http\Controllers\OrderController::class, 'index'])->name('orders.index')->middleware('permission:view-orders');
     Route::get('orders/create', [\App\Http\Controllers\OrderController::class, 'create'])->name('orders.create')->middleware('permission:create-orders');
