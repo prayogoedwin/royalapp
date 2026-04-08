@@ -3,6 +3,11 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -18,5 +23,63 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (ValidationException $e, Request $request) {
+            if (!$request->is('api/*')) {
+                return null;
+            }
+
+            $firstError = collect($e->errors())->flatten()->first() ?? 'Validation error.';
+
+            return response()->json([
+                'status' => false,
+                'message' => $firstError,
+                'data' => [],
+            ], 422);
+        });
+
+        $exceptions->render(function (AuthenticationException $e, Request $request) {
+            if (!$request->is('api/*')) {
+                return null;
+            }
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthenticated.',
+                'data' => [],
+            ], 401);
+        });
+
+        $exceptions->render(function (ModelNotFoundException $e, Request $request) {
+            if (!$request->is('api/*')) {
+                return null;
+            }
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Data not found.',
+                'data' => [],
+            ], 404);
+        });
+
+        $exceptions->render(function (\Throwable $e, Request $request) {
+            if (!$request->is('api/*')) {
+                return null;
+            }
+
+            if ($e instanceof HttpExceptionInterface) {
+                return response()->json([
+                    'status' => false,
+                    'message' => $e->getMessage() ?: 'HTTP error.',
+                    'data' => [],
+                ], $e->getStatusCode());
+            }
+
+            return response()->json([
+                'status' => false,
+                'message' => app()->hasDebugModeEnabled()
+                    ? $e->getMessage()
+                    : 'Internal server error.',
+                'data' => [],
+            ], 500);
+        });
     })->create();

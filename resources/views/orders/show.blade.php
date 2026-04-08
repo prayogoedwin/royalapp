@@ -71,12 +71,20 @@
                             <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->pickup_datetime->format('d M Y H:i') }}</dd>
                         </div>
                         <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Appointment</dt>
+                            <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->appointment ?? '-' }}</dd>
+                        </div>
+                        <div>
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Price</dt>
                             <dd class="text-base text-gray-900 dark:text-gray-100">Rp {{ number_format($order->price, 0, ',', '.') }}</dd>
                         </div>
                         <div>
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Payment Method</dt>
                             <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->payment_method ?? '-' }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Status Pembayaran</dt>
+                            <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->payment_status ?? '-' }}</dd>
                         </div>
                         <div>
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</dt>
@@ -109,12 +117,16 @@
                                 <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->orderReport->km_akhir }}</dd>
                             </div>
                             <div>
-                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Total KM</dt>
-                                <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->orderReport->km_total }}</dd>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">KM Selisih</dt>
+                                <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->orderReport->km_selisih !== null ? number_format($order->orderReport->km_selisih, 2, ',', '.') : '—' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</dt>
-                                <dd class="text-base text-gray-900 dark:text-gray-100 capitalize">{{ $order->orderReport->status }}</dd>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Status order</dt>
+                                <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->orderStatus?->name ?? '—' }}</dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Deliver</dt>
+                                <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->orderReport->deliver_datetime?->format('d M Y H:i') ?? '-' }}</dd>
                             </div>
                             @if($order->orderReport->submitted_at)
                                 <div>

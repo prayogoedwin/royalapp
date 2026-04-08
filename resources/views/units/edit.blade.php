@@ -90,7 +90,7 @@
                             type="date" 
                             value="{{ old('tgl_perpanjangan_pajak_berikutnya', $unit->tgl_perpanjangan_pajak_berikutnya?->format('Y-m-d')) }}"
                         />
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Notifikasi akan muncul H-{{ config('app.unit_notification_days') }} hari</p>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Notifikasi akan muncul H-{{ config('app.unit_notification_days', 30) }} hari</p>
                     </div>
                 </div>
 
@@ -111,7 +111,28 @@
                             type="date" 
                             value="{{ old('tgl_ganti_plat_berikutnya', $unit->tgl_ganti_plat_berikutnya?->format('Y-m-d')) }}"
                         />
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Notifikasi akan muncul H-{{ config('app.unit_notification_days') }} hari</p>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Notifikasi akan muncul H-{{ config('app.unit_notification_days', 30) }} hari</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <x-forms.input 
+                            label="KIR Terakhir" 
+                            name="tgl_kir_terakhir" 
+                            type="date" 
+                            value="{{ old('tgl_kir_terakhir', $unit->tgl_kir_terakhir?->format('Y-m-d')) }}"
+                        />
+                    </div>
+
+                    <div>
+                        <x-forms.input 
+                            label="KIR Berikutnya" 
+                            name="tgl_kir_berikutnya" 
+                            type="date" 
+                            value="{{ old('tgl_kir_berikutnya', $unit->tgl_kir_berikutnya?->format('Y-m-d')) }}"
+                        />
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Notifikasi akan muncul H-{{ config('app.unit_notification_days', 30) }} hari</p>
                     </div>
                 </div>
 

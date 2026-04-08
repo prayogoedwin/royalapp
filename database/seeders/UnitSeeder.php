@@ -19,9 +19,9 @@ class UnitSeeder extends Seeder
             ];
 
             foreach ($ambulanceUnits as $code) {
-                Unit::firstOrCreate([
+                Unit::updateOrCreate([
                     'division_id' => $ambulance->id,
-                    'code' => $code,
+                    'code' => strtoupper(trim($code)),
                 ]);
             }
         }
@@ -32,9 +32,9 @@ class UnitSeeder extends Seeder
             ];
 
             foreach ($towingUnits as $code) {
-                Unit::firstOrCreate([
+                Unit::updateOrCreate([
                     'division_id' => $towing->id,
-                    'code' => $code,
+                    'code' => strtoupper(trim($code)),
                 ]);
             }
         }

@@ -18,6 +18,9 @@ Route::view('dashboard', 'dashboard')
     ->name('dashboard');
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('leaderboard', [\App\Http\Controllers\LeaderboardController::class, 'index'])
+        ->name('leaderboard.index')
+        ->middleware('permission:view-leaderboard');
     Route::get('settings/profile', [Settings\ProfileController::class, 'edit'])->name('settings.profile.edit');
     Route::put('settings/profile', [Settings\ProfileController::class, 'update'])->name('settings.profile.update');
     Route::delete('settings/profile', [Settings\ProfileController::class, 'destroy'])->name('settings.profile.destroy');
@@ -147,6 +150,36 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('orders/{order}', [\App\Http\Controllers\OrderController::class, 'destroy'])->name('orders.destroy')->middleware('permission:delete-orders');
     Route::delete('order-photos/{photo}', [\App\Http\Controllers\OrderController::class, 'deletePhoto'])->name('order-photos.destroy')
         ->middleware('permission:delete-order-photos');
+
+    // Tasks (internal order)
+    Route::get('tasks', [\App\Http\Controllers\TaskController::class, 'index'])->name('tasks.index')->middleware('permission:view-tasks');
+    Route::get('tasks/create', [\App\Http\Controllers\TaskController::class, 'create'])->name('tasks.create')->middleware('permission:create-tasks');
+    Route::post('tasks', [\App\Http\Controllers\TaskController::class, 'store'])->name('tasks.store')->middleware('permission:create-tasks');
+    Route::get('tasks/crew-search', [\App\Http\Controllers\TaskController::class, 'searchCrew'])->name('tasks.crew-search')->middleware('permission:create-tasks|edit-tasks');
+    Route::get('tasks/{task}', [\App\Http\Controllers\TaskController::class, 'show'])->name('tasks.show')->middleware('permission:show-tasks');
+    Route::get('tasks/{task}/edit', [\App\Http\Controllers\TaskController::class, 'edit'])->name('tasks.edit')->middleware('permission:edit-tasks');
+    Route::put('tasks/{task}', [\App\Http\Controllers\TaskController::class, 'update'])->name('tasks.update')->middleware('permission:edit-tasks');
+    Route::delete('tasks/{task}', [\App\Http\Controllers\TaskController::class, 'destroy'])->name('tasks.destroy')->middleware('permission:delete-tasks');
+
+    Route::post('tasks/{task}/attachments', [\App\Http\Controllers\TaskController::class, 'storeAttachment'])->name('tasks.attachments.store')
+        ->middleware('permission:create-task-attachments');
+    Route::delete('task-attachments/{taskAttachment}', [\App\Http\Controllers\TaskController::class, 'destroyAttachment'])->name('tasks.attachments.destroy')
+        ->middleware('permission:delete-task-attachments');
+
+    Route::post('tasks/{task}/comments', [\App\Http\Controllers\TaskController::class, 'storeComment'])->name('tasks.comments.store')
+        ->middleware('permission:create-task-comments');
+    Route::delete('task-comments/{taskComment}', [\App\Http\Controllers\TaskController::class, 'destroyComment'])->name('tasks.comments.destroy')
+        ->middleware('permission:delete-task-comments');
+
+    // Vehicle Maintenances
+    Route::get('vehicle-maintenances', [\App\Http\Controllers\VehicleMaintenanceController::class, 'index'])->name('vehicle-maintenances.index')->middleware('permission:view-vehicle-maintenances');
+    Route::get('vehicle-maintenances/create', [\App\Http\Controllers\VehicleMaintenanceController::class, 'create'])->name('vehicle-maintenances.create')->middleware('permission:create-vehicle-maintenances');
+    Route::get('vehicle-maintenances/pic-search', [\App\Http\Controllers\VehicleMaintenanceController::class, 'searchPic'])->name('vehicle-maintenances.pic-search')->middleware('permission:create-vehicle-maintenances|edit-vehicle-maintenances');
+    Route::post('vehicle-maintenances', [\App\Http\Controllers\VehicleMaintenanceController::class, 'store'])->name('vehicle-maintenances.store')->middleware('permission:create-vehicle-maintenances');
+    Route::get('vehicle-maintenances/{vehicleMaintenance}', [\App\Http\Controllers\VehicleMaintenanceController::class, 'show'])->name('vehicle-maintenances.show')->middleware('permission:show-vehicle-maintenances');
+    Route::get('vehicle-maintenances/{vehicleMaintenance}/edit', [\App\Http\Controllers\VehicleMaintenanceController::class, 'edit'])->name('vehicle-maintenances.edit')->middleware('permission:edit-vehicle-maintenances');
+    Route::put('vehicle-maintenances/{vehicleMaintenance}', [\App\Http\Controllers\VehicleMaintenanceController::class, 'update'])->name('vehicle-maintenances.update')->middleware('permission:edit-vehicle-maintenances');
+    Route::delete('vehicle-maintenances/{vehicleMaintenance}', [\App\Http\Controllers\VehicleMaintenanceController::class, 'destroy'])->name('vehicle-maintenances.destroy')->middleware('permission:delete-vehicle-maintenances');
 
     // Order Vehicle Issues
     Route::get('order-vehicle-issues', [\App\Http\Controllers\OrderVehicleIssueController::class, 'index'])

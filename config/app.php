@@ -49,7 +49,7 @@ return [
     |
     */
 
-    'unit_notification_days' => env('UNIT_NOTIFICATION_DAYS', 10),
+    'unit_notification_days' => env('UNIT_NOTIFICATION_DAYS', 30),
 
     /*
     |--------------------------------------------------------------------------

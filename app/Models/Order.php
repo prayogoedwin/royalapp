@@ -19,11 +19,13 @@ class Order extends Model
         'order_status_id',
         'customer_name',
         'customer_phone',
+        'appointment',
         'pickup_address',
         'destination_address',
         'pickup_datetime',
         'price',
         'payment_method',
+        'payment_status',
         'notes',
         'created_by',
         'updated_by',
@@ -99,5 +101,10 @@ class Order extends Model
     public function orderVehicleIssues(): HasMany
     {
         return $this->hasMany(OrderVehicleIssue::class);
+    }
+
+    public function vehicleMaintenances(): HasMany
+    {
+        return $this->hasMany(VehicleMaintenance::class);
     }
 }

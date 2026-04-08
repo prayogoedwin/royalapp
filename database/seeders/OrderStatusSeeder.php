@@ -11,6 +11,7 @@ class OrderStatusSeeder extends Seeder
     {
         $statuses = [
             ['name' => 'Pending', 'color' => 'yellow'],
+            ['name' => 'Waiting', 'color' => 'gray'],
             ['name' => 'Ongoing', 'color' => 'blue'],
             ['name' => 'Done', 'color' => 'green'],
             ['name' => 'Cancelled', 'color' => 'red'],

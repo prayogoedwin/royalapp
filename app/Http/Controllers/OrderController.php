@@ -13,6 +13,7 @@ use App\Models\OrderReport;
 use App\Models\OrderExpense;
 use App\Models\OrderEtollTransaction;
 use App\Models\OrderTowing;
+use App\Support\OrderOptions;
 use App\Support\UploadPath;
 use App\Models\Unit;
 use Illuminate\Http\RedirectResponse;
@@ -24,6 +25,63 @@ use Yajra\DataTables\Facades\DataTables;
 
 class OrderController extends Controller
 {
+    private function buildEmployeeAvailability($employees, ?int $excludeOrderId = null)
+    {
+        $monthStart = now()->startOfMonth();
+        $monthEnd = now()->endOfMonth();
+
+        return $employees->mapWithKeys(function (Employee $employee) use ($excludeOrderId, $monthStart, $monthEnd) {
+            $hasOngoing = false;
+            $pickupSlots = [];
+            $monthlyOrderIds = [];
+            $monthlyKm = 0.0;
+
+            foreach ($employee->orderCrews as $crew) {
+                $order = $crew->order;
+                if (! $order || ! $order->orderStatus) {
+                    continue;
+                }
+
+                if ($excludeOrderId && (int) $order->id === $excludeOrderId) {
+                    continue;
+                }
+
+                // Extra guard: ignore soft deleted rows for precision.
+                if ($order->deleted_at || $crew->deleted_at) {
+                    continue;
+                }
+
+                $statusName = strtolower((string) $order->orderStatus->name);
+                if ($statusName === 'ongoing') {
+                    $hasOngoing = true;
+                }
+
+                // Conflict only for active schedules, exclude Done/Cancelled.
+                if (in_array($statusName, ['pending', 'waiting', 'ongoing'], true) && $order->pickup_datetime) {
+                    $pickupSlots[] = $order->pickup_datetime->format('Y-m-d\TH:i');
+                }
+
+                if (
+                    $order->pickup_datetime
+                    && $statusName !== 'cancelled'
+                    && $order->pickup_datetime->between($monthStart, $monthEnd)
+                ) {
+                    $monthlyOrderIds[(int) $order->id] = true;
+                    $monthlyKm += (float) ($order->orderReport?->km_total ?? 0);
+                }
+            }
+
+            return [
+                $employee->id => [
+                    'has_ongoing' => $hasOngoing,
+                    'pickup_slots' => array_values(array_unique($pickupSlots)),
+                    'monthly_orders' => count($monthlyOrderIds),
+                    'monthly_km' => $monthlyKm,
+                ],
+            ];
+        });
+    }
+
     public function index(Request $request)
     {
         if ($request->ajax()) {
@@ -40,6 +98,7 @@ class OrderController extends Controller
                         'blue' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
                         'green' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
                         'red' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+                        'gray' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
                     ];
                     $color = $colors[$order->orderStatus->color ?? 'yellow'] ?? 'bg-gray-100 text-gray-800';
                     return '<span class="px-2 py-1 rounded-full text-xs font-medium ' . $color . '">' . $order->orderStatus->name . '</span>';
@@ -81,10 +140,19 @@ class OrderController extends Controller
     {
         $divisions = Division::orderBy('nama')->get();
         $orderStatuses = OrderStatus::orderBy('name')->get();
-        $employees = Employee::with('position')->where('status', 'active')->orderBy('full_name')->get();
+        $employees = Employee::with([
+            'position',
+            'orderCrews.order.orderStatus',
+            'orderCrews.order.orderReport',
+        ])->whereHas('position', function ($query) {
+            $query->whereIn(DB::raw('LOWER(nama)'), ['driver', 'nurse']);
+        })->orderBy('full_name')->get();
         $units = Unit::with('division')->orderBy('division_id')->orderBy('code')->get();
+        $paymentMethods = OrderOptions::paymentMethods();
+        $paymentStatuses = OrderOptions::paymentStatuses();
+        $employeeAvailability = $this->buildEmployeeAvailability($employees);
 
-        return view('orders.create', compact('divisions', 'orderStatuses', 'employees', 'units'));
+        return view('orders.create', compact('divisions', 'orderStatuses', 'employees', 'units', 'employeeAvailability', 'paymentMethods', 'paymentStatuses'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -95,11 +163,13 @@ class OrderController extends Controller
             'unit_code' => ['nullable', 'string', 'max:255'],
             'customer_name' => ['required', 'string', 'max:255'],
             'customer_phone' => ['required', 'string', 'max:255'],
+            'appointment' => ['nullable', 'string', 'max:255'],
             'pickup_address' => ['required', 'string'],
             'destination_address' => ['required', 'string'],
             'pickup_datetime' => ['required', 'date'],
             'price' => ['required', 'numeric', 'min:0'],
-            'payment_method' => ['nullable', 'string', 'max:255'],
+            'payment_method' => ['nullable', 'in:' . implode(',', array_keys(OrderOptions::paymentMethods()))],
+            'payment_status' => ['required', 'in:' . implode(',', array_keys(OrderOptions::paymentStatuses()))],
             'notes' => ['nullable', 'string'],
             
             // Ambulance specific
@@ -149,11 +219,13 @@ class OrderController extends Controller
                 'order_status_id' => $validated['order_status_id'],
                 'customer_name' => $validated['customer_name'],
                 'customer_phone' => $validated['customer_phone'],
+                'appointment' => $validated['appointment'] ?? null,
                 'pickup_address' => $validated['pickup_address'],
                 'destination_address' => $validated['destination_address'],
                 'pickup_datetime' => $validated['pickup_datetime'],
                 'price' => $validated['price'],
                 'payment_method' => $validated['payment_method'],
+                'payment_status' => $validated['payment_status'],
                 'notes' => $validated['notes'],
                 'created_by' => auth()->id(),
             ]);
@@ -251,10 +323,19 @@ class OrderController extends Controller
         ]);
         $divisions = Division::orderBy('nama')->get();
         $orderStatuses = OrderStatus::orderBy('name')->get();
-        $employees = Employee::with('position')->where('status', 'active')->orderBy('full_name')->get();
+        $employees = Employee::with([
+            'position',
+            'orderCrews.order.orderStatus',
+            'orderCrews.order.orderReport',
+        ])->whereHas('position', function ($query) {
+            $query->whereIn(DB::raw('LOWER(nama)'), ['driver', 'nurse']);
+        })->orderBy('full_name')->get();
         $units = Unit::with('division')->orderBy('division_id')->orderBy('code')->get();
+        $paymentMethods = OrderOptions::paymentMethods();
+        $paymentStatuses = OrderOptions::paymentStatuses();
+        $employeeAvailability = $this->buildEmployeeAvailability($employees, (int) $order->id);
 
-        return view('orders.edit', compact('order', 'divisions', 'orderStatuses', 'employees', 'units'));
+        return view('orders.edit', compact('order', 'divisions', 'orderStatuses', 'employees', 'units', 'employeeAvailability', 'paymentMethods', 'paymentStatuses'));
     }
 
     public function update(Request $request, Order $order): RedirectResponse
@@ -268,17 +349,23 @@ class OrderController extends Controller
             $validated = $request->validate([
                 'km_awal' => ['nullable', 'numeric', 'min:0'],
                 'km_akhir' => ['nullable', 'numeric', 'min:0'],
-                'status' => ['nullable', 'string', 'max:50'],
+                'order_status_id' => ['required', 'exists:order_statuses,id'],
+                'deliver_datetime' => ['nullable', 'date'],
                 'notes' => ['nullable', 'string'],
             ]);
             DB::beginTransaction();
             try {
+                $order->update([
+                    'order_status_id' => $validated['order_status_id'],
+                    'updated_by' => auth()->id(),
+                ]);
+
                 OrderReport::updateOrCreate(
                     ['order_id' => $order->id],
                     [
                         'km_awal' => $validated['km_awal'] ?? 0,
                         'km_akhir' => $validated['km_akhir'] ?? 0,
-                        'status' => $validated['status'] ?? 'draft',
+                        'deliver_datetime' => $validated['deliver_datetime'] ?? null,
                         'notes' => $validated['notes'] ?? null,
                         'updated_by' => auth()->id(),
                         'created_by' => $order->orderReport->created_by ?? auth()->id(),
@@ -442,16 +529,17 @@ class OrderController extends Controller
             abort(403, 'Unauthorized action.');
         }
         $validated = $request->validate([
-            'division_id' => ['required', 'exists:divisions,id'],
             'order_status_id' => ['required', 'exists:order_statuses,id'],
             'unit_code' => ['nullable', 'string', 'max:255'],
             'customer_name' => ['required', 'string', 'max:255'],
             'customer_phone' => ['required', 'string', 'max:255'],
+            'appointment' => ['nullable', 'string', 'max:255'],
             'pickup_address' => ['required', 'string'],
             'destination_address' => ['required', 'string'],
             'pickup_datetime' => ['required', 'date'],
             'price' => ['required', 'numeric', 'min:0'],
-            'payment_method' => ['nullable', 'string', 'max:255'],
+            'payment_method' => ['nullable', 'in:' . implode(',', array_keys(OrderOptions::paymentMethods()))],
+            'payment_status' => ['required', 'in:' . implode(',', array_keys(OrderOptions::paymentStatuses()))],
             'notes' => ['nullable', 'string'],
             'patient_condition' => ['nullable', 'string'],
             'medical_needs' => ['nullable', 'string'],
@@ -463,23 +551,28 @@ class OrderController extends Controller
 
         DB::beginTransaction();
         try {
+            // Division is fixed at order creation; do not allow changing via request.
+            $divisionId = $order->division_id;
+
             $order->update([
-                'division_id' => $validated['division_id'],
+                'division_id' => $divisionId,
                 'order_status_id' => $validated['order_status_id'],
                 'unit_code' => $validated['unit_code'] ?? null,
                 'customer_name' => $validated['customer_name'],
                 'customer_phone' => $validated['customer_phone'],
+                'appointment' => $validated['appointment'] ?? null,
                 'pickup_address' => $validated['pickup_address'],
                 'destination_address' => $validated['destination_address'],
                 'pickup_datetime' => $validated['pickup_datetime'],
                 'price' => $validated['price'],
                 'payment_method' => $validated['payment_method'],
+                'payment_status' => $validated['payment_status'],
                 'notes' => $validated['notes'],
                 'updated_by' => auth()->id(),
             ]);
 
-            $division = Division::find($validated['division_id']);
-            if ($division->nama === 'Royal Ambulance') {
+            $division = Division::find($divisionId);
+            if ($division && $division->nama === 'Royal Ambulance') {
                 OrderAmbulance::updateOrCreate(
                     ['order_id' => $order->id],
                     [
@@ -489,7 +582,7 @@ class OrderController extends Controller
                     ]
                 );
             }
-            if ($division->nama === 'Royal Towing') {
+            if ($division && $division->nama === 'Royal Towing') {
                 OrderTowing::updateOrCreate(
                     ['order_id' => $order->id],
                     [

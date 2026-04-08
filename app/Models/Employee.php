@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Employee extends Model
@@ -55,5 +56,15 @@ class Employee extends Model
     public function pool(): BelongsTo
     {
         return $this->belongsTo(Pool::class);
+    }
+
+    public function orderCrews(): HasMany
+    {
+        return $this->hasMany(OrderCrew::class);
+    }
+
+    public function vehicleMaintenancePics(): HasMany
+    {
+        return $this->hasMany(VehicleMaintenancePic::class);
     }
 }

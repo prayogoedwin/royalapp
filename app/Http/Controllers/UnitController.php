@@ -68,6 +68,8 @@ class UnitController extends Controller
             'tgl_perpanjangan_pajak_berikutnya' => ['nullable', 'date'],
             'tgl_ganti_plat' => ['nullable', 'date'],
             'tgl_ganti_plat_berikutnya' => ['nullable', 'date'],
+            'tgl_kir_terakhir' => ['nullable', 'date'],
+            'tgl_kir_berikutnya' => ['nullable', 'date'],
         ]);
 
         Unit::create($validated);
@@ -99,6 +101,8 @@ class UnitController extends Controller
             'tgl_perpanjangan_pajak_berikutnya' => ['nullable', 'date'],
             'tgl_ganti_plat' => ['nullable', 'date'],
             'tgl_ganti_plat_berikutnya' => ['nullable', 'date'],
+            'tgl_kir_terakhir' => ['nullable', 'date'],
+            'tgl_kir_berikutnya' => ['nullable', 'date'],
         ]);
 
         $unit->update($validated);

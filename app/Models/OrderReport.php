@@ -19,6 +19,7 @@ class OrderReport extends Model
         'submitted_at',
         'approved_by',
         'approved_at',
+        'deliver_datetime',
         'rejection_reason',
         'notes',
         'created_by',
@@ -29,9 +30,8 @@ class OrderReport extends Model
     protected $casts = [
         'submitted_at' => 'datetime',
         'approved_at' => 'datetime',
+        'deliver_datetime' => 'datetime',
     ];
-
-    protected $appends = ['km_total'];
 
     public function order(): BelongsTo
     {
@@ -58,9 +58,17 @@ class OrderReport extends Model
         return $this->belongsTo(User::class, 'deleted_by');
     }
 
-    public function getKmTotalAttribute()
+    /**
+     * KM selisih = km_akhir - km_awal (disimpan di DB sebagai kolom generated `km_total`).
+     * Untuk agregasi per crew: SUM(order_reports.km_total) JOIN orders … order_crews.
+     */
+    public function getKmSelisihAttribute(): ?float
     {
-        return $this->km_akhir - $this->km_awal;
+        if ($this->km_awal === null || $this->km_akhir === null) {
+            return null;
+        }
+
+        return (float) $this->km_akhir - (float) $this->km_awal;
     }
 
     public function canBeEdited(): bool

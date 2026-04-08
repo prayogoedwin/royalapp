@@ -56,6 +56,24 @@ class RolePermissionSeeder extends Seeder
             'create-orders',
             'edit-orders',
             'delete-orders',
+            // tasks
+            'view-tasks',
+            'show-tasks',
+            'create-tasks',
+            'edit-tasks',
+            'delete-tasks',
+            // task attachments
+            'view-task-attachments',
+            'show-task-attachments',
+            'create-task-attachments',
+            'edit-task-attachments',
+            'delete-task-attachments',
+            // task comments
+            'view-task-comments',
+            'show-task-comments',
+            'create-task-comments',
+            'edit-task-comments',
+            'delete-task-comments',
             // order section permissions (driver vs managerial)
             'edit-order-report',
             'delete-order-report',
@@ -93,6 +111,14 @@ class RolePermissionSeeder extends Seeder
             'create-order-vehicle-issues',
             'edit-order-vehicle-issues',
             'delete-order-vehicle-issues',
+            // vehicle maintenances
+            'view-vehicle-maintenances',
+            'show-vehicle-maintenances',
+            'create-vehicle-maintenances',
+            'edit-vehicle-maintenances',
+            'delete-vehicle-maintenances',
+            // leaderboard / analytics
+            'view-leaderboard',
         ];
 
         foreach ($permissions as $permissionName) {
@@ -131,9 +157,12 @@ class RolePermissionSeeder extends Seeder
                 'view-employee-types', 'show-employee-types',
                 'view-employees', 'show-employees',
                 'view-orders', 'show-orders',
+                'view-tasks', 'show-tasks',
+                'view-vehicle-maintenances', 'show-vehicle-maintenances',
                 'view-units', 'show-units',
                 'view-pools', 'show-pools',
                 'view-order-vehicle-issues', 'show-order-vehicle-issues',
+                'view-leaderboard',
             ])->pluck('id')
         );
 
@@ -141,6 +170,10 @@ class RolePermissionSeeder extends Seeder
         $createdRoles['Managerial']->permissions()->sync(
             Permission::whereIn('name', [
                 'view-orders', 'show-orders', 'create-orders', 'edit-orders', 'delete-orders',
+                'view-tasks', 'show-tasks', 'create-tasks', 'edit-tasks', 'delete-tasks',
+                'view-vehicle-maintenances', 'show-vehicle-maintenances', 'create-vehicle-maintenances', 'edit-vehicle-maintenances', 'delete-vehicle-maintenances',
+                'view-task-attachments', 'show-task-attachments', 'create-task-attachments', 'edit-task-attachments', 'delete-task-attachments',
+                'view-task-comments', 'show-task-comments', 'create-task-comments', 'edit-task-comments', 'delete-task-comments',
                 'edit-order-report', 'delete-order-report',
                 'create-order-expenses', 'delete-order-expenses',
                 'create-order-etoll', 'delete-order-etoll',
@@ -153,12 +186,17 @@ class RolePermissionSeeder extends Seeder
                 'create-absensi-masuk',
                 'create-absensi-pulang',
                 'view-order-vehicle-issues', 'show-order-vehicle-issues', 'create-order-vehicle-issues', 'edit-order-vehicle-issues', 'delete-order-vehicle-issues',
+                'view-leaderboard',
             ])->pluck('id')
         );
 
         $createdRoles['Supervisor']->permissions()->sync(
             Permission::whereIn('name', [
                 'view-orders', 'show-orders', 'create-orders', 'edit-orders',
+                'view-tasks', 'show-tasks', 'create-tasks', 'edit-tasks',
+                'view-vehicle-maintenances', 'show-vehicle-maintenances', 'create-vehicle-maintenances', 'edit-vehicle-maintenances',
+                'view-task-attachments', 'show-task-attachments', 'create-task-attachments', 'edit-task-attachments', 'delete-task-attachments',
+                'view-task-comments', 'show-task-comments', 'create-task-comments', 'edit-task-comments', 'delete-task-comments',
                 'edit-order-report', 'delete-order-report',
                 'create-order-expenses', 'delete-order-expenses',
                 'create-order-etoll', 'delete-order-etoll',
@@ -171,6 +209,7 @@ class RolePermissionSeeder extends Seeder
                 'create-absensi-masuk',
                 'create-absensi-pulang',
                 'view-order-vehicle-issues', 'show-order-vehicle-issues', 'create-order-vehicle-issues', 'edit-order-vehicle-issues',
+                'view-leaderboard',
             ])->pluck('id')
         );
 
@@ -178,6 +217,10 @@ class RolePermissionSeeder extends Seeder
         $createdRoles['Operational']->permissions()->sync(
             Permission::whereIn('name', [
                 'view-orders', 'show-orders',
+                'view-tasks', 'show-tasks', 'create-tasks',
+                'view-vehicle-maintenances', 'show-vehicle-maintenances', 'create-vehicle-maintenances',
+                'create-task-attachments', 'delete-task-attachments',
+                'create-task-comments', 'delete-task-comments',
                 'edit-order-report',
                 'view-presensi',
                 'create-absensi-masuk',
@@ -186,6 +229,7 @@ class RolePermissionSeeder extends Seeder
                 'create-order-etoll', 'delete-order-etoll',
                 'create-order-photos',
                 'view-order-vehicle-issues', 'show-order-vehicle-issues', 'create-order-vehicle-issues',
+                'view-leaderboard',
             ])->pluck('id')
         );
 

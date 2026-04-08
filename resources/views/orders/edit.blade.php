@@ -36,14 +36,20 @@
             <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">{{ __('Basic Information') }}</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                @php
+                    $currentDivisionId = old('division_id', $order->division_id);
+                    $currentDivisionName = $divisions->firstWhere('id', (int) $currentDivisionId)?->nama
+                        ?? $order->division?->nama
+                        ?? '—';
+                @endphp
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ __('Division') }} <span class="text-red-500">*</span></label>
-                    <select name="division_id" id="division_id" required class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-                        <option value="">{{ __('Select Division') }}</option>
-                        @foreach($divisions as $division)
-                            <option value="{{ $division->id }}" data-name="{{ $division->nama }}" @selected(old('division_id', $order->division_id) == $division->id)>{{ $division->nama }}</option>
-                        @endforeach
-                    </select>
+                    {{-- Division tidak di-submit; server memakai division order yang ada --}}
+                    <input type="hidden" id="division_id" value="{{ $currentDivisionId }}">
+                    <div class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-gray-100 cursor-not-allowed select-none">
+                        {{ $currentDivisionName }}
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ __('Division cannot be changed for an existing order.') }}</p>
                     @error('division_id')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
 
@@ -74,6 +80,10 @@
                 </div>
 
                 <div>
+                    <x-forms.input label="Appointment" name="appointment" type="text" value="{{ old('appointment', $order->appointment) }}" placeholder="Sebelum Jam 8 / jam 8.05 / IDEM" />
+                </div>
+
+                <div>
                     <x-forms.input label="Pickup Date & Time" name="pickup_datetime" type="datetime-local" value="{{ old('pickup_datetime', $order->pickup_datetime->format('Y-m-d\TH:i')) }}" required />
                 </div>
 
@@ -82,7 +92,24 @@
                 </div>
 
                 <div>
-                    <x-forms.input label="Payment Method" name="payment_method" type="text" value="{{ old('payment_method', $order->payment_method) }}" />
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Payment Method</label>
+                    <select name="payment_method" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                        <option value="">-</option>
+                        @foreach($paymentMethods as $value => $label)
+                            <option value="{{ $value }}" @selected(old('payment_method', $order->payment_method) === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    @error('payment_method')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status Pembayaran <span class="text-red-500">*</span></label>
+                    <select name="payment_status" required class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                        @foreach($paymentStatuses as $value => $label)
+                            <option value="{{ $value }}" @selected(old('payment_status', $order->payment_status ?? 'UNPAID') === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    @error('payment_status')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
             </div>
 
@@ -170,6 +197,9 @@
                 <p class="text-sm text-gray-500 dark:text-gray-400">Tambahkan / ubah crew yang bertugas pada order ini.</p>
                 <button type="button" onclick="addCrew()" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs">+ Add Crew</button>
             </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                🔴 Ongoing, 🟡 Bentrok jadwal pickup, 🟢 Tersedia, ⚫ Off/Inactive (disabled)
+            </p>
             <div id="crew-list" class="space-y-3">
                 @foreach($order->orderCrews as $crew)
                     <div class="flex gap-3 items-start crew-row">
@@ -177,8 +207,16 @@
                             <select name="crew_ids[]" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                                 <option value="">Select Employee</option>
                                 @foreach($employees as $employee)
-                                    <option value="{{ $employee->id }}" @selected($crew->employee_id == $employee->id)>
-                                        {{ $employee->full_name }} - {{ $employee->position->nama ?? '' }}
+                                    @php
+                                        $availability = $employeeAvailability[$employee->id] ?? ['has_ongoing' => false, 'pickup_slots' => []];
+                                        $isConflict = in_array($order->pickup_datetime->format('Y-m-d\TH:i'), $availability['pickup_slots'] ?? [], true);
+                                        $isActive = strtolower((string) $employee->status) === 'active';
+                                        $indicator = ! $isActive ? '⚫' : ($availability['has_ongoing'] ? '🔴' : ($isConflict ? '🟡' : '🟢'));
+                                        $monthlyOrders = (int) ($availability['monthly_orders'] ?? 0);
+                                        $monthlyKm = (float) ($availability['monthly_km'] ?? 0);
+                                    @endphp
+                                    <option value="{{ $employee->id }}" @disabled(! $isActive) @selected($crew->employee_id == $employee->id)>
+                                        {{ $employee->full_name }} - {{ $employee->position->nama ?? '' }} {{ $indicator }} ({{ $monthlyOrders }} order) ({{ fmod($monthlyKm, 1.0) == 0.0 ? (int) $monthlyKm : number_format($monthlyKm, 2, '.', '') }} km)
                                     </option>
                                 @endforeach
                             </select>
@@ -247,31 +285,72 @@
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Order Report</h2>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div
+                class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"
+                x-data="{
+                    kmAwal: @js(old('km_awal', $order->orderReport->km_awal ?? '')),
+                    kmAkhir: @js(old('km_akhir', $order->orderReport->km_akhir ?? '')),
+                    get selisih() {
+                        const a = parseFloat(this.kmAwal);
+                        const b = parseFloat(this.kmAkhir);
+                        if (isNaN(a) || isNaN(b)) return '—';
+                        const d = b - a;
+                        return Number.isInteger(d) ? String(d) : d.toFixed(2);
+                    }
+                }"
+            >
                 <div>
-                    <x-forms.input
-                        label="KM Awal"
+                    <label for="order_report_km_awal" class="block ml-1 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">KM Awal</label>
+                    <input
+                        id="order_report_km_awal"
+                        type="number"
                         name="km_awal"
-                        type="number"
                         step="0.01"
-                        value="{{ old('km_awal', $order->orderReport->km_awal ?? null) }}"
+                        x-model="kmAwal"
+                        class="w-full px-4 py-1.5 rounded-lg text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
+                    @error('km_awal')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div>
-                    <x-forms.input
-                        label="KM Akhir"
+                    <label for="order_report_km_akhir" class="block ml-1 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">KM Akhir</label>
+                    <input
+                        id="order_report_km_akhir"
+                        type="number"
                         name="km_akhir"
-                        type="number"
                         step="0.01"
-                        value="{{ old('km_akhir', $order->orderReport->km_akhir ?? null) }}"
+                        x-model="kmAkhir"
+                        class="w-full px-4 py-1.5 rounded-lg text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
+                    @error('km_akhir')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                </div>
+                <div>
+                    <label for="order_report_order_status_id" class="block ml-1 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status <span class="text-red-500">*</span> <span class="text-xs font-normal text-gray-500 dark:text-gray-400">(sama dengan status order)</span></label>
+                    <select
+                        id="order_report_order_status_id"
+                        name="order_status_id"
+                        required
+                        class="w-full px-4 py-1.5 rounded-lg text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                        @foreach($orderStatuses as $status)
+                            <option value="{{ $status->id }}" @selected(old('order_status_id', $order->order_status_id) == $status->id)>{{ $status->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('order_status_id')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                </div>
+                <div>
+                    <span class="block ml-1 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">KM Selisih</span>
+                    <div
+                        class="w-full px-4 py-1.5 rounded-lg text-gray-800 dark:text-gray-100 bg-gray-100 dark:bg-gray-600 border border-gray-200 dark:border-gray-600 cursor-not-allowed select-none"
+                        x-text="selisih"
+                    ></div>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ __('Dihitung otomatis (KM Akhir − KM Awal).') }}</p>
                 </div>
                 <div>
                     <x-forms.input
-                        label="Status"
-                        name="status"
-                        type="text"
-                        value="{{ old('status', $order->orderReport->status ?? 'draft') }}"
+                        label="Deliver"
+                        name="deliver_datetime"
+                        type="datetime-local"
+                        value="{{ old('deliver_datetime', ($order->orderReport?->deliver_datetime ? $order->orderReport->deliver_datetime->format('Y-m-d\TH:i') : null)) }}"
                     />
                 </div>
             </div>
@@ -530,6 +609,7 @@
     <script>
         const units = @json($units);
         const employees = @json($employees);
+        const employeeAvailability = @json($employeeAvailability);
         let photoCount = 0;
         let expenseCount = 0;
         let etollCount = 0;
@@ -556,10 +636,31 @@
             }
         }
 
-        document.getElementById('division_id').addEventListener('change', populateUnits);
-
         if (document.getElementById('division_id').value) {
             populateUnits();
+        }
+
+        function getCrewIndicator(emp) {
+            if ((emp.status || '').toLowerCase() !== 'active') {
+                return '⚫';
+            }
+            const pickupValue = document.getElementById('pickup_datetime')?.value || @js($order->pickup_datetime->format('Y-m-d\TH:i'));
+            const availability = employeeAvailability?.[emp.id] || { has_ongoing: false, pickup_slots: [] };
+            if (availability.has_ongoing) {
+                return '🔴';
+            }
+            if (pickupValue && (availability.pickup_slots || []).includes(pickupValue)) {
+                return '🟡';
+            }
+            return '🟢';
+        }
+
+        function getCrewMonthlyStats(emp) {
+            const availability = employeeAvailability?.[emp.id] || {};
+            const monthlyOrders = Number(availability.monthly_orders || 0);
+            const monthlyKm = Number(availability.monthly_km || 0);
+            const kmLabel = Number.isInteger(monthlyKm) ? monthlyKm.toString() : monthlyKm.toFixed(2);
+            return `(${monthlyOrders} order) (${kmLabel} km)`;
         }
 
         function addCrew() {
@@ -570,7 +671,10 @@
                 <div class="flex-1">
                     <select name="crew_ids[]" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                         <option value="">Select Employee</option>
-                        ${employees.map(emp => `<option value="${emp.id}">${emp.full_name} - ${emp.position?.nama ?? ''}</option>`).join('')}
+                        ${employees.map(emp => {
+                            const isActive = (emp.status || '').toLowerCase() === 'active';
+                            return `<option value="${emp.id}" ${isActive ? '' : 'disabled'}>${emp.full_name} - ${emp.position?.nama ?? ''} ${getCrewIndicator(emp)} ${getCrewMonthlyStats(emp)}</option>`;
+                        }).join('')}
                     </select>
                 </div>
                 <div class="flex-1">

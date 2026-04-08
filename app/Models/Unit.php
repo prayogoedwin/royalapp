@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Unit extends Model
 {
@@ -17,6 +18,8 @@ class Unit extends Model
         'tgl_perpanjangan_pajak_berikutnya',
         'tgl_ganti_plat',
         'tgl_ganti_plat_berikutnya',
+        'tgl_kir_terakhir',
+        'tgl_kir_berikutnya',
     ];
 
     protected $casts = [
@@ -24,6 +27,8 @@ class Unit extends Model
         'tgl_perpanjangan_pajak_berikutnya' => 'date',
         'tgl_ganti_plat' => 'date',
         'tgl_ganti_plat_berikutnya' => 'date',
+        'tgl_kir_terakhir' => 'date',
+        'tgl_kir_berikutnya' => 'date',
     ];
 
     public function division(): BelongsTo
@@ -31,41 +36,50 @@ class Unit extends Model
         return $this->belongsTo(Division::class);
     }
 
-    /**
-     * Check if tax renewal is due within the notification period
-     */
+    public function vehicleMaintenances(): HasMany
+    {
+        return $this->hasMany(VehicleMaintenance::class);
+    }
+
     public function isPajakDueSoon(): bool
     {
         if (!$this->tgl_perpanjangan_pajak_berikutnya) {
             return false;
         }
 
-        $notificationDays = (int) config('app.unit_notification_days', 10);
+        $notificationDays = (int) config('app.unit_notification_days', 30);
         $dueDate = $this->tgl_perpanjangan_pajak_berikutnya;
         $notificationDate = now()->addDays($notificationDays);
 
         return $dueDate->lte($notificationDate) && $dueDate->gte(now());
     }
 
-    /**
-     * Check if plate renewal is due within the notification period
-     */
     public function isPlatDueSoon(): bool
     {
         if (!$this->tgl_ganti_plat_berikutnya) {
             return false;
         }
 
-        $notificationDays = (int) config('app.unit_notification_days', 10);
+        $notificationDays = (int) config('app.unit_notification_days', 30);
         $dueDate = $this->tgl_ganti_plat_berikutnya;
         $notificationDate = now()->addDays($notificationDays);
 
         return $dueDate->lte($notificationDate) && $dueDate->gte(now());
     }
 
-    /**
-     * Get days until tax renewal
-     */
+    public function isKirDueSoon(): bool
+    {
+        if (!$this->tgl_kir_berikutnya) {
+            return false;
+        }
+
+        $notificationDays = (int) config('app.unit_notification_days', 30);
+        $dueDate = $this->tgl_kir_berikutnya;
+        $notificationDate = now()->addDays($notificationDays);
+
+        return $dueDate->lte($notificationDate) && $dueDate->gte(now());
+    }
+
     public function daysUntilPajakRenewal(): ?int
     {
         if (!$this->tgl_perpanjangan_pajak_berikutnya) {
@@ -75,9 +89,6 @@ class Unit extends Model
         return (int) now()->diffInDays($this->tgl_perpanjangan_pajak_berikutnya, false);
     }
 
-    /**
-     * Get days until plate renewal
-     */
     public function daysUntilPlatRenewal(): ?int
     {
         if (!$this->tgl_ganti_plat_berikutnya) {
@@ -87,12 +98,18 @@ class Unit extends Model
         return (int) now()->diffInDays($this->tgl_ganti_plat_berikutnya, false);
     }
 
-    /**
-     * Scope to get units with upcoming tax renewal
-     */
+    public function daysUntilKirRenewal(): ?int
+    {
+        if (!$this->tgl_kir_berikutnya) {
+            return null;
+        }
+
+        return (int) now()->diffInDays($this->tgl_kir_berikutnya, false);
+    }
+
     public function scopeWithUpcomingTaxRenewal($query)
     {
-        $notificationDays = (int) config('app.unit_notification_days', 10);
+        $notificationDays = (int) config('app.unit_notification_days', 30);
         $notificationDate = now()->addDays($notificationDays);
 
         return $query->whereNotNull('tgl_perpanjangan_pajak_berikutnya')
@@ -100,16 +117,23 @@ class Unit extends Model
             ->whereDate('tgl_perpanjangan_pajak_berikutnya', '<=', $notificationDate);
     }
 
-    /**
-     * Scope to get units with upcoming plate renewal
-     */
     public function scopeWithUpcomingPlateRenewal($query)
     {
-        $notificationDays = (int) config('app.unit_notification_days', 10);
+        $notificationDays = (int) config('app.unit_notification_days', 30);
         $notificationDate = now()->addDays($notificationDays);
 
         return $query->whereNotNull('tgl_ganti_plat_berikutnya')
             ->whereDate('tgl_ganti_plat_berikutnya', '>=', now())
             ->whereDate('tgl_ganti_plat_berikutnya', '<=', $notificationDate);
+    }
+
+    public function scopeWithUpcomingKirRenewal($query)
+    {
+        $notificationDays = (int) config('app.unit_notification_days', 30);
+        $notificationDate = now()->addDays($notificationDays);
+
+        return $query->whereNotNull('tgl_kir_berikutnya')
+            ->whereDate('tgl_kir_berikutnya', '>=', now())
+            ->whereDate('tgl_kir_berikutnya', '<=', $notificationDate);
     }
 }

@@ -65,6 +65,10 @@
                 </div>
 
                 <div>
+                    <x-forms.input label="Appointment" name="appointment" type="text" value="{{ old('appointment') }}" placeholder="Sebelum Jam 8 / jam 8.05 / IDEM" />
+                </div>
+
+                <div>
                     <x-forms.input label="Pickup Date & Time" name="pickup_datetime" type="datetime-local" value="{{ old('pickup_datetime') }}" required />
                 </div>
 
@@ -73,7 +77,24 @@
                 </div>
 
                 <div>
-                    <x-forms.input label="Payment Method" name="payment_method" type="text" value="{{ old('payment_method') }}" />
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Payment Method</label>
+                    <select name="payment_method" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                        <option value="">-</option>
+                        @foreach($paymentMethods as $value => $label)
+                            <option value="{{ $value }}" @selected(old('payment_method') === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    @error('payment_method')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status Pembayaran <span class="text-red-500">*</span></label>
+                    <select name="payment_status" required class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                        @foreach($paymentStatuses as $value => $label)
+                            <option value="{{ $value }}" @selected(old('payment_status', 'UNPAID') === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    @error('payment_status')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
             </div>
 
@@ -143,6 +164,9 @@
                 <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">{{ __('Crew Assignment') }}</h2>
                 <button type="button" onclick="addCrew()" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">+ Add Crew</button>
             </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                🔴 Ongoing, 🟡 Bentrok jadwal pickup, 🟢 Tersedia, ⚫ Off/Inactive (disabled)
+            </p>
             
             <div id="crew-list" class="space-y-3"></div>
         </div>
@@ -167,6 +191,7 @@
 
     <script>
         const employees = @json($employees);
+        const employeeAvailability = @json($employeeAvailability);
         const units = @json($units);
         let crewCount = 0;
         let photoCount = 0;
@@ -212,6 +237,29 @@
             document.getElementById('division_id').dispatchEvent(new Event('change'));
         }
 
+        function getCrewIndicator(emp) {
+            if ((emp.status || '').toLowerCase() !== 'active') {
+                return '⚫';
+            }
+            const pickupValue = document.getElementById('pickup_datetime')?.value || '';
+            const availability = employeeAvailability?.[emp.id] || { has_ongoing: false, pickup_slots: [] };
+            if (availability.has_ongoing) {
+                return '🔴';
+            }
+            if (pickupValue && (availability.pickup_slots || []).includes(pickupValue)) {
+                return '🟡';
+            }
+            return '🟢';
+        }
+
+        function getCrewMonthlyStats(emp) {
+            const availability = employeeAvailability?.[emp.id] || {};
+            const monthlyOrders = Number(availability.monthly_orders || 0);
+            const monthlyKm = Number(availability.monthly_km || 0);
+            const kmLabel = Number.isInteger(monthlyKm) ? monthlyKm.toString() : monthlyKm.toFixed(2);
+            return `(${monthlyOrders} order) (${kmLabel} km)`;
+        }
+
         function addCrew() {
             const crewList = document.getElementById('crew-list');
             const crewItem = document.createElement('div');
@@ -220,7 +268,10 @@
                 <div class="flex-1">
                     <select name="crew_ids[]" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                         <option value="">Select Employee</option>
-                        ${employees.map(emp => `<option value="${emp.id}">${emp.full_name} - ${emp.position.nama}</option>`).join('')}
+                        ${employees.map(emp => {
+                            const isActive = (emp.status || '').toLowerCase() === 'active';
+                            return `<option value="${emp.id}" ${isActive ? '' : 'disabled'}>${emp.full_name} - ${emp.position?.nama ?? ''} ${getCrewIndicator(emp)} ${getCrewMonthlyStats(emp)}</option>`;
+                        }).join('')}
                     </select>
                 </div>
                 <div class="flex-1">
