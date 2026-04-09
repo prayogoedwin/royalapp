@@ -262,7 +262,19 @@ class AbsensiApiController extends Controller
             ->where('employee_id', $employee->id)
             ->whereBetween('tanggal', [$start->toDateString(), $end->toDateString()])
             ->orderBy('tanggal')
-            ->get();
+            ->get()
+            ->keyBy(fn (Absensi $item) => $item->tanggal?->format('Y-m-d'));
+
+        $items = [];
+        $cursor = $start->copy();
+        while ($cursor->lte($end)) {
+            $dateKey = $cursor->format('Y-m-d');
+            $items[] = [
+                'tanggal' => $dateKey,
+                'absensi' => $rows->get($dateKey),
+            ];
+            $cursor->addDay();
+        }
 
         $summaryByStatus = $rows->groupBy('status')->map->count();
 
@@ -271,9 +283,10 @@ class AbsensiApiController extends Controller
             'year' => $year,
             'period_start' => $start->toDateString(),
             'period_end' => $end->toDateString(),
+            'total_days_in_month' => $start->daysInMonth,
             'total_days_with_record' => $rows->count(),
             'summary_by_status' => $summaryByStatus,
-            'items' => $rows,
+            'items' => $items,
         ]);
     }
 }
