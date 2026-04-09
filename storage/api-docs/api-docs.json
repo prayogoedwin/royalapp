@@ -162,6 +162,160 @@
                 ]
             }
         },
+        "/api/absensi/masuk": {
+            "post": {
+                "tags": [
+                    "Absensi"
+                ],
+                "summary": "Absen masuk",
+                "operationId": "7c7e9c6508e5f4a2fe4db6d102080170",
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "tanggal": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-04-09"
+                                    },
+                                    "jam_masuk": {
+                                        "type": "string",
+                                        "example": "08:00"
+                                    },
+                                    "keterangan": {
+                                        "type": "string",
+                                        "example": "Masuk shift pagi"
+                                    },
+                                    "foto_masuk": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/absensi/pulang": {
+            "post": {
+                "tags": [
+                    "Absensi"
+                ],
+                "summary": "Absen pulang",
+                "operationId": "199584291035627ddc4c131792d06872",
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "tanggal": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-04-09"
+                                    },
+                                    "jam_pulang": {
+                                        "type": "string",
+                                        "example": "17:00"
+                                    },
+                                    "keterangan": {
+                                        "type": "string",
+                                        "example": "Pulang shift pagi"
+                                    },
+                                    "foto_pulang": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/absensi/latest": {
+            "get": {
+                "tags": [
+                    "Absensi"
+                ],
+                "summary": "Lihat absensi masuk/pulang terakhir (bukan hari ini-only)",
+                "operationId": "48a4998853bb6a195e6e999b63c5aa30",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/absensi/rekap-bulanan": {
+            "get": {
+                "tags": [
+                    "Absensi"
+                ],
+                "summary": "Rekap absensi per bulan (default bulan ini)",
+                "operationId": "5b5934d79aa0ae2e726153549729d2a4",
+                "parameters": [
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 4
+                        }
+                    },
+                    {
+                        "name": "year",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 2026
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/order-statuses": {
             "get": {
                 "tags": [
@@ -1013,6 +1167,10 @@
         {
             "name": "Stats",
             "description": "Stats"
+        },
+        {
+            "name": "Absensi",
+            "description": "Absensi"
         },
         {
             "name": "Orders",

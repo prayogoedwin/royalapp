@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\AbsensiApiController;
 use App\Http\Controllers\Api\OrderApiController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
@@ -14,6 +15,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/profile/password', [UserController::class, 'updatePassword']);
     Route::get('/stats/orders/total', [UserController::class, 'totalOrders']);
     Route::get('/stats/tasks/total', [UserController::class, 'totalTasks']);
+    Route::post('/absensi/masuk', [AbsensiApiController::class, 'storeMasuk']);
+    Route::post('/absensi/pulang', [AbsensiApiController::class, 'storePulang']);
+    Route::get('/absensi/latest', [AbsensiApiController::class, 'latest']);
+    Route::get('/absensi/rekap-bulanan', [AbsensiApiController::class, 'monthlyRecap']);
 
     Route::get('/order-statuses', [OrderApiController::class, 'statuses']);
     Route::get('/orders', [OrderApiController::class, 'myOrders']);

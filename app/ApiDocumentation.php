@@ -82,6 +82,70 @@ class ApiDocumentation
     #[OA\Get(path: '/api/stats/tasks/total', tags: ['Stats'], summary: 'Count total task by user', security: [['sanctum' => []]], responses: [new OA\Response(response: 200, description: 'OK')])]
     public function totalTasks(): void {}
 
+    #[OA\Post(
+        path: '/api/absensi/masuk',
+        tags: ['Absensi'],
+        summary: 'Absen masuk',
+        security: [['sanctum' => []]],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(properties: [
+                    new OA\Property(property: 'tanggal', type: 'string', format: 'date', example: '2026-04-09'),
+                    new OA\Property(property: 'jam_masuk', type: 'string', example: '08:00'),
+                    new OA\Property(property: 'keterangan', type: 'string', example: 'Masuk shift pagi'),
+                    new OA\Property(property: 'foto_masuk', type: 'string', format: 'binary')
+                ])
+            )
+        ),
+        responses: [new OA\Response(response: 200, description: 'OK')]
+    )]
+    public function absensiMasuk(): void {}
+
+    #[OA\Post(
+        path: '/api/absensi/pulang',
+        tags: ['Absensi'],
+        summary: 'Absen pulang',
+        security: [['sanctum' => []]],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(properties: [
+                    new OA\Property(property: 'tanggal', type: 'string', format: 'date', example: '2026-04-09'),
+                    new OA\Property(property: 'jam_pulang', type: 'string', example: '17:00'),
+                    new OA\Property(property: 'keterangan', type: 'string', example: 'Pulang shift pagi'),
+                    new OA\Property(property: 'foto_pulang', type: 'string', format: 'binary')
+                ])
+            )
+        ),
+        responses: [new OA\Response(response: 200, description: 'OK')]
+    )]
+    public function absensiPulang(): void {}
+
+    #[OA\Get(
+        path: '/api/absensi/latest',
+        tags: ['Absensi'],
+        summary: 'Lihat absensi masuk/pulang terakhir (bukan hari ini-only)',
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK')]
+    )]
+    public function absensiLatest(): void {}
+
+    #[OA\Get(
+        path: '/api/absensi/rekap-bulanan',
+        tags: ['Absensi'],
+        summary: 'Rekap absensi per bulan (default bulan ini)',
+        security: [['sanctum' => []]],
+        parameters: [
+            new OA\Parameter(name: 'month', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 4)),
+            new OA\Parameter(name: 'year', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 2026))
+        ],
+        responses: [new OA\Response(response: 200, description: 'OK')]
+    )]
+    public function absensiRecapBulanan(): void {}
+
     #[OA\Get(
         path: '/api/order-statuses',
         tags: ['Orders'],
