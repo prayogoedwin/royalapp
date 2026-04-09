@@ -44,6 +44,8 @@ class AbsensiApiController extends Controller
         $validated = $request->validate([
             'tanggal' => ['nullable', 'date'],
             'jam_masuk' => ['nullable', 'date_format:H:i'],
+            'lat' => ['nullable', 'numeric', 'between:-90,90'],
+            'lng' => ['nullable', 'numeric', 'between:-180,180'],
             'keterangan' => ['nullable', 'string'],
             'foto_masuk' => ['nullable', 'image', 'max:2048'],
             'device_info' => ['nullable', 'array'],
@@ -74,6 +76,10 @@ class AbsensiApiController extends Controller
                 'pool_id' => $employee->pool_id,
                 'tanggal' => $tanggal,
                 'jam_masuk' => $jamMasuk,
+                'lat' => $validated['lat'] ?? null,
+                'lng' => $validated['lng'] ?? null,
+                'lat_masuk' => $validated['lat'] ?? null,
+                'lng_masuk' => $validated['lng'] ?? null,
                 'status' => Absensi::STATUS_HADIR,
                 'is_overnight' => false,
                 'device_info' => $validated['device_info'] ?? null,
@@ -88,6 +94,10 @@ class AbsensiApiController extends Controller
             }
 
             $absensi->jam_masuk = $jamMasuk;
+            $absensi->lat = $validated['lat'] ?? $absensi->lat;
+            $absensi->lng = $validated['lng'] ?? $absensi->lng;
+            $absensi->lat_masuk = $validated['lat'] ?? $absensi->lat_masuk;
+            $absensi->lng_masuk = $validated['lng'] ?? $absensi->lng_masuk;
             $absensi->status = Absensi::STATUS_HADIR;
             $absensi->pool_id = $employee->pool_id;
             $absensi->device_info = $validated['device_info'] ?? $absensi->device_info;
@@ -114,6 +124,8 @@ class AbsensiApiController extends Controller
         $validated = $request->validate([
             'tanggal' => ['nullable', 'date'],
             'jam_pulang' => ['nullable', 'date_format:H:i'],
+            'lat' => ['nullable', 'numeric', 'between:-90,90'],
+            'lng' => ['nullable', 'numeric', 'between:-180,180'],
             'keterangan' => ['nullable', 'string'],
             'foto_pulang' => ['nullable', 'image', 'max:2048'],
             'device_info' => ['nullable', 'array'],
@@ -167,6 +179,10 @@ class AbsensiApiController extends Controller
         $isOvernight = $jamMasuk && $jamPulang ? $jamPulang <= $jamMasuk : false;
 
         $absensi->jam_pulang = $jamPulang;
+        $absensi->lat = $validated['lat'] ?? $absensi->lat;
+        $absensi->lng = $validated['lng'] ?? $absensi->lng;
+        $absensi->lat_pulang = $validated['lat'] ?? $absensi->lat_pulang;
+        $absensi->lng_pulang = $validated['lng'] ?? $absensi->lng_pulang;
         $absensi->is_overnight = $absensi->is_overnight ?? $isOvernight;
         $absensi->status = Absensi::STATUS_HADIR;
         $absensi->pool_id = $employee->pool_id;

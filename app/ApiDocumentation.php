@@ -94,6 +94,8 @@ class ApiDocumentation
                 schema: new OA\Schema(properties: [
                     new OA\Property(property: 'tanggal', type: 'string', format: 'date', example: '2026-04-09'),
                     new OA\Property(property: 'jam_masuk', type: 'string', example: '08:00'),
+                    new OA\Property(property: 'lat', type: 'number', format: 'float', example: -6.200000),
+                    new OA\Property(property: 'lng', type: 'number', format: 'float', example: 106.816666),
                     new OA\Property(property: 'keterangan', type: 'string', example: 'Masuk shift pagi'),
                     new OA\Property(property: 'foto_masuk', type: 'string', format: 'binary')
                 ])
@@ -115,6 +117,8 @@ class ApiDocumentation
                 schema: new OA\Schema(properties: [
                     new OA\Property(property: 'tanggal', type: 'string', format: 'date', example: '2026-04-09'),
                     new OA\Property(property: 'jam_pulang', type: 'string', example: '17:00'),
+                    new OA\Property(property: 'lat', type: 'number', format: 'float', example: -6.200000),
+                    new OA\Property(property: 'lng', type: 'number', format: 'float', example: 106.816666),
                     new OA\Property(property: 'keterangan', type: 'string', example: 'Pulang shift pagi'),
                     new OA\Property(property: 'foto_pulang', type: 'string', format: 'binary')
                 ])

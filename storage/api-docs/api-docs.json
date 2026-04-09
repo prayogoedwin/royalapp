@@ -184,6 +184,16 @@
                                         "type": "string",
                                         "example": "08:00"
                                     },
+                                    "lat": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": -6.2
+                                    },
+                                    "lng": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 106.816666
+                                    },
                                     "keterangan": {
                                         "type": "string",
                                         "example": "Masuk shift pagi"
@@ -231,6 +241,16 @@
                                     "jam_pulang": {
                                         "type": "string",
                                         "example": "17:00"
+                                    },
+                                    "lat": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": -6.2
+                                    },
+                                    "lng": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 106.816666
                                     },
                                     "keterangan": {
                                         "type": "string",
