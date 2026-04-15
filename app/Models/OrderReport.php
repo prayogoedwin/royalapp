@@ -14,6 +14,8 @@ class OrderReport extends Model
         'order_id',
         'km_awal',
         'km_akhir',
+        'saldo_etoll_before',
+        'saldo_etoll_after',
         'driver_signature',
         'status',
         'submitted_at',
@@ -31,6 +33,8 @@ class OrderReport extends Model
         'submitted_at' => 'datetime',
         'approved_at' => 'datetime',
         'deliver_datetime' => 'datetime',
+        'saldo_etoll_before' => 'decimal:2',
+        'saldo_etoll_after' => 'decimal:2',
     ];
 
     public function order(): BelongsTo

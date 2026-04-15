@@ -350,6 +350,8 @@ class OrderController extends Controller
                 'km_awal' => ['nullable', 'numeric', 'min:0'],
                 'km_akhir' => ['nullable', 'numeric', 'min:0'],
                 'order_status_id' => ['required', 'exists:order_statuses,id'],
+                'saldo_etoll_before' => ['nullable', 'numeric', 'min:0'],
+                'saldo_etoll_after' => ['nullable', 'numeric', 'min:0'],
                 'deliver_datetime' => ['nullable', 'date'],
                 'notes' => ['nullable', 'string'],
             ]);
@@ -365,6 +367,8 @@ class OrderController extends Controller
                     [
                         'km_awal' => $validated['km_awal'] ?? 0,
                         'km_akhir' => $validated['km_akhir'] ?? 0,
+                        'saldo_etoll_before' => $validated['saldo_etoll_before'] ?? null,
+                        'saldo_etoll_after' => $validated['saldo_etoll_after'] ?? null,
                         'deliver_datetime' => $validated['deliver_datetime'] ?? null,
                         'notes' => $validated['notes'] ?? null,
                         'updated_by' => auth()->id(),
@@ -424,17 +428,15 @@ class OrderController extends Controller
             }
             $validated = $request->validate([
                 'etolls' => ['nullable', 'array'],
-                'etolls.*.balance_before' => ['nullable', 'numeric', 'min:0'],
-                'etolls.*.balance_after' => ['nullable', 'numeric', 'min:0'],
+                'etolls.*.amount' => ['nullable', 'numeric', 'min:0'],
             ]);
             DB::beginTransaction();
             try {
                 $rows = $validated['etolls'] ?? [];
                 foreach ($rows as $i => $row) {
-                    $balanceBefore = $row['balance_before'] ?? null;
-                    $balanceAfter = $row['balance_after'] ?? null;
+                    $amount = $row['amount'] ?? null;
                     $hasFile = $request->hasFile('etolls.'.$i.'.receipt_photo');
-                    if ($balanceBefore === null && $balanceAfter === null && !$hasFile) {
+                    if ($amount === null && !$hasFile) {
                         continue;
                     }
                     $receiptPath = null;
@@ -445,9 +447,9 @@ class OrderController extends Controller
                     OrderEtollTransaction::create([
                         'order_id' => $order->id,
                         'topup_amount' => null,
-                        'usage_amount' => null,
-                        'balance_before' => $balanceBefore ?? 0,
-                        'balance_after' => $balanceAfter ?? 0,
+                        'usage_amount' => $amount ?? 0,
+                        'balance_before' => null,
+                        'balance_after' => null,
                         'receipt_photo' => $receiptPath,
                         'created_by' => auth()->id(),
                     ]);

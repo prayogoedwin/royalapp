@@ -353,6 +353,24 @@
                         value="{{ old('deliver_datetime', ($order->orderReport?->deliver_datetime ? $order->orderReport->deliver_datetime->format('Y-m-d\TH:i') : null)) }}"
                     />
                 </div>
+                <div>
+                    <x-forms.input
+                        label="Saldo Sebelum E-Toll"
+                        name="saldo_etoll_before"
+                        type="number"
+                        step="0.01"
+                        value="{{ old('saldo_etoll_before', $order->orderReport?->saldo_etoll_before) }}"
+                    />
+                </div>
+                <div>
+                    <x-forms.input
+                        label="Saldo Sesudah E-Toll"
+                        name="saldo_etoll_after"
+                        type="number"
+                        step="0.01"
+                        value="{{ old('saldo_etoll_after', $order->orderReport?->saldo_etoll_after) }}"
+                    />
+                </div>
             </div>
 
             <div class="mb-4">
@@ -461,20 +479,22 @@
                     <table class="min-w-full text-sm">
                         <thead>
                             <tr class="border-b border-gray-200 dark:border-gray-700 text-xs uppercase text-gray-500 dark:text-gray-400">
-                                <th class="py-2 pr-4 text-right">Saldo Sebelum</th>
-                                <th class="py-2 pr-4 text-right">Saldo Sesudah</th>
+                                <th class="py-2 pr-4 text-right">Bayar Per Pintu Tol</th>
                                 <th class="py-2 pr-4 text-left">Foto</th>
                                 <th class="py-2 pr-4 text-right">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                             @foreach($order->orderEtollTransactions as $trx)
+                                @php
+                                    $paidPerGate = $trx->usage_amount;
+                                    if ($paidPerGate === null && $trx->balance_before !== null && $trx->balance_after !== null) {
+                                        $paidPerGate = max(0, (float) $trx->balance_before - (float) $trx->balance_after);
+                                    }
+                                @endphp
                                 <tr>
                                     <td class="py-2 pr-4 text-right text-gray-900 dark:text-gray-100">
-                                        Rp {{ number_format($trx->balance_before ?? 0, 0, ',', '.') }}
-                                    </td>
-                                    <td class="py-2 pr-4 text-right text-gray-900 dark:text-gray-100">
-                                        Rp {{ number_format($trx->balance_after ?? 0, 0, ',', '.') }}
+                                        Rp {{ number_format($paidPerGate ?? 0, 0, ',', '.') }}
                                     </td>
                                     <td class="py-2 pr-4">
                                         @if($trx->receipt_photo ?? null)
@@ -501,7 +521,7 @@
                 </div>
             @endif
 
-            <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tambah Transaksi E-Toll Baru (dengan upload foto)</p>
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tambah Transaksi E-Toll Baru (bayar per pintu tol + upload foto struk)</p>
             <div id="etoll-list" class="space-y-3 mb-4"></div>
             <button type="button" onclick="addEtollRow()" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs mb-4">+ Tambah Transaksi</button>
 
@@ -747,18 +767,14 @@
             const container = document.getElementById('etoll-list');
             const idx = etollCount++;
             const row = document.createElement('div');
-            row.className = 'grid grid-cols-1 md:grid-cols-3 gap-3 border border-gray-200 dark:border-gray-700 rounded-md p-3';
+            row.className = 'grid grid-cols-1 md:grid-cols-2 gap-3 border border-gray-200 dark:border-gray-700 rounded-md p-3';
             row.innerHTML = `
                 <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Saldo Sebelum</label>
-                    <input type="number" step="0.01" min="0" name="etolls[${idx}][balance_before]" class="block w-full px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-gray-100" placeholder="Rp" />
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Bayar Per Pintu Tol</label>
+                    <input type="number" step="0.01" min="0" name="etolls[${idx}][amount]" class="block w-full px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-gray-100" placeholder="Rp" />
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Saldo Sesudah</label>
-                    <input type="number" step="0.01" min="0" name="etolls[${idx}][balance_after]" class="block w-full px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-gray-100" placeholder="Rp" />
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Foto receipt e-toll</label>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Foto struk e-toll</label>
                     <input type="file" name="etolls[${idx}][receipt_photo]" accept="image/*" class="block w-full text-sm text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer bg-white dark:bg-gray-700" />
                 </div>
             `;

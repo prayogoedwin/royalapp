@@ -128,6 +128,18 @@
                                 <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Deliver</dt>
                                 <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->orderReport->deliver_datetime?->format('d M Y H:i') ?? '-' }}</dd>
                             </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Saldo Sebelum E-Toll</dt>
+                                <dd class="text-base text-gray-900 dark:text-gray-100">
+                                    {{ $order->orderReport->saldo_etoll_before !== null ? 'Rp '.number_format($order->orderReport->saldo_etoll_before, 0, ',', '.') : '-' }}
+                                </dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Saldo Sesudah E-Toll</dt>
+                                <dd class="text-base text-gray-900 dark:text-gray-100">
+                                    {{ $order->orderReport->saldo_etoll_after !== null ? 'Rp '.number_format($order->orderReport->saldo_etoll_after, 0, ',', '.') : '-' }}
+                                </dd>
+                            </div>
                             @if($order->orderReport->submitted_at)
                                 <div>
                                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Submitted At</dt>
@@ -244,19 +256,21 @@
                             <table class="min-w-full text-sm">
                                 <thead>
                                     <tr class="border-b border-gray-200 dark:border-gray-700 text-xs uppercase text-gray-500 dark:text-gray-400">
-                                        <th class="py-2 pr-4 text-right">Saldo Sebelum</th>
-                                        <th class="py-2 pr-4 text-right">Saldo Sesudah</th>
+                                        <th class="py-2 pr-4 text-right">Bayar Per Pintu Tol</th>
                                         <th class="py-2 pr-4 text-left">Foto</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                                     @foreach($order->orderEtollTransactions as $trx)
+                                        @php
+                                            $paidPerGate = $trx->usage_amount;
+                                            if ($paidPerGate === null && $trx->balance_before !== null && $trx->balance_after !== null) {
+                                                $paidPerGate = max(0, (float) $trx->balance_before - (float) $trx->balance_after);
+                                            }
+                                        @endphp
                                         <tr>
                                             <td class="py-2 pr-4 text-right text-gray-900 dark:text-gray-100">
-                                                Rp {{ number_format($trx->balance_before ?? 0, 0, ',', '.') }}
-                                            </td>
-                                            <td class="py-2 pr-4 text-right text-gray-900 dark:text-gray-100">
-                                                Rp {{ number_format($trx->balance_after ?? 0, 0, ',', '.') }}
+                                                Rp {{ number_format($paidPerGate ?? 0, 0, ',', '.') }}
                                             </td>
                                             <td class="py-2 pr-4">
                                                 @if($trx->receipt_photo ?? null)
