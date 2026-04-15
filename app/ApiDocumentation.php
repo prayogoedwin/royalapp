@@ -34,9 +34,18 @@ use OpenApi\Attributes as OA;
     properties: [
         new OA\Property(property: 'km_awal', type: 'number', format: 'float', example: 145458),
         new OA\Property(property: 'km_akhir', type: 'number', format: 'float', example: 150480),
+        new OA\Property(property: 'saldo_etoll_before', type: 'number', format: 'float', example: 20000),
+        new OA\Property(property: 'saldo_etoll_after', type: 'number', format: 'float', example: 15000),
         new OA\Property(property: 'deliver_datetime', type: 'string', format: 'date-time', example: '2026-04-10T08:30:00+07:00'),
         new OA\Property(property: 'notes', type: 'string', example: 'Pasien diturunkan dengan aman'),
         new OA\Property(property: 'order_status_id', type: 'integer', example: 3)
+    ]
+)]
+#[OA\Schema(
+    schema: 'OrderEtollRequest',
+    properties: [
+        new OA\Property(property: 'amount', type: 'number', format: 'float', example: 5000),
+        new OA\Property(property: 'receipt_photo', type: 'string', format: 'binary')
     ]
 )]
 class ApiDocumentation
@@ -274,8 +283,50 @@ class ApiDocumentation
     public function orderReport(): void {}
 
     #[OA\Get(path: '/api/orders/{order}/etolls', tags: ['Order Etoll'], summary: 'List etoll transactions', security: [['sanctum' => []]], parameters: [new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
-    #[OA\Post(path: '/api/orders/{order}/etolls', tags: ['Order Etoll'], summary: 'Create etoll transaction', security: [['sanctum' => []]], parameters: [new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 201, description: 'Created')])]
-    #[OA\Put(path: '/api/orders/{order}/etolls/{trx}', tags: ['Order Etoll'], summary: 'Update etoll transaction', security: [['sanctum' => []]], parameters: [new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'trx', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
+    #[OA\Post(
+        path: '/api/orders/{order}/etolls',
+        tags: ['Order Etoll'],
+        summary: 'Create etoll transaction (amount per gate + receipt)',
+        security: [['sanctum' => []]],
+        parameters: [new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    required: ['amount'],
+                    properties: [
+                        new OA\Property(property: 'amount', type: 'number', format: 'float', example: 5000),
+                        new OA\Property(property: 'receipt_photo', type: 'string', format: 'binary')
+                    ]
+                )
+            )
+        ),
+        responses: [new OA\Response(response: 201, description: 'Created')]
+    )]
+    #[OA\Put(
+        path: '/api/orders/{order}/etolls/{trx}',
+        tags: ['Order Etoll'],
+        summary: 'Update etoll transaction (amount per gate + receipt)',
+        security: [['sanctum' => []]],
+        parameters: [
+            new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'trx', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+        ],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    properties: [
+                        new OA\Property(property: 'amount', type: 'number', format: 'float', example: 5000),
+                        new OA\Property(property: 'receipt_photo', type: 'string', format: 'binary')
+                    ]
+                )
+            )
+        ),
+        responses: [new OA\Response(response: 200, description: 'OK')]
+    )]
     #[OA\Delete(path: '/api/orders/{order}/etolls/{trx}', tags: ['Order Etoll'], summary: 'Delete etoll transaction', security: [['sanctum' => []]], parameters: [new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'trx', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
     public function orderEtolls(): void {}
 

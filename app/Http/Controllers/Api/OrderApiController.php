@@ -18,6 +18,23 @@ use Illuminate\Support\Facades\Storage;
 
 class OrderApiController extends Controller
 {
+    private function etollPayload(OrderEtollTransaction $trx): array
+    {
+        return [
+            'id' => $trx->id,
+            'order_id' => $trx->order_id,
+            'amount' => $trx->usage_amount,
+            'receipt_photo' => $trx->receipt_photo,
+            'balance_before' => $trx->balance_before,
+            'balance_after' => $trx->balance_after,
+            'topup_amount' => $trx->topup_amount,
+            'usage_amount' => $trx->usage_amount,
+            'created_by' => $trx->created_by,
+            'created_at' => $trx->created_at,
+            'updated_at' => $trx->updated_at,
+        ];
+    }
+
     private function okResponse(mixed $data = [], string $message = 'Success', int $status = 200): JsonResponse
     {
         return response()->json([
@@ -272,6 +289,8 @@ class OrderApiController extends Controller
         $validated = $request->validate([
             'km_awal' => ['nullable', 'numeric', 'min:0'],
             'km_akhir' => ['nullable', 'numeric', 'min:0'],
+            'saldo_etoll_before' => ['nullable', 'numeric', 'min:0'],
+            'saldo_etoll_after' => ['nullable', 'numeric', 'min:0'],
             'deliver_datetime' => ['nullable', 'date'],
             'notes' => ['nullable', 'string'],
             'order_status_id' => ['nullable', 'exists:order_statuses,id'],
@@ -281,6 +300,8 @@ class OrderApiController extends Controller
             [
                 'km_awal' => $validated['km_awal'] ?? null,
                 'km_akhir' => $validated['km_akhir'] ?? null,
+                'saldo_etoll_before' => $validated['saldo_etoll_before'] ?? null,
+                'saldo_etoll_after' => $validated['saldo_etoll_after'] ?? null,
                 'deliver_datetime' => $validated['deliver_datetime'] ?? null,
                 'notes' => $validated['notes'] ?? null,
                 'updated_by' => $request->user()->id,
@@ -298,7 +319,12 @@ class OrderApiController extends Controller
     {
         $order = $this->findUserOrder($request, $orderId);
         if (!$order) return $this->errorResponse('Order not found.', 404);
-        return $this->okResponse($order->orderEtollTransactions()->latest()->get());
+        $rows = $order->orderEtollTransactions()
+            ->latest()
+            ->get()
+            ->map(fn (OrderEtollTransaction $trx) => $this->etollPayload($trx))
+            ->values();
+        return $this->okResponse($rows);
     }
 
     /** @OA\Post(path="/api/orders/{order}/etolls", tags={"Order Etoll"}, summary="Create etoll transaction", security={{"sanctum":{}}}, @OA\Parameter(name="order", in="path", required=true, @OA\Schema(type="integer")), @OA\Response(response=201, description="Created")) */
@@ -307,19 +333,24 @@ class OrderApiController extends Controller
         $order = $this->findUserOrder($request, $orderId);
         if (!$order) return $this->errorResponse('Order not found.', 404);
         $validated = $request->validate([
-            'balance_before' => ['required', 'numeric'],
-            'balance_after' => ['required', 'numeric'],
-            'topup_amount' => ['nullable', 'numeric'],
-            'usage_amount' => ['nullable', 'numeric'],
+            'amount' => ['required_without:usage_amount', 'nullable', 'numeric', 'min:0'],
+            'usage_amount' => ['required_without:amount', 'nullable', 'numeric', 'min:0'],
             'receipt_photo' => ['nullable', 'image', 'max:4096'],
         ]);
+        $amount = $validated['amount'] ?? $validated['usage_amount'] ?? 0;
         if ($request->hasFile('receipt_photo')) {
             $validated['receipt_photo'] = $request->file('receipt_photo')->store(UploadPath::dir('order-etoll'), 'public');
         }
-        $validated['order_id'] = $order->id;
-        $validated['created_by'] = $request->user()->id;
-        $trx = OrderEtollTransaction::create($validated);
-        return $this->okResponse($trx, 'Created', 201);
+        $trx = OrderEtollTransaction::create([
+            'order_id' => $order->id,
+            'topup_amount' => null,
+            'usage_amount' => $amount,
+            'balance_before' => null,
+            'balance_after' => null,
+            'receipt_photo' => $validated['receipt_photo'] ?? null,
+            'created_by' => $request->user()->id,
+        ]);
+        return $this->okResponse($this->etollPayload($trx), 'Created', 201);
     }
 
     /** @OA\Put(path="/api/orders/{order}/etolls/{trx}", tags={"Order Etoll"}, summary="Update etoll transaction", security={{"sanctum":{}}}, @OA\Parameter(name="order", in="path", required=true, @OA\Schema(type="integer")), @OA\Parameter(name="trx", in="path", required=true, @OA\Schema(type="integer")), @OA\Response(response=200, description="Updated")) */
@@ -330,18 +361,23 @@ class OrderApiController extends Controller
         $trx = $order->orderEtollTransactions()->find($trxId);
         if (!$trx) return $this->errorResponse('E-toll transaction not found.', 404);
         $validated = $request->validate([
-            'balance_before' => ['sometimes', 'numeric'],
-            'balance_after' => ['sometimes', 'numeric'],
-            'topup_amount' => ['nullable', 'numeric'],
-            'usage_amount' => ['nullable', 'numeric'],
+            'amount' => ['sometimes', 'nullable', 'numeric', 'min:0'],
+            'usage_amount' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'receipt_photo' => ['nullable', 'image', 'max:4096'],
         ]);
+        if (array_key_exists('amount', $validated) || array_key_exists('usage_amount', $validated)) {
+            $validated['usage_amount'] = $validated['amount'] ?? $validated['usage_amount'];
+            $validated['topup_amount'] = null;
+            $validated['balance_before'] = null;
+            $validated['balance_after'] = null;
+        }
+        unset($validated['amount']);
         if ($request->hasFile('receipt_photo')) {
             if ($trx->receipt_photo) Storage::disk('public')->delete($trx->receipt_photo);
             $validated['receipt_photo'] = $request->file('receipt_photo')->store(UploadPath::dir('order-etoll'), 'public');
         }
         $trx->update($validated);
-        return $this->okResponse($trx->fresh());
+        return $this->okResponse($this->etollPayload($trx->fresh()));
     }
 
     /** @OA\Delete(path="/api/orders/{order}/etolls/{trx}", tags={"Order Etoll"}, summary="Delete etoll transaction", security={{"sanctum":{}}}, @OA\Parameter(name="order", in="path", required=true, @OA\Schema(type="integer")), @OA\Parameter(name="trx", in="path", required=true, @OA\Schema(type="integer")), @OA\Response(response=200, description="Deleted")) */

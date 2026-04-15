@@ -853,7 +853,7 @@
                 "tags": [
                     "Order Etoll"
                 ],
-                "summary": "Create etoll transaction",
+                "summary": "Create etoll transaction (amount per gate + receipt)",
                 "operationId": "4aaff73d08243e141d1ca9af86becb40",
                 "parameters": [
                     {
@@ -865,6 +865,30 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 5000
+                                    },
+                                    "receipt_photo": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "201": {
                         "description": "Created"
@@ -882,7 +906,7 @@
                 "tags": [
                     "Order Etoll"
                 ],
-                "summary": "Update etoll transaction",
+                "summary": "Update etoll transaction (amount per gate + receipt)",
                 "operationId": "f7ba5723271d4c4a79b0f38215fee9cb",
                 "parameters": [
                     {
@@ -902,6 +926,27 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 5000
+                                    },
+                                    "receipt_photo": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "OK"
@@ -1150,6 +1195,16 @@
                         "format": "float",
                         "example": 150480
                     },
+                    "saldo_etoll_before": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 20000
+                    },
+                    "saldo_etoll_after": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 15000
+                    },
                     "deliver_datetime": {
                         "type": "string",
                         "format": "date-time",
@@ -1162,6 +1217,20 @@
                     "order_status_id": {
                         "type": "integer",
                         "example": 3
+                    }
+                },
+                "type": "object"
+            },
+            "OrderEtollRequest": {
+                "properties": {
+                    "amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 5000
+                    },
+                    "receipt_photo": {
+                        "type": "string",
+                        "format": "binary"
                     }
                 },
                 "type": "object"
