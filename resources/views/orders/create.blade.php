@@ -196,16 +196,12 @@
         let crewCount = 0;
         let photoCount = 0;
 
-        console.log('Units data:', units); // Debug
-
         // Toggle sections based on division
         document.getElementById('division_id').addEventListener('change', function() {
             const selectedOption = this.options[this.selectedIndex];
             const divisionName = selectedOption.getAttribute('data-name');
             const divisionId = parseInt(this.value);
-            
-            console.log('Division changed:', { divisionName, divisionId }); // Debug
-            
+
             document.getElementById('ambulance-section').classList.add('hidden');
             document.getElementById('towing-section').classList.add('hidden');
             
@@ -220,8 +216,7 @@
             unitSelect.innerHTML = '<option value="">Select Unit</option>';
             
             if (divisionId && !isNaN(divisionId)) {
-                const filteredUnits = units.filter(unit => unit.division_id === divisionId);
-                console.log('Filtered units:', filteredUnits); // Debug
+                const filteredUnits = units.filter(unit => Number(unit.division_id) === Number(divisionId));
                 
                 filteredUnits.forEach(unit => {
                     const option = document.createElement('option');

@@ -618,12 +618,12 @@
             const divisionSelect = document.getElementById('division_id');
             const unitSelect = document.getElementById('unit_code');
             const divisionId = parseInt(divisionSelect.value);
-            const currentUnit = @json($order->unit_code);
+            const currentUnit = @json(old('unit_code', $order->unit_code));
 
             unitSelect.innerHTML = '<option value="">Select Unit</option>';
 
             if (divisionId && !isNaN(divisionId)) {
-                const filteredUnits = units.filter(unit => unit.division_id === divisionId);
+                const filteredUnits = units.filter(unit => Number(unit.division_id) === Number(divisionId));
                 filteredUnits.forEach(unit => {
                     const option = document.createElement('option');
                     option.value = unit.code;
