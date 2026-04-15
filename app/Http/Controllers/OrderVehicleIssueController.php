@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\OrderVehicleIssue;
+use App\Support\OrderCategoryOptions;
 use App\Support\UploadPath;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,7 +29,7 @@ class OrderVehicleIssueController extends Controller
     public function store(Request $request, Order $order): RedirectResponse
     {
         $validated = $request->validate([
-            'issue_category' => ['required', 'in:mechanical,body,interior,safety,medical_equipment,other'],
+            'issue_category' => ['required', 'in:' . implode(',', array_keys(OrderCategoryOptions::issueCategories()))],
             'description' => ['required', 'string'],
             'priority' => ['required', 'in:low,medium,high,urgent'],
             'issue_photo' => ['nullable', 'image', 'max:2048'],
@@ -73,7 +74,7 @@ class OrderVehicleIssueController extends Controller
     public function update(Request $request, OrderVehicleIssue $orderVehicleIssue): RedirectResponse
     {
         $validated = $request->validate([
-            'issue_category' => ['required', 'in:mechanical,body,interior,safety,medical_equipment,other'],
+            'issue_category' => ['required', 'in:' . implode(',', array_keys(OrderCategoryOptions::issueCategories()))],
             'description' => ['required', 'string'],
             'priority' => ['required', 'in:low,medium,high,urgent'],
             'issue_photo' => ['nullable', 'image', 'max:2048'],

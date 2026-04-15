@@ -49,6 +49,13 @@ use OpenApi\Attributes as OA;
     ]
 )]
 #[OA\Schema(
+    schema: 'CategoryItem',
+    properties: [
+        new OA\Property(property: 'value', type: 'string', example: 'solar'),
+        new OA\Property(property: 'label', type: 'string', example: 'Solar/BBM')
+    ]
+)]
+#[OA\Schema(
     schema: 'OrderDetailData',
     properties: [
         new OA\Property(property: 'id', type: 'integer', example: 1),
@@ -201,6 +208,24 @@ class ApiDocumentation
         responses: [new OA\Response(response: 200, description: 'OK')]
     )]
     public function orderStatuses(): void {}
+
+    #[OA\Get(
+        path: '/api/order-expense-categories',
+        tags: ['Orders'],
+        summary: 'Get order expense categories',
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK')]
+    )]
+    public function orderExpenseCategories(): void {}
+
+    #[OA\Get(
+        path: '/api/order-issue-categories',
+        tags: ['Orders'],
+        summary: 'Get order issue categories',
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK')]
+    )]
+    public function orderIssueCategories(): void {}
 
     #[OA\Get(
         path: '/api/orders',
@@ -377,7 +402,30 @@ class ApiDocumentation
     public function orderEtolls(): void {}
 
     #[OA\Get(path: '/api/orders/{order}/vehicle-issues', tags: ['Order Vehicle Issues'], summary: 'List vehicle issues', security: [['sanctum' => []]], parameters: [new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
-    #[OA\Post(path: '/api/orders/{order}/vehicle-issues', tags: ['Order Vehicle Issues'], summary: 'Create vehicle issue', security: [['sanctum' => []]], parameters: [new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 201, description: 'Created')])]
+    #[OA\Post(
+        path: '/api/orders/{order}/vehicle-issues',
+        tags: ['Order Vehicle Issues'],
+        summary: 'Create vehicle issue',
+        security: [['sanctum' => []]],
+        parameters: [new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    required: ['issue_category', 'description', 'priority'],
+                    properties: [
+                        new OA\Property(property: 'issue_category', type: 'string', example: 'mechanical'),
+                        new OA\Property(property: 'description', type: 'string', example: 'Rem tidak pakem'),
+                        new OA\Property(property: 'priority', type: 'string', example: 'high'),
+                        new OA\Property(property: 'issue_photo', type: 'string', format: 'binary'),
+                        new OA\Property(property: 'repair_photo', type: 'string', format: 'binary')
+                    ]
+                )
+            )
+        ),
+        responses: [new OA\Response(response: 201, description: 'Created')]
+    )]
     #[OA\Put(path: '/api/orders/{order}/vehicle-issues/{issue}', tags: ['Order Vehicle Issues'], summary: 'Update vehicle issue', security: [['sanctum' => []]], parameters: [new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'issue', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
     #[OA\Delete(path: '/api/orders/{order}/vehicle-issues/{issue}', tags: ['Order Vehicle Issues'], summary: 'Delete vehicle issue', security: [['sanctum' => []]], parameters: [new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer')), new OA\Parameter(name: 'issue', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
     public function orderVehicleIssues(): void {}

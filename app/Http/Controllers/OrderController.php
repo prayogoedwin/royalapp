@@ -14,6 +14,7 @@ use App\Models\OrderExpense;
 use App\Models\OrderEtollTransaction;
 use App\Models\OrderTowing;
 use App\Support\OrderOptions;
+use App\Support\OrderCategoryOptions;
 use App\Support\UploadPath;
 use App\Models\Unit;
 use Illuminate\Http\RedirectResponse;
@@ -389,7 +390,7 @@ class OrderController extends Controller
             }
             $validated = $request->validate([
                 'expenses' => ['nullable', 'array'],
-                'expenses.*.expense_category' => ['required_with:expenses.*.amount', 'string', 'max:50'],
+                'expenses.*.expense_category' => ['required_with:expenses.*.amount', 'in:' . implode(',', array_keys(OrderCategoryOptions::expenseCategories()))],
                 'expenses.*.description' => ['nullable', 'string'],
                 'expenses.*.amount' => ['nullable', 'numeric', 'min:0'],
             ]);

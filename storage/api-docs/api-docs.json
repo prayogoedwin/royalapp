@@ -355,6 +355,44 @@
                 ]
             }
         },
+        "/api/order-expense-categories": {
+            "get": {
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Get order expense categories",
+                "operationId": "89fe1cd2dba7373022d0da2a689927c7",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/order-issue-categories": {
+            "get": {
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Get order issue categories",
+                "operationId": "a8cdfb659ac1a107faa58ebf82dda7d0",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/orders": {
             "get": {
                 "tags": [
@@ -1058,6 +1096,43 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "issue_category",
+                                    "description",
+                                    "priority"
+                                ],
+                                "properties": {
+                                    "issue_category": {
+                                        "type": "string",
+                                        "example": "mechanical"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Rem tidak pakem"
+                                    },
+                                    "priority": {
+                                        "type": "string",
+                                        "example": "high"
+                                    },
+                                    "issue_photo": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "repair_photo": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "201": {
                         "description": "Created"
@@ -1251,6 +1326,19 @@
                     "receipt_photo": {
                         "type": "string",
                         "format": "binary"
+                    }
+                },
+                "type": "object"
+            },
+            "CategoryItem": {
+                "properties": {
+                    "value": {
+                        "type": "string",
+                        "example": "solar"
+                    },
+                    "label": {
+                        "type": "string",
+                        "example": "Solar/BBM"
                     }
                 },
                 "type": "object"

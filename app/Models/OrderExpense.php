@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\OrderCategoryOptions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -35,14 +36,6 @@ class OrderExpense extends Model
 
     public static function getCategoryLabel($category): string
     {
-        return match($category) {
-            'solar' => 'Solar/BBM',
-            'e-toll' => 'E-Toll',
-            'parkir' => 'Parkir',
-            'tol_manual' => 'Tol Manual',
-            'makan' => 'Makan',
-            'lainnya' => 'Lainnya',
-            default => $category,
-        };
+        return OrderCategoryOptions::expenseCategoryLabel($category);
     }
 }

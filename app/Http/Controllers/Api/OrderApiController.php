@@ -10,6 +10,7 @@ use App\Models\OrderExpense;
 use App\Models\OrderPhoto;
 use App\Models\OrderReport;
 use App\Models\OrderVehicleIssue;
+use App\Support\OrderCategoryOptions;
 use App\Support\UploadPath;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -106,6 +107,24 @@ class OrderApiController extends Controller
             ->get();
 
         return $this->okResponse($statuses);
+    }
+
+    public function expenseCategories(): JsonResponse
+    {
+        $items = collect(OrderCategoryOptions::expenseCategories())
+            ->map(fn (string $label, string $value) => ['value' => $value, 'label' => $label])
+            ->values();
+
+        return $this->okResponse($items);
+    }
+
+    public function issueCategories(): JsonResponse
+    {
+        $items = collect(OrderCategoryOptions::issueCategories())
+            ->map(fn (string $label, string $value) => ['value' => $value, 'label' => $label])
+            ->values();
+
+        return $this->okResponse($items);
     }
 
     /**
@@ -236,7 +255,7 @@ class OrderApiController extends Controller
         $order = $this->findUserOrder($request, $orderId);
         if (!$order) return $this->errorResponse('Order not found.', 404);
         $validated = $request->validate([
-            'expense_category' => ['required', 'string', 'max:100'],
+            'expense_category' => ['required', 'in:' . implode(',', array_keys(OrderCategoryOptions::expenseCategories()))],
             'description' => ['nullable', 'string'],
             'amount' => ['required', 'numeric', 'min:0'],
             'receipt_photo' => ['nullable', 'image', 'max:4096'],
@@ -258,7 +277,7 @@ class OrderApiController extends Controller
         $expense = $order->orderExpenses()->find($expenseId);
         if (!$expense) return $this->errorResponse('Expense not found.', 404);
         $validated = $request->validate([
-            'expense_category' => ['sometimes', 'string', 'max:100'],
+            'expense_category' => ['sometimes', 'in:' . implode(',', array_keys(OrderCategoryOptions::expenseCategories()))],
             'description' => ['nullable', 'string'],
             'amount' => ['sometimes', 'numeric', 'min:0'],
             'receipt_photo' => ['nullable', 'image', 'max:4096'],
@@ -408,7 +427,7 @@ class OrderApiController extends Controller
         $order = $this->findUserOrder($request, $orderId);
         if (!$order) return $this->errorResponse('Order not found.', 404);
         $validated = $request->validate([
-            'issue_category' => ['required', 'string', 'max:100'],
+            'issue_category' => ['required', 'in:' . implode(',', array_keys(OrderCategoryOptions::issueCategories()))],
             'description' => ['required', 'string'],
             'priority' => ['required', 'in:low,medium,high,urgent'],
             'is_resolved' => ['nullable', 'boolean'],
@@ -441,7 +460,7 @@ class OrderApiController extends Controller
         $issue = $order->orderVehicleIssues()->find($issueId);
         if (!$issue) return $this->errorResponse('Vehicle issue not found.', 404);
         $validated = $request->validate([
-            'issue_category' => ['sometimes', 'string', 'max:100'],
+            'issue_category' => ['sometimes', 'in:' . implode(',', array_keys(OrderCategoryOptions::issueCategories()))],
             'description' => ['sometimes', 'string'],
             'priority' => ['sometimes', 'in:low,medium,high,urgent'],
             'is_resolved' => ['nullable', 'boolean'],

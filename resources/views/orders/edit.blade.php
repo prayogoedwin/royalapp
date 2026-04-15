@@ -560,12 +560,9 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Kategori <span class="text-red-500">*</span></label>
                     <select name="issue_category" required class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-                        <option value="mechanical">Mechanical</option>
-                        <option value="body">Body/Exterior</option>
-                        <option value="interior">Interior</option>
-                        <option value="safety">Safety Equipment</option>
-                        <option value="medical_equipment">Medical Equipment</option>
-                        <option value="other">Other</option>
+                        @foreach(\App\Support\OrderCategoryOptions::issueCategories() as $value => $label)
+                            <option value="{{ $value }}">{{ $label }}</option>
+                        @endforeach
                     </select>
                 </div>
                 <div>
@@ -630,6 +627,7 @@
         const units = @json($units);
         const employees = @json($employees);
         const employeeAvailability = @json($employeeAvailability);
+        const expenseCategories = @json(\App\Support\OrderCategoryOptions::expenseCategories());
         let photoCount = 0;
         let expenseCount = 0;
         let etollCount = 0;
@@ -735,16 +733,14 @@
             const idx = expenseCount++;
             const row = document.createElement('div');
             row.className = 'grid grid-cols-1 md:grid-cols-4 gap-3 border border-gray-200 dark:border-gray-700 rounded-md p-3';
+            const expenseCategoryOptions = Object.entries(expenseCategories)
+                .map(([value, label]) => `<option value="${value}">${label}</option>`)
+                .join('');
             row.innerHTML = `
                 <div>
                     <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Kategori</label>
                     <select name="expenses[${idx}][expense_category]" class="block w-full px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-gray-100">
-                        <option value="solar">Solar/BBM</option>
-                        <option value="e-toll">E-Toll</option>
-                        <option value="parkir">Parkir</option>
-                        <option value="tol_manual">Tol Manual</option>
-                        <option value="makan">Makan</option>
-                        <option value="lainnya">Lainnya</option>
+                        ${expenseCategoryOptions}
                     </select>
                 </div>
                 <div>

@@ -31,12 +31,9 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category <span class="text-red-500">*</span></label>
                     <select name="issue_category" required class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500">
                         <option value="">Select category</option>
-                        <option value="mechanical" @selected(old('issue_category', $orderVehicleIssue->issue_category) === 'mechanical')>Mechanical</option>
-                        <option value="body" @selected(old('issue_category', $orderVehicleIssue->issue_category) === 'body')>Body / Exterior</option>
-                        <option value="interior" @selected(old('issue_category', $orderVehicleIssue->issue_category) === 'interior')>Interior</option>
-                        <option value="safety" @selected(old('issue_category', $orderVehicleIssue->issue_category) === 'safety')>Safety Equipment</option>
-                        <option value="medical_equipment" @selected(old('issue_category', $orderVehicleIssue->issue_category) === 'medical_equipment')>Medical Equipment</option>
-                        <option value="other" @selected(old('issue_category', $orderVehicleIssue->issue_category) === 'other')>Other</option>
+                        @foreach(\App\Support\OrderCategoryOptions::issueCategories() as $value => $label)
+                            <option value="{{ $value }}" @selected(old('issue_category', $orderVehicleIssue->issue_category) === $value)>{{ $label }}</option>
+                        @endforeach
                     </select>
                     @error('issue_category')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>

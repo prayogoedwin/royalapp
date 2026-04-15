@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\OrderCategoryOptions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -47,15 +48,7 @@ class OrderVehicleIssue extends Model
 
     public static function getCategoryLabel($category): string
     {
-        return match($category) {
-            'mechanical' => 'Mechanical',
-            'body' => 'Body/Exterior',
-            'interior' => 'Interior',
-            'safety' => 'Safety Equipment',
-            'medical_equipment' => 'Medical Equipment',
-            'other' => 'Other',
-            default => $category,
-        };
+        return OrderCategoryOptions::issueCategoryLabel($category);
     }
 
     public static function getPriorityLabel($priority): string
