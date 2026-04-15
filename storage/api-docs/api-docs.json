@@ -432,7 +432,27 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/OrderDetailData"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -1231,6 +1251,95 @@
                     "receipt_photo": {
                         "type": "string",
                         "format": "binary"
+                    }
+                },
+                "type": "object"
+            },
+            "OrderDetailData": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "order_number": {
+                        "type": "string",
+                        "example": "RA.0001"
+                    },
+                    "division_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "order_status_id": {
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "customer_name": {
+                        "type": "string",
+                        "example": "Budi"
+                    },
+                    "pickup_datetime": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "order_ambulance": {
+                        "properties": {
+                            "patient_condition": {
+                                "type": "string",
+                                "example": "Lemah",
+                                "nullable": true
+                            },
+                            "medical_needs": {
+                                "type": "string",
+                                "example": "Kursi roda",
+                                "nullable": true
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "order_towing": {
+                        "properties": {
+                            "car_type": {
+                                "type": "string",
+                                "example": "SUV",
+                                "nullable": true
+                            },
+                            "car_condition": {
+                                "type": "string",
+                                "example": "Mogok",
+                                "nullable": true
+                            }
+                        },
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "order_report": {
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "order_etoll_transactions": {
+                        "type": "array",
+                        "items": {
+                            "type": "object"
+                        }
+                    },
+                    "order_expenses": {
+                        "type": "array",
+                        "items": {
+                            "type": "object"
+                        }
+                    },
+                    "order_photos": {
+                        "type": "array",
+                        "items": {
+                            "type": "object"
+                        }
+                    },
+                    "order_vehicle_issues": {
+                        "type": "array",
+                        "items": {
+                            "type": "object"
+                        }
                     }
                 },
                 "type": "object"

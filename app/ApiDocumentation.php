@@ -48,6 +48,40 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'receipt_photo', type: 'string', format: 'binary')
     ]
 )]
+#[OA\Schema(
+    schema: 'OrderDetailData',
+    properties: [
+        new OA\Property(property: 'id', type: 'integer', example: 1),
+        new OA\Property(property: 'order_number', type: 'string', example: 'RA.0001'),
+        new OA\Property(property: 'division_id', type: 'integer', example: 1),
+        new OA\Property(property: 'order_status_id', type: 'integer', example: 3),
+        new OA\Property(property: 'customer_name', type: 'string', example: 'Budi'),
+        new OA\Property(property: 'pickup_datetime', type: 'string', format: 'date-time'),
+        new OA\Property(
+            property: 'order_ambulance',
+            type: 'object',
+            nullable: true,
+            properties: [
+                new OA\Property(property: 'patient_condition', type: 'string', nullable: true, example: 'Lemah'),
+                new OA\Property(property: 'medical_needs', type: 'string', nullable: true, example: 'Kursi roda')
+            ]
+        ),
+        new OA\Property(
+            property: 'order_towing',
+            type: 'object',
+            nullable: true,
+            properties: [
+                new OA\Property(property: 'car_type', type: 'string', nullable: true, example: 'SUV'),
+                new OA\Property(property: 'car_condition', type: 'string', nullable: true, example: 'Mogok')
+            ]
+        ),
+        new OA\Property(property: 'order_report', type: 'object', nullable: true),
+        new OA\Property(property: 'order_etoll_transactions', type: 'array', items: new OA\Items(type: 'object')),
+        new OA\Property(property: 'order_expenses', type: 'array', items: new OA\Items(type: 'object')),
+        new OA\Property(property: 'order_photos', type: 'array', items: new OA\Items(type: 'object')),
+        new OA\Property(property: 'order_vehicle_issues', type: 'array', items: new OA\Items(type: 'object'))
+    ]
+)]
 class ApiDocumentation
 {
     #[OA\Post(
@@ -191,7 +225,19 @@ class ApiDocumentation
         parameters: [
             new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1))
         ],
-        responses: [new OA\Response(response: 200, description: 'OK')]
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'OK',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Success'),
+                        new OA\Property(property: 'data', ref: '#/components/schemas/OrderDetailData')
+                    ]
+                )
+            )
+        ]
     )]
     public function orderDetail(): void {}
 

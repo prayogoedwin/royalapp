@@ -121,6 +121,8 @@ class OrderApiController extends Controller
         $order->load([
             'division',
             'orderStatus',
+            'orderAmbulance',
+            'orderTowing',
             'orderCrews.employee.position',
             'orderPhotos',
             'orderExpenses',
