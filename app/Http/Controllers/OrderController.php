@@ -21,6 +21,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -169,50 +170,45 @@ class OrderController extends Controller
             'destination_address' => ['required', 'string'],
             'pickup_datetime' => ['required', 'date'],
             'price' => ['required', 'numeric', 'min:0'],
-            'payment_method' => ['nullable', 'in:' . implode(',', array_keys(OrderOptions::paymentMethods()))],
-            'payment_status' => ['required', 'in:' . implode(',', array_keys(OrderOptions::paymentStatuses()))],
+            'payment_method' => ['nullable', Rule::in(array_keys(OrderOptions::paymentMethods()))],
+            'payment_status' => ['required', Rule::in(array_keys(OrderOptions::paymentStatuses()))],
             'notes' => ['nullable', 'string'],
-            
+
             // Ambulance specific
             'patient_condition' => ['nullable', 'string'],
             'medical_needs' => ['nullable', 'string'],
-            
+
             // Towing specific
             'car_type' => ['nullable', 'string'],
             'car_condition' => ['nullable', 'string'],
             'receiver_phone' => ['nullable', 'string'],
             'payment_requirement' => ['nullable', 'string'],
-            
-            // Crews
+
+            // Crews (empty "Select Employee" rows are ignored)
             'crew_ids' => ['nullable', 'array'],
-            'crew_ids.*' => ['exists:employees,id'],
-            
+            'crew_ids.*' => ['nullable', 'exists:employees,id'],
+
             // Photos
             'photos' => ['nullable', 'array'],
-            'photos.*' => ['image', 'mimes:jpeg,png,jpg', 'max:2048'],
+            'photos.*' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
             'photo_titles' => ['nullable', 'array'],
             'photo_descriptions' => ['nullable', 'array'],
         ]);
 
         DB::beginTransaction();
         try {
-            // Generate order number
-            $division = Division::find($validated['division_id']);
+            $division = Division::findOrFail($validated['division_id']);
             $prefix = $division->nama === 'Royal Ambulance' ? 'RA' : 'RT';
-            $lastOrder = Order::where('order_number', 'like', $prefix . '.%')
-                ->orderBy('id', 'desc')
-                ->first();
-            
-            if ($lastOrder) {
-                $lastNumber = (int) substr($lastOrder->order_number, strlen($prefix) + 1);
-                $newNumber = $lastNumber + 1;
-            } else {
-                $newNumber = 1;
-            }
-            
-            $orderNumber = $prefix . '.' . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
 
-            // Create order
+            // Include soft-deleted rows: unique(order_number) still applies to them,
+            // so generating from non-trashed-only can collide and fail every submit.
+            $offset = strlen($prefix) + 2; // 1-based MySQL SUBSTRING after "RA." / "RT."
+            $lastNumber = (int) Order::withTrashed()
+                ->where('order_number', 'like', $prefix . '.%')
+                ->selectRaw('MAX(CAST(SUBSTRING(order_number, ?) AS UNSIGNED)) as max_num', [$offset])
+                ->value('max_num');
+            $orderNumber = $prefix . '.' . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+
             $order = Order::create([
                 'order_number' => $orderNumber,
                 'unit_code' => $validated['unit_code'] ?? null,
@@ -225,52 +221,53 @@ class OrderController extends Controller
                 'destination_address' => $validated['destination_address'],
                 'pickup_datetime' => $validated['pickup_datetime'],
                 'price' => $validated['price'],
-                'payment_method' => $validated['payment_method'],
+                'payment_method' => $validated['payment_method'] ?? null,
                 'payment_status' => $validated['payment_status'],
-                'notes' => $validated['notes'],
+                'notes' => $validated['notes'] ?? null,
                 'created_by' => auth()->id(),
             ]);
 
-            // Create ambulance details if applicable
-            if ($division->nama === 'Royal Ambulance' && ($validated['patient_condition'] || $validated['medical_needs'])) {
+            if ($division->nama === 'Royal Ambulance' && (! empty($validated['patient_condition']) || ! empty($validated['medical_needs']))) {
                 OrderAmbulance::create([
                     'order_id' => $order->id,
-                    'patient_condition' => $validated['patient_condition'],
-                    'medical_needs' => $validated['medical_needs'],
+                    'patient_condition' => $validated['patient_condition'] ?? null,
+                    'medical_needs' => $validated['medical_needs'] ?? null,
                     'created_by' => auth()->id(),
                 ]);
             }
 
-            // Create towing details if applicable
-            if ($division->nama === 'Royal Towing' && ($validated['car_type'] || $validated['car_condition'])) {
+            if ($division->nama === 'Royal Towing' && (! empty($validated['car_type']) || ! empty($validated['car_condition']))) {
                 OrderTowing::create([
                     'order_id' => $order->id,
-                    'car_type' => $validated['car_type'],
-                    'car_condition' => $validated['car_condition'],
-                    'receiver_phone' => $validated['receiver_phone'],
-                    'payment_requirement' => $validated['payment_requirement'],
+                    'car_type' => $validated['car_type'] ?? null,
+                    'car_condition' => $validated['car_condition'] ?? null,
+                    'receiver_phone' => $validated['receiver_phone'] ?? null,
+                    'payment_requirement' => $validated['payment_requirement'] ?? null,
                     'created_by' => auth()->id(),
                 ]);
             }
 
-            // Add crews (role auto-filled from employee position)
-            if (!empty($validated['crew_ids'])) {
-                foreach ($validated['crew_ids'] as $employeeId) {
-                    $employee = Employee::with('position')->find($employeeId);
-                    OrderCrew::create([
-                        'order_id' => $order->id,
-                        'employee_id' => $employeeId,
-                        'role' => $employee->position->nama ?? null,
-                        'created_by' => auth()->id(),
-                    ]);
+            $crewIds = array_values(array_filter($validated['crew_ids'] ?? []));
+            foreach ($crewIds as $employeeId) {
+                $employee = Employee::with('position')->find($employeeId);
+                if (! $employee) {
+                    continue;
                 }
+                OrderCrew::create([
+                    'order_id' => $order->id,
+                    'employee_id' => $employeeId,
+                    'role' => $employee->position->nama ?? null,
+                    'created_by' => auth()->id(),
+                ]);
             }
 
-            // Upload photos
             if ($request->hasFile('photos')) {
                 foreach ($request->file('photos') as $index => $photo) {
+                    if (! $photo) {
+                        continue;
+                    }
                     $path = $photo->store(UploadPath::dir('orders'), 'public');
-                    
+
                     OrderPhoto::create([
                         'order_id' => $order->id,
                         'title' => $validated['photo_titles'][$index] ?? 'Photo ' . ($index + 1),
@@ -286,6 +283,8 @@ class OrderController extends Controller
             return to_route('orders.index')->with('status', 'Order created successfully with number: ' . $orderNumber);
         } catch (\Exception $e) {
             DB::rollBack();
+            report($e);
+
             return back()->withInput()->withErrors(['error' => 'Failed to create order: ' . $e->getMessage()]);
         }
     }

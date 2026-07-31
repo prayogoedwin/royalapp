@@ -16,6 +16,17 @@
         <p class="text-gray-600 dark:text-gray-400 mt-1">{{ __('Create a new order') }}</p>
     </div>
 
+    @if($errors->any())
+        <div class="mb-4 p-3 rounded bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 text-sm">
+            <p class="font-medium mb-1">{{ __('Failed to create order:') }}</p>
+            <ul class="list-disc list-inside space-y-0.5">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <form action="{{ route('orders.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
         @csrf
 
