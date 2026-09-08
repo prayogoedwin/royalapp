@@ -59,7 +59,7 @@
                                             name="roles[]" 
                                             value="{{ $role->id }}" 
                                             label="{{ $role->name }}"
-                                            :checked="in_array($role->id, old('roles', $employee->user->roles->pluck('id')->toArray() ?? []))" />
+                                            :checked="in_array($role->id, old('roles', $employee->user ? $employee->user->roles->pluck('id')->toArray() : []))" />
                                     </div>
                                 @endforeach
                             </div>

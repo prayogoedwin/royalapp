@@ -61,8 +61,8 @@ class EmployeeController extends Controller
                         $actions .= '<a href="' . route('employees.edit', $employee) . '" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Edit</a>';
                     }
                     
-                    if (auth()->user()->hasPermission('delete-employees')) {
-                        $actions .= '<form action="' . route('employees.destroy', $employee) . '" method="POST" class="inline" onsubmit="return confirm(\'Are you sure? This will also delete the associated user account.\')">
+                    if (auth()->user()->hasPermission('delete-employees') && (int) $employee->user_id !== (int) auth()->id()) {
+                        $actions .= '<form action="' . route('employees.destroy', $employee) . '" method="POST" class="inline" onsubmit="return confirm(\'Hapus employee ini? Akun user terkait juga akan dihapus.\')">
                             ' . csrf_field() . method_field('DELETE') . '
                             <button type="submit" class="text-red-600 dark:text-red-400 hover:underline">Delete</button>
                         </form>';
@@ -268,21 +268,23 @@ class EmployeeController extends Controller
 
     public function destroy(Employee $employee): RedirectResponse
     {
+        if ($employee->user_id && (int) $employee->user_id === (int) auth()->id()) {
+            return back()->with('status', 'Tidak dapat menghapus employee dari akun yang sedang digunakan.');
+        }
+
         DB::beginTransaction();
         try {
             $user = $employee->user;
-            
-            // Soft delete employee
+
             $employee->delete();
-            
-            // Soft delete user if exists
+
             if ($user) {
                 $user->delete();
             }
 
             DB::commit();
 
-            return to_route('employees.index')->with('status', 'Employee and associated user deleted successfully.');
+            return to_route('employees.index')->with('status', 'Employee dan user terkait berhasil dihapus.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withErrors(['error' => 'Failed to delete employee: ' . $e->getMessage()]);

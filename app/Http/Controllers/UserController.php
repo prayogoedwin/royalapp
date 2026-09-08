@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
@@ -40,8 +41,8 @@ class UserController extends Controller
                         $actions .= '<a href="' . route('users.edit', $user) . '" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Edit</a>';
                     }
                     
-                    if (auth()->user()->hasPermission('delete-users')) {
-                        $actions .= '<form action="' . route('users.destroy', $user) . '" method="POST" class="inline" onsubmit="return confirm(\'Are you sure?\')">
+                    if (auth()->user()->hasPermission('delete-users') && (int) auth()->id() !== (int) $user->id) {
+                        $actions .= '<form action="' . route('users.destroy', $user) . '" method="POST" class="inline" onsubmit="return confirm(\'Hapus user ini? Data employee terkait juga akan dihapus.\')">
                             ' . csrf_field() . method_field('DELETE') . '
                             <button type="submit" class="text-red-600 dark:text-red-400 hover:underline">Delete</button>
                         </form>';
@@ -137,8 +138,16 @@ class UserController extends Controller
 
     public function destroy(User $user): RedirectResponse
     {
-        $user->delete();
+        if ((int) $user->id === (int) auth()->id()) {
+            return back()->with('status', 'Tidak dapat menghapus akun yang sedang digunakan.');
+        }
 
-        return to_route('users.index')->with('status', 'User deleted successfully.');
+        DB::transaction(function () use ($user) {
+            $employee = $user->employee;
+            $user->delete();
+            $employee?->delete();
+        });
+
+        return to_route('users.index')->with('status', 'User dan employee terkait berhasil dihapus.');
     }
 }

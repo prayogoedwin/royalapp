@@ -26,6 +26,13 @@
                     <x-button type="primary">{{ __('Edit Employee') }}</x-button>
                 </a>
             @endif
+            @if(auth()->user()->hasPermission('delete-employees') && (int) $employee->user_id !== (int) auth()->id())
+                <form action="{{ route('employees.destroy', $employee) }}" method="POST" onsubmit="return confirm('Hapus employee ini? Akun user terkait juga akan dihapus.')">
+                    @csrf
+                    @method('DELETE')
+                    <x-button type="danger">{{ __('Hapus') }}</x-button>
+                </form>
+            @endif
             @php
                 $myEmployeeId = auth()->user()?->employee?->id;
                 $presensiHref = ($myEmployeeId && (int)$myEmployeeId === (int)$employee->id)

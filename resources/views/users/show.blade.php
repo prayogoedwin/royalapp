@@ -26,6 +26,13 @@
                     <x-button type="primary">{{ __('Edit User') }}</x-button>
                 </a>
             @endif
+            @if(auth()->user()->hasPermission('delete-users') && (int) auth()->id() !== (int) $user->id)
+                <form action="{{ route('users.destroy', $user) }}" method="POST" onsubmit="return confirm('Hapus user ini? Data employee terkait juga akan dihapus.')">
+                    @csrf
+                    @method('DELETE')
+                    <x-button type="danger">{{ __('Hapus') }}</x-button>
+                </form>
+            @endif
             <a href="{{ route('users.index') }}">
                 <x-button type="secondary">{{ __('Back') }}</x-button>
             </a>
