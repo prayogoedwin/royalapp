@@ -33,7 +33,23 @@ class OrderVehicleIssue extends Model
 
     public function order(): BelongsTo
     {
-        return $this->belongsTo(Order::class);
+        return $this->belongsTo(Order::class)->withTrashed();
+    }
+
+    public function canOpenOrder(): bool
+    {
+        return $this->order !== null && ! $this->order->trashed();
+    }
+
+    public function orderLabel(): string
+    {
+        $number = $this->order?->order_number;
+
+        if ($number) {
+            return $this->order->trashed() ? $number.' (terhapus)' : $number;
+        }
+
+        return 'Order #'.$this->order_id;
     }
 
     public function resolvedBy(): BelongsTo

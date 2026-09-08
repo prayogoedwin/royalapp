@@ -14,7 +14,7 @@
     <div class="mb-6 flex justify-between items-center">
         <div>
             <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Vehicle Issue Detail</h1>
-            <p class="text-gray-600 dark:text-gray-400 mt-1">Order {{ $orderVehicleIssue->order->order_number ?? ('#' . $orderVehicleIssue->order_id) }}</p>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">Order {{ $orderVehicleIssue->orderLabel() }}</p>
         </div>
         <div class="flex gap-2">
             @can('edit-orders')
@@ -35,9 +35,13 @@
                     <div>
                         <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Order</dt>
                         <dd class="text-base text-gray-900 dark:text-gray-100">
-                            <a href="{{ route('orders.show', $orderVehicleIssue->order) }}" class="text-blue-600 dark:text-blue-400 hover:underline">
-                                {{ $orderVehicleIssue->order->order_number ?? ('Order #' . $orderVehicleIssue->order_id) }}
-                            </a>
+                            @if($orderVehicleIssue->canOpenOrder())
+                                <a href="{{ route('orders.show', $orderVehicleIssue->order) }}" class="text-blue-600 dark:text-blue-400 hover:underline">
+                                    {{ $orderVehicleIssue->orderLabel() }}
+                                </a>
+                            @else
+                                {{ $orderVehicleIssue->orderLabel() }}
+                            @endif
                         </dd>
                     </div>
 

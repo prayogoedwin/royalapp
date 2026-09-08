@@ -32,9 +32,13 @@
                     @forelse($issues as $issue)
                         <tr>
                             <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
-                                <a href="{{ route('orders.show', $issue->order) }}" class="text-blue-600 dark:text-blue-400 hover:underline">
-                                    {{ $issue->order->order_number ?? ('Order #' . $issue->order_id) }}
-                                </a>
+                                @if($issue->canOpenOrder())
+                                    <a href="{{ route('orders.show', $issue->order) }}" class="text-blue-600 dark:text-blue-400 hover:underline">
+                                        {{ $issue->orderLabel() }}
+                                    </a>
+                                @else
+                                    {{ $issue->orderLabel() }}
+                                @endif
                             </td>
                             <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{{ $issue->unit_code ?? '-' }}</td>
                             <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{{ \App\Models\OrderVehicleIssue::getCategoryLabel($issue->issue_category) }}</td>

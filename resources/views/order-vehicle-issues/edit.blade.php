@@ -23,7 +23,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Order</label>
-                <p class="text-sm text-gray-900 dark:text-gray-100 font-medium">{{ $orderVehicleIssue->order->order_number ?? ('Order #' . $orderVehicleIssue->order_id) }} - {{ $orderVehicleIssue->unit_code ?? '-' }}</p>
+                <p class="text-sm text-gray-900 dark:text-gray-100 font-medium">{{ $orderVehicleIssue->orderLabel() }} - {{ $orderVehicleIssue->unit_code ?? '-' }}</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
