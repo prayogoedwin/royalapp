@@ -21,6 +21,12 @@
             <p class="text-gray-600 dark:text-gray-400 mt-1">{{ __('Employee details') }}</p>
         </div>
         <div class="flex gap-2">
+            @if(auth()->user()->hasPermission('edit-employees') && ! $employee->user)
+                <form action="{{ route('employees.create-account', $employee) }}" method="POST" onsubmit="return confirm('Buat akun login untuk employee ini? Password default sama dengan NIK.')">
+                    @csrf
+                    <x-button type="primary">{{ __('Buat Akun') }}</x-button>
+                </form>
+            @endif
             @if(auth()->user()->hasPermission('edit-employees'))
                 <a href="{{ route('employees.edit', $employee) }}">
                     <x-button type="primary">{{ __('Edit Employee') }}</x-button>
@@ -63,10 +69,19 @@
         <div class="lg:col-span-2 space-y-6">
             <!-- User Account Information -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between gap-3">
                     <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">{{ __('User Account Information') }}</h2>
+                    @if(auth()->user()->hasPermission('edit-employees') && ! $employee->user)
+                        <form action="{{ route('employees.create-account', $employee) }}" method="POST" onsubmit="return confirm('Buat akun login untuk employee ini? Password default sama dengan NIK.')">
+                            @csrf
+                            <x-button type="primary">{{ __('Buat Akun') }}</x-button>
+                        </form>
+                    @endif
                 </div>
                 <div class="p-6">
+                    @if(! $employee->user)
+                        <p class="mb-4 text-sm text-amber-700 dark:text-amber-300">Employee ini belum punya akun login. Password default akan memakai NIK.</p>
+                    @endif
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

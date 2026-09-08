@@ -93,6 +93,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('employees/{employee}', [\App\Http\Controllers\EmployeeController::class, 'show'])->name('employees.show')->middleware('permission:show-employees');
     Route::get('employees/{employee}/edit', [\App\Http\Controllers\EmployeeController::class, 'edit'])->name('employees.edit')->middleware('permission:edit-employees');
     Route::put('employees/{employee}', [\App\Http\Controllers\EmployeeController::class, 'update'])->name('employees.update')->middleware('permission:edit-employees');
+    Route::post('employees/{employee}/create-account', [\App\Http\Controllers\EmployeeController::class, 'createAccount'])->name('employees.create-account')->middleware('permission:edit-employees');
     Route::delete('employees/{employee}', [\App\Http\Controllers\EmployeeController::class, 'destroy'])->name('employees.destroy')->middleware('permission:delete-employees');
 
     // Presensi / Absensi

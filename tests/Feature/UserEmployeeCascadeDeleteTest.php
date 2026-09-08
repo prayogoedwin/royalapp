@@ -10,6 +10,7 @@ use App\Models\Position;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class UserEmployeeCascadeDeleteTest extends TestCase
@@ -65,6 +66,41 @@ class UserEmployeeCascadeDeleteTest extends TestCase
             ->assertOk();
     }
 
+    public function test_can_create_login_account_for_employee_without_user(): void
+    {
+        $admin = $this->userWithPermissions(['edit-employees', 'show-employees']);
+        Role::query()->firstOrCreate(['name' => 'Operational']);
+        $employee = $this->makeEmployeeFor(null, 'SAMPLE-DRIVER03');
+
+        $this->actingAs($admin)
+            ->get(route('employees.show', $employee))
+            ->assertOk()
+            ->assertSee('Buat Akun', false);
+
+        $this->actingAs($admin)
+            ->post(route('employees.create-account', $employee))
+            ->assertRedirect();
+
+        $employee->refresh();
+        $this->assertNotNull($employee->user_id);
+        $this->assertTrue(Hash::check('SAMPLE-DRIVER03', $employee->user->password));
+        $this->assertSame('sample.driver03@royalapp.com', $employee->user->email);
+    }
+
+    public function test_cannot_create_account_when_employee_already_has_user(): void
+    {
+        $admin = $this->userWithPermissions(['edit-employees']);
+        [$user, $employee] = $this->makeLinkedUserAndEmployee();
+
+        $this->actingAs($admin)
+            ->post(route('employees.create-account', $employee))
+            ->assertRedirect();
+
+        $employee->refresh();
+        $this->assertSame($user->id, $employee->user_id);
+        $this->assertSame(2, User::query()->count());
+    }
+
     /**
      * @param  list<string>  $permissions
      */
@@ -96,7 +132,7 @@ class UserEmployeeCascadeDeleteTest extends TestCase
         return [$user, $employee];
     }
 
-    private function makeEmployeeFor(?User $user): Employee
+    private function makeEmployeeFor(?User $user, string $nik = ''): Employee
     {
         $position = Position::query()->firstOrCreate(['nama' => 'Driver']);
         $division = Division::query()->firstOrCreate(['nama' => 'Royal Ambulance']);
@@ -107,8 +143,8 @@ class UserEmployeeCascadeDeleteTest extends TestCase
             'position_id' => $position->id,
             'division_id' => $division->id,
             'employee_type_id' => $type->id,
-            'nik' => 'NIK-'.uniqid(),
-            'full_name' => $user?->name ?? 'Asman Prayoga',
+            'nik' => $nik !== '' ? $nik : 'NIK-'.uniqid(),
+            'full_name' => $user?->name ?? 'Catur Sihombing',
             'status' => 'active',
             'join_date' => now()->toDateString(),
         ]);

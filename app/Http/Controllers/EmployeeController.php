@@ -13,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -59,6 +60,13 @@ class EmployeeController extends Controller
                     
                     if (auth()->user()->hasPermission('edit-employees')) {
                         $actions .= '<a href="' . route('employees.edit', $employee) . '" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Edit</a>';
+                    }
+
+                    if (auth()->user()->hasPermission('edit-employees') && ! $employee->user) {
+                        $actions .= '<form action="' . route('employees.create-account', $employee) . '" method="POST" class="inline" onsubmit="return confirm(\'Buat akun login untuk employee ini? Password default sama dengan NIK.\')">
+                            ' . csrf_field() . '
+                            <button type="submit" class="text-amber-600 dark:text-amber-400 hover:underline mr-3">Buat Akun</button>
+                        </form>';
                     }
                     
                     if (auth()->user()->hasPermission('delete-employees') && (int) $employee->user_id !== (int) auth()->id()) {
@@ -167,9 +175,64 @@ class EmployeeController extends Controller
 
     public function show(Employee $employee): View
     {
-        $employee->load(['user', 'position', 'division', 'employeeType']);
-        
+        $employee->load(['user.roles', 'position', 'division', 'employeeType']);
+
         return view('employees.show', compact('employee'));
+    }
+
+    public function createAccount(Employee $employee): RedirectResponse
+    {
+        if ($employee->user) {
+            return back()->with('status', 'Employee ini sudah memiliki akun.');
+        }
+
+        if (blank($employee->nik)) {
+            return back()->withErrors(['error' => 'NIK kosong, akun tidak bisa dibuat.']);
+        }
+
+        $employee->loadMissing('position');
+
+        DB::beginTransaction();
+        try {
+            $user = User::create([
+                'name' => $employee->full_name,
+                'email' => $this->accountEmailFor($employee),
+                'password' => $employee->nik,
+            ]);
+
+            $roleName = strcasecmp((string) $employee->position?->nama, 'driver') === 0
+                ? 'Operational'
+                : 'User';
+            $role = Role::query()->where('name', $roleName)->first()
+                ?? Role::query()->where('name', 'User')->first()
+                ?? Role::query()->where('name', 'Operational')->first();
+
+            if ($role) {
+                $user->assignRole($role);
+            }
+
+            $employee->update(['user_id' => $user->id]);
+
+            DB::commit();
+
+            return back()->with('status', 'Akun berhasil dibuat. Email: '.$user->email.'. Password sama dengan NIK.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()->withErrors(['error' => 'Gagal membuat akun: '.$e->getMessage()]);
+        }
+    }
+
+    private function accountEmailFor(Employee $employee): string
+    {
+        $local = Str::slug($employee->nik, '.') ?: 'emp'.$employee->id;
+        $email = strtolower($local).'@royalapp.com';
+
+        if (! User::query()->where('email', $email)->exists()) {
+            return $email;
+        }
+
+        return strtolower($local).'.'.$employee->id.'@royalapp.com';
     }
 
     public function edit(Employee $employee): View
