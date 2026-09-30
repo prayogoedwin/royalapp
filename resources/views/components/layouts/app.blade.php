@@ -169,6 +169,19 @@
             </main>
         </div>
     </div>
+    <script>
+        document.addEventListener('focusin', function (event) {
+            var el = event.target;
+            if (!el || el.tagName !== 'INPUT' || el.type !== 'number' || el.dataset.wheelLocked) {
+                return;
+            }
+            el.dataset.wheelLocked = '1';
+            el.addEventListener('wheel', function (wheelEvent) {
+                wheelEvent.preventDefault();
+                el.blur();
+            }, { passive: false });
+        });
+    </script>
 </body>
 
 </html>
