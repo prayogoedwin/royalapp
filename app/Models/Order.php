@@ -35,7 +35,7 @@ class Order extends Model
 
     protected $casts = [
         'pickup_datetime' => 'datetime',
-        'price' => 'decimal:2',
+        'price' => 'integer',
     ];
 
     public function division(): BelongsTo

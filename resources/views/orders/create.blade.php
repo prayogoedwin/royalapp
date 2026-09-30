@@ -84,7 +84,7 @@
                 </div>
 
                 <div>
-                    <x-forms.input label="Price" name="price" type="text" inputmode="decimal" value="{{ old('price', 0) }}" required />
+                    <x-forms.input label="Price" name="price" type="text" inputmode="numeric" value="{{ old('price', 0) }}" required />
                 </div>
 
                 <div>
