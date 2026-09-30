@@ -170,17 +170,15 @@
         </div>
     </div>
     <script>
-        document.addEventListener('focusin', function (event) {
+        document.addEventListener('wheel', function (event) {
             var el = event.target;
-            if (!el || el.tagName !== 'INPUT' || el.type !== 'number' || el.dataset.wheelLocked) {
+            if (!el || el.tagName !== 'INPUT' || el.type !== 'number' || document.activeElement !== el) {
                 return;
             }
-            el.dataset.wheelLocked = '1';
-            el.addEventListener('wheel', function (wheelEvent) {
-                wheelEvent.preventDefault();
-                el.blur();
-            }, { passive: false });
-        });
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            el.blur();
+        }, { capture: true, passive: false });
     </script>
 </body>
 

@@ -88,7 +88,7 @@
                 </div>
 
                 <div>
-                    <x-forms.input label="Price" name="price" type="number" step="0.01" value="{{ old('price', $order->price) }}" required />
+                    <x-forms.input label="Price" name="price" type="text" inputmode="decimal" value="{{ old('price', $order->price) }}" required />
                 </div>
 
                 <div>
