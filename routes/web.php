@@ -1,16 +1,28 @@
 <?php
 
+use App\Http\Controllers\AbsensiController;
 use App\Http\Controllers\DivisionController;
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeTypeController;
+use App\Http\Controllers\LeaderboardController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\OrderVehicleIssueController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\PoolController;
 use App\Http\Controllers\PositionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\Settings;
+use App\Http\Controllers\TaskController;
+use App\Http\Controllers\UnitController;
+use App\Http\Controllers\UploadFolderController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\VehicleMaintenanceController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return auth()->check()
+        ? redirect()->route('dashboard')
+        : redirect()->route('login');
 })->name('home');
 
 Route::view('dashboard', 'dashboard')
@@ -18,7 +30,7 @@ Route::view('dashboard', 'dashboard')
     ->name('dashboard');
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('leaderboard', [\App\Http\Controllers\LeaderboardController::class, 'index'])
+    Route::get('leaderboard', [LeaderboardController::class, 'index'])
         ->name('leaderboard.index')
         ->middleware('permission:view-leaderboard');
     Route::get('settings/profile', [Settings\ProfileController::class, 'edit'])->name('settings.profile.edit');
@@ -38,7 +50,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('roles/{role}/edit', [RoleController::class, 'edit'])->name('roles.edit')->middleware('permission:edit-roles');
     Route::put('roles/{role}', [RoleController::class, 'update'])->name('roles.update')->middleware('permission:edit-roles');
     Route::delete('roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy')->middleware('permission:delete-roles');
-    
+
     // Permissions Management - dengan permission check
     Route::get('permissions', [PermissionController::class, 'index'])->name('permissions.index')->middleware('permission:view-permissions');
     Route::get('permissions/export', [PermissionController::class, 'export'])->name('permissions.export')->middleware('permission:download-permissions');
@@ -48,7 +60,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('permissions/{permission}/edit', [PermissionController::class, 'edit'])->name('permissions.edit')->middleware('permission:edit-permissions');
     Route::put('permissions/{permission}', [PermissionController::class, 'update'])->name('permissions.update')->middleware('permission:edit-permissions');
     Route::delete('permissions/{permission}', [PermissionController::class, 'destroy'])->name('permissions.destroy')->middleware('permission:delete-permissions');
-    
+
     // Users Management - dengan permission check
     Route::get('users', [UserController::class, 'index'])->name('users.index')->middleware('permission:view-users');
     Route::get('users/export', [UserController::class, 'export'])->name('users.export')->middleware('permission:download-users');
@@ -87,141 +99,141 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('employee-types/{employeeType}', [EmployeeTypeController::class, 'destroy'])->name('employee-types.destroy')->middleware('permission:delete-employee-types');
 
     // Employees Management
-    Route::get('employees', [\App\Http\Controllers\EmployeeController::class, 'index'])->name('employees.index')->middleware('permission:view-employees');
-    Route::get('employees/create', [\App\Http\Controllers\EmployeeController::class, 'create'])->name('employees.create')->middleware('permission:create-employees');
-    Route::post('employees', [\App\Http\Controllers\EmployeeController::class, 'store'])->name('employees.store')->middleware('permission:create-employees');
-    Route::get('employees/{employee}', [\App\Http\Controllers\EmployeeController::class, 'show'])->name('employees.show')->middleware('permission:show-employees');
-    Route::get('employees/{employee}/edit', [\App\Http\Controllers\EmployeeController::class, 'edit'])->name('employees.edit')->middleware('permission:edit-employees');
-    Route::put('employees/{employee}', [\App\Http\Controllers\EmployeeController::class, 'update'])->name('employees.update')->middleware('permission:edit-employees');
-    Route::post('employees/{employee}/create-account', [\App\Http\Controllers\EmployeeController::class, 'createAccount'])->name('employees.create-account')->middleware('permission:edit-employees');
-    Route::delete('employees/{employee}', [\App\Http\Controllers\EmployeeController::class, 'destroy'])->name('employees.destroy')->middleware('permission:delete-employees');
+    Route::get('employees', [EmployeeController::class, 'index'])->name('employees.index')->middleware('permission:view-employees');
+    Route::get('employees/create', [EmployeeController::class, 'create'])->name('employees.create')->middleware('permission:create-employees');
+    Route::post('employees', [EmployeeController::class, 'store'])->name('employees.store')->middleware('permission:create-employees');
+    Route::get('employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show')->middleware('permission:show-employees');
+    Route::get('employees/{employee}/edit', [EmployeeController::class, 'edit'])->name('employees.edit')->middleware('permission:edit-employees');
+    Route::put('employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update')->middleware('permission:edit-employees');
+    Route::post('employees/{employee}/create-account', [EmployeeController::class, 'createAccount'])->name('employees.create-account')->middleware('permission:edit-employees');
+    Route::delete('employees/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy')->middleware('permission:delete-employees');
 
     // Presensi / Absensi
-    Route::get('employees/{employee}/presensi', [\App\Http\Controllers\AbsensiController::class, 'showEmployeePresensi'])
+    Route::get('employees/{employee}/presensi', [AbsensiController::class, 'showEmployeePresensi'])
         ->name('employees.presensi')
         ->middleware('permission:view-presensi-all|edit-absensi-status');
-    Route::get('employees/{employee}/presensi/print', [\App\Http\Controllers\AbsensiController::class, 'exportEmployeePresensiPdf'])
+    Route::get('employees/{employee}/presensi/print', [AbsensiController::class, 'exportEmployeePresensiPdf'])
         ->name('employees.presensi.print')
         ->middleware('permission:view-presensi-all|edit-absensi-status');
-    Route::get('presensi', [\App\Http\Controllers\AbsensiController::class, 'showMyPresensi'])
+    Route::get('presensi', [AbsensiController::class, 'showMyPresensi'])
         ->name('presensi.my')
         ->middleware('permission:view-presensi');
-    Route::get('presensi/print', [\App\Http\Controllers\AbsensiController::class, 'exportMyPresensiPdf'])
+    Route::get('presensi/print', [AbsensiController::class, 'exportMyPresensiPdf'])
         ->name('presensi.print')
         ->middleware('permission:view-presensi');
-    Route::get('absensi/today', [\App\Http\Controllers\AbsensiController::class, 'showAllEmployeesToday'])
+    Route::get('absensi/today', [AbsensiController::class, 'showAllEmployeesToday'])
         ->name('absensi.today.all')
         ->middleware('permission:view-presensi-all');
-    Route::post('presensi/masuk', [\App\Http\Controllers\AbsensiController::class, 'storeMasuk'])
+    Route::post('presensi/masuk', [AbsensiController::class, 'storeMasuk'])
         ->name('presensi.masuk')
         ->middleware('permission:create-absensi-masuk');
-    Route::post('presensi/pulang', [\App\Http\Controllers\AbsensiController::class, 'storePulang'])
+    Route::post('presensi/pulang', [AbsensiController::class, 'storePulang'])
         ->name('presensi.pulang')
         ->middleware('permission:create-absensi-pulang');
-    Route::put('absensis/{absensi}/status', [\App\Http\Controllers\AbsensiController::class, 'adminUpdateStatus'])
+    Route::put('absensis/{absensi}/status', [AbsensiController::class, 'adminUpdateStatus'])
         ->name('absensis.status.update')
         ->middleware('permission:edit-absensi-status');
-    Route::post('employees/{employee}/presensi/status', [\App\Http\Controllers\AbsensiController::class, 'adminUpsertStatusForDate'])
+    Route::post('employees/{employee}/presensi/status', [AbsensiController::class, 'adminUpsertStatusForDate'])
         ->name('absensis.status.upsert-by-date')
         ->middleware('permission:edit-absensi-status');
 
     // Upload folders by year/month
-    Route::get('upload-folders', [\App\Http\Controllers\UploadFolderController::class, 'index'])
+    Route::get('upload-folders', [UploadFolderController::class, 'index'])
         ->name('upload-folders.index')
         ->middleware('permission:view-upload-folders');
-    Route::delete('upload-folders/{year}/{month}', [\App\Http\Controllers\UploadFolderController::class, 'destroy'])
+    Route::delete('upload-folders/{year}/{month}', [UploadFolderController::class, 'destroy'])
         ->name('upload-folders.destroy')
         ->middleware('permission:delete-upload-folders');
 
     // Orders Management
-    Route::get('orders', [\App\Http\Controllers\OrderController::class, 'index'])->name('orders.index')->middleware('permission:view-orders');
-    Route::get('orders/create', [\App\Http\Controllers\OrderController::class, 'create'])->name('orders.create')->middleware('permission:create-orders');
-    Route::post('orders', [\App\Http\Controllers\OrderController::class, 'store'])->name('orders.store')->middleware('permission:create-orders');
-    Route::get('orders/{order}', [\App\Http\Controllers\OrderController::class, 'show'])->name('orders.show')->middleware('permission:show-orders');
-    Route::get('orders/{order}/edit', [\App\Http\Controllers\OrderController::class, 'edit'])->name('orders.edit')
+    Route::get('orders', [OrderController::class, 'index'])->name('orders.index')->middleware('permission:view-orders');
+    Route::get('orders/create', [OrderController::class, 'create'])->name('orders.create')->middleware('permission:create-orders');
+    Route::post('orders', [OrderController::class, 'store'])->name('orders.store')->middleware('permission:create-orders');
+    Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show')->middleware('permission:show-orders');
+    Route::get('orders/{order}/edit', [OrderController::class, 'edit'])->name('orders.edit')
         ->middleware('permission:edit-orders|edit-order-report|create-order-expenses|create-order-etoll|create-order-photos|create-order-vehicle-issues|edit-order-vehicle-issues');
-    Route::put('orders/{order}', [\App\Http\Controllers\OrderController::class, 'update'])->name('orders.update')
+    Route::put('orders/{order}', [OrderController::class, 'update'])->name('orders.update')
         ->middleware('permission:edit-orders|edit-order-report|create-order-expenses|create-order-etoll|create-order-photos');
-    Route::delete('orders/{order}/report', [\App\Http\Controllers\OrderController::class, 'deleteOrderReport'])->name('order-report.destroy')
+    Route::delete('orders/{order}/report', [OrderController::class, 'deleteOrderReport'])->name('order-report.destroy')
         ->middleware('permission:delete-order-report');
-    Route::delete('order-expenses/{expense}', [\App\Http\Controllers\OrderController::class, 'deleteExpense'])->name('order-expenses.destroy')
+    Route::delete('order-expenses/{expense}', [OrderController::class, 'deleteExpense'])->name('order-expenses.destroy')
         ->middleware('permission:delete-order-expenses');
-    Route::delete('order-etoll/{trx}', [\App\Http\Controllers\OrderController::class, 'deleteEtoll'])->name('order-etoll.destroy')
+    Route::delete('order-etoll/{trx}', [OrderController::class, 'deleteEtoll'])->name('order-etoll.destroy')
         ->middleware('permission:delete-order-etoll');
-    Route::delete('orders/{order}', [\App\Http\Controllers\OrderController::class, 'destroy'])->name('orders.destroy')->middleware('permission:delete-orders');
-    Route::delete('order-photos/{photo}', [\App\Http\Controllers\OrderController::class, 'deletePhoto'])->name('order-photos.destroy')
+    Route::delete('orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy')->middleware('permission:delete-orders');
+    Route::delete('order-photos/{photo}', [OrderController::class, 'deletePhoto'])->name('order-photos.destroy')
         ->middleware('permission:delete-order-photos');
 
     // Tasks (internal order)
-    Route::get('tasks', [\App\Http\Controllers\TaskController::class, 'index'])->name('tasks.index')->middleware('permission:view-tasks');
-    Route::get('tasks/create', [\App\Http\Controllers\TaskController::class, 'create'])->name('tasks.create')->middleware('permission:create-tasks');
-    Route::post('tasks', [\App\Http\Controllers\TaskController::class, 'store'])->name('tasks.store')->middleware('permission:create-tasks');
-    Route::get('tasks/crew-search', [\App\Http\Controllers\TaskController::class, 'searchCrew'])->name('tasks.crew-search')->middleware('permission:create-tasks|edit-tasks');
-    Route::get('tasks/{task}', [\App\Http\Controllers\TaskController::class, 'show'])->name('tasks.show')->middleware('permission:show-tasks');
-    Route::get('tasks/{task}/edit', [\App\Http\Controllers\TaskController::class, 'edit'])->name('tasks.edit')->middleware('permission:edit-tasks');
-    Route::put('tasks/{task}', [\App\Http\Controllers\TaskController::class, 'update'])->name('tasks.update')->middleware('permission:edit-tasks');
-    Route::delete('tasks/{task}', [\App\Http\Controllers\TaskController::class, 'destroy'])->name('tasks.destroy')->middleware('permission:delete-tasks');
+    Route::get('tasks', [TaskController::class, 'index'])->name('tasks.index')->middleware('permission:view-tasks');
+    Route::get('tasks/create', [TaskController::class, 'create'])->name('tasks.create')->middleware('permission:create-tasks');
+    Route::post('tasks', [TaskController::class, 'store'])->name('tasks.store')->middleware('permission:create-tasks');
+    Route::get('tasks/crew-search', [TaskController::class, 'searchCrew'])->name('tasks.crew-search')->middleware('permission:create-tasks|edit-tasks');
+    Route::get('tasks/{task}', [TaskController::class, 'show'])->name('tasks.show')->middleware('permission:show-tasks');
+    Route::get('tasks/{task}/edit', [TaskController::class, 'edit'])->name('tasks.edit')->middleware('permission:edit-tasks');
+    Route::put('tasks/{task}', [TaskController::class, 'update'])->name('tasks.update')->middleware('permission:edit-tasks');
+    Route::delete('tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy')->middleware('permission:delete-tasks');
 
-    Route::post('tasks/{task}/attachments', [\App\Http\Controllers\TaskController::class, 'storeAttachment'])->name('tasks.attachments.store')
+    Route::post('tasks/{task}/attachments', [TaskController::class, 'storeAttachment'])->name('tasks.attachments.store')
         ->middleware('permission:create-task-attachments');
-    Route::delete('task-attachments/{taskAttachment}', [\App\Http\Controllers\TaskController::class, 'destroyAttachment'])->name('tasks.attachments.destroy')
+    Route::delete('task-attachments/{taskAttachment}', [TaskController::class, 'destroyAttachment'])->name('tasks.attachments.destroy')
         ->middleware('permission:delete-task-attachments');
 
-    Route::post('tasks/{task}/comments', [\App\Http\Controllers\TaskController::class, 'storeComment'])->name('tasks.comments.store')
+    Route::post('tasks/{task}/comments', [TaskController::class, 'storeComment'])->name('tasks.comments.store')
         ->middleware('permission:create-task-comments');
-    Route::delete('task-comments/{taskComment}', [\App\Http\Controllers\TaskController::class, 'destroyComment'])->name('tasks.comments.destroy')
+    Route::delete('task-comments/{taskComment}', [TaskController::class, 'destroyComment'])->name('tasks.comments.destroy')
         ->middleware('permission:delete-task-comments');
 
     // Vehicle Maintenances
-    Route::get('vehicle-maintenances', [\App\Http\Controllers\VehicleMaintenanceController::class, 'index'])->name('vehicle-maintenances.index')->middleware('permission:view-vehicle-maintenances');
-    Route::get('vehicle-maintenances/create', [\App\Http\Controllers\VehicleMaintenanceController::class, 'create'])->name('vehicle-maintenances.create')->middleware('permission:create-vehicle-maintenances');
-    Route::get('vehicle-maintenances/pic-search', [\App\Http\Controllers\VehicleMaintenanceController::class, 'searchPic'])->name('vehicle-maintenances.pic-search')->middleware('permission:create-vehicle-maintenances|edit-vehicle-maintenances');
-    Route::post('vehicle-maintenances', [\App\Http\Controllers\VehicleMaintenanceController::class, 'store'])->name('vehicle-maintenances.store')->middleware('permission:create-vehicle-maintenances');
-    Route::get('vehicle-maintenances/{vehicleMaintenance}', [\App\Http\Controllers\VehicleMaintenanceController::class, 'show'])->name('vehicle-maintenances.show')->middleware('permission:show-vehicle-maintenances');
-    Route::get('vehicle-maintenances/{vehicleMaintenance}/edit', [\App\Http\Controllers\VehicleMaintenanceController::class, 'edit'])->name('vehicle-maintenances.edit')->middleware('permission:edit-vehicle-maintenances');
-    Route::put('vehicle-maintenances/{vehicleMaintenance}', [\App\Http\Controllers\VehicleMaintenanceController::class, 'update'])->name('vehicle-maintenances.update')->middleware('permission:edit-vehicle-maintenances');
-    Route::delete('vehicle-maintenances/{vehicleMaintenance}', [\App\Http\Controllers\VehicleMaintenanceController::class, 'destroy'])->name('vehicle-maintenances.destroy')->middleware('permission:delete-vehicle-maintenances');
+    Route::get('vehicle-maintenances', [VehicleMaintenanceController::class, 'index'])->name('vehicle-maintenances.index')->middleware('permission:view-vehicle-maintenances');
+    Route::get('vehicle-maintenances/create', [VehicleMaintenanceController::class, 'create'])->name('vehicle-maintenances.create')->middleware('permission:create-vehicle-maintenances');
+    Route::get('vehicle-maintenances/pic-search', [VehicleMaintenanceController::class, 'searchPic'])->name('vehicle-maintenances.pic-search')->middleware('permission:create-vehicle-maintenances|edit-vehicle-maintenances');
+    Route::post('vehicle-maintenances', [VehicleMaintenanceController::class, 'store'])->name('vehicle-maintenances.store')->middleware('permission:create-vehicle-maintenances');
+    Route::get('vehicle-maintenances/{vehicleMaintenance}', [VehicleMaintenanceController::class, 'show'])->name('vehicle-maintenances.show')->middleware('permission:show-vehicle-maintenances');
+    Route::get('vehicle-maintenances/{vehicleMaintenance}/edit', [VehicleMaintenanceController::class, 'edit'])->name('vehicle-maintenances.edit')->middleware('permission:edit-vehicle-maintenances');
+    Route::put('vehicle-maintenances/{vehicleMaintenance}', [VehicleMaintenanceController::class, 'update'])->name('vehicle-maintenances.update')->middleware('permission:edit-vehicle-maintenances');
+    Route::delete('vehicle-maintenances/{vehicleMaintenance}', [VehicleMaintenanceController::class, 'destroy'])->name('vehicle-maintenances.destroy')->middleware('permission:delete-vehicle-maintenances');
 
     // Order Vehicle Issues
-    Route::get('order-vehicle-issues', [\App\Http\Controllers\OrderVehicleIssueController::class, 'index'])
+    Route::get('order-vehicle-issues', [OrderVehicleIssueController::class, 'index'])
         ->name('order-vehicle-issues.index')
         ->middleware('permission:view-order-vehicle-issues');
-    Route::get('orders/{order}/vehicle-issues/create', [\App\Http\Controllers\OrderVehicleIssueController::class, 'create'])
+    Route::get('orders/{order}/vehicle-issues/create', [OrderVehicleIssueController::class, 'create'])
         ->name('order-vehicle-issues.create')
         ->middleware('permission:create-order-vehicle-issues');
-    Route::post('orders/{order}/vehicle-issues', [\App\Http\Controllers\OrderVehicleIssueController::class, 'store'])
+    Route::post('orders/{order}/vehicle-issues', [OrderVehicleIssueController::class, 'store'])
         ->name('order-vehicle-issues.store')
         ->middleware('permission:create-order-vehicle-issues');
-    Route::get('order-vehicle-issues/{orderVehicleIssue}', [\App\Http\Controllers\OrderVehicleIssueController::class, 'show'])
+    Route::get('order-vehicle-issues/{orderVehicleIssue}', [OrderVehicleIssueController::class, 'show'])
         ->name('order-vehicle-issues.show')
         ->middleware('permission:show-order-vehicle-issues');
-    Route::get('order-vehicle-issues/{orderVehicleIssue}/edit', [\App\Http\Controllers\OrderVehicleIssueController::class, 'edit'])
+    Route::get('order-vehicle-issues/{orderVehicleIssue}/edit', [OrderVehicleIssueController::class, 'edit'])
         ->name('order-vehicle-issues.edit')
         ->middleware('permission:edit-order-vehicle-issues');
-    Route::put('order-vehicle-issues/{orderVehicleIssue}', [\App\Http\Controllers\OrderVehicleIssueController::class, 'update'])
+    Route::put('order-vehicle-issues/{orderVehicleIssue}', [OrderVehicleIssueController::class, 'update'])
         ->name('order-vehicle-issues.update')
         ->middleware('permission:edit-order-vehicle-issues');
-    Route::delete('order-vehicle-issues/{orderVehicleIssue}', [\App\Http\Controllers\OrderVehicleIssueController::class, 'destroy'])
+    Route::delete('order-vehicle-issues/{orderVehicleIssue}', [OrderVehicleIssueController::class, 'destroy'])
         ->name('order-vehicle-issues.destroy')
         ->middleware('permission:delete-order-vehicle-issues');
 
     // Units Management
-    Route::get('units', [\App\Http\Controllers\UnitController::class, 'index'])->name('units.index')->middleware('permission:view-units');
-    Route::get('units/create', [\App\Http\Controllers\UnitController::class, 'create'])->name('units.create')->middleware('permission:create-units');
-    Route::post('units', [\App\Http\Controllers\UnitController::class, 'store'])->name('units.store')->middleware('permission:create-units');
-    Route::get('units/{unit}', [\App\Http\Controllers\UnitController::class, 'show'])->name('units.show')->middleware('permission:show-units');
-    Route::get('units/{unit}/edit', [\App\Http\Controllers\UnitController::class, 'edit'])->name('units.edit')->middleware('permission:edit-units');
-    Route::put('units/{unit}', [\App\Http\Controllers\UnitController::class, 'update'])->name('units.update')->middleware('permission:edit-units');
-    Route::delete('units/{unit}', [\App\Http\Controllers\UnitController::class, 'destroy'])->name('units.destroy')->middleware('permission:delete-units');
+    Route::get('units', [UnitController::class, 'index'])->name('units.index')->middleware('permission:view-units');
+    Route::get('units/create', [UnitController::class, 'create'])->name('units.create')->middleware('permission:create-units');
+    Route::post('units', [UnitController::class, 'store'])->name('units.store')->middleware('permission:create-units');
+    Route::get('units/{unit}', [UnitController::class, 'show'])->name('units.show')->middleware('permission:show-units');
+    Route::get('units/{unit}/edit', [UnitController::class, 'edit'])->name('units.edit')->middleware('permission:edit-units');
+    Route::put('units/{unit}', [UnitController::class, 'update'])->name('units.update')->middleware('permission:edit-units');
+    Route::delete('units/{unit}', [UnitController::class, 'destroy'])->name('units.destroy')->middleware('permission:delete-units');
 
     // Pools Management
-    Route::get('pools', [\App\Http\Controllers\PoolController::class, 'index'])->name('pools.index')->middleware('permission:view-pools');
-    Route::get('pools/create', [\App\Http\Controllers\PoolController::class, 'create'])->name('pools.create')->middleware('permission:create-pools');
-    Route::post('pools', [\App\Http\Controllers\PoolController::class, 'store'])->name('pools.store')->middleware('permission:create-pools');
-    Route::get('pools/{pool}', [\App\Http\Controllers\PoolController::class, 'show'])->name('pools.show')->middleware('permission:show-pools');
-    Route::get('pools/{pool}/edit', [\App\Http\Controllers\PoolController::class, 'edit'])->name('pools.edit')->middleware('permission:edit-pools');
-    Route::put('pools/{pool}', [\App\Http\Controllers\PoolController::class, 'update'])->name('pools.update')->middleware('permission:edit-pools');
-    Route::delete('pools/{pool}', [\App\Http\Controllers\PoolController::class, 'destroy'])->name('pools.destroy')->middleware('permission:delete-pools');
+    Route::get('pools', [PoolController::class, 'index'])->name('pools.index')->middleware('permission:view-pools');
+    Route::get('pools/create', [PoolController::class, 'create'])->name('pools.create')->middleware('permission:create-pools');
+    Route::post('pools', [PoolController::class, 'store'])->name('pools.store')->middleware('permission:create-pools');
+    Route::get('pools/{pool}', [PoolController::class, 'show'])->name('pools.show')->middleware('permission:show-pools');
+    Route::get('pools/{pool}/edit', [PoolController::class, 'edit'])->name('pools.edit')->middleware('permission:edit-pools');
+    Route::put('pools/{pool}', [PoolController::class, 'update'])->name('pools.update')->middleware('permission:edit-pools');
+    Route::delete('pools/{pool}', [PoolController::class, 'destroy'])->name('pools.destroy')->middleware('permission:delete-pools');
 });
 
 require __DIR__.'/auth.php';
