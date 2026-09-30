@@ -20,7 +20,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $users = User::with('roles')->select('users.*');
+            $users = User::with('roles')->visibleTo()->select('users.*');
             
             return DataTables::of($users)
                 ->addColumn('roles', function ($user) {
@@ -97,6 +97,7 @@ class UserController extends Controller
 
     public function show(User $user): View
     {
+        $this->ensureVisible($user);
         $user->load('roles.permissions');
         
         return view('users.show', compact('user'));
@@ -104,6 +105,7 @@ class UserController extends Controller
 
     public function edit(User $user): View
     {
+        $this->ensureVisible($user);
         $roles = Role::orderBy('name')->get();
         $user->load('roles');
 
@@ -112,6 +114,8 @@ class UserController extends Controller
 
     public function update(Request $request, User $user): RedirectResponse
     {
+        $this->ensureVisible($user);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$user->id],
@@ -138,6 +142,8 @@ class UserController extends Controller
 
     public function destroy(User $user): RedirectResponse
     {
+        $this->ensureVisible($user);
+
         if ((int) $user->id === (int) auth()->id()) {
             return back()->with('status', 'Tidak dapat menghapus akun yang sedang digunakan.');
         }
@@ -149,5 +155,10 @@ class UserController extends Controller
         });
 
         return to_route('users.index')->with('status', 'User dan employee terkait berhasil dihapus.');
+    }
+
+    private function ensureVisible(User $user): void
+    {
+        abort_if($user->isConcealedFrom(auth()->user()), 404);
     }
 }

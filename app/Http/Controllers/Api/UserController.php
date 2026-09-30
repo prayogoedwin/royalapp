@@ -26,7 +26,7 @@ class UserController extends Controller
      */
     public function index(): JsonResponse
     {
-        $users = User::with('roles.permissions')->paginate(15);
+        $users = User::with('roles.permissions')->visibleTo()->paginate(15);
 
         return response()->json([
             'status' => true,

