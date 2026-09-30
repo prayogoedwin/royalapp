@@ -141,9 +141,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('upload-folders', [UploadFolderController::class, 'index'])
         ->name('upload-folders.index')
         ->middleware('permission:view-upload-folders');
+    Route::get('upload-folders/{year}/{month}/download', [UploadFolderController::class, 'download'])
+        ->name('upload-folders.download')
+        ->middleware('permission:view-upload-folders')
+        ->where(['year' => '[0-9]{4}', 'month' => '[0-9]{2}']);
     Route::delete('upload-folders/{year}/{month}', [UploadFolderController::class, 'destroy'])
         ->name('upload-folders.destroy')
-        ->middleware('permission:delete-upload-folders');
+        ->middleware('permission:delete-upload-folders')
+        ->where(['year' => '[0-9]{4}', 'month' => '[0-9]{2}']);
 
     // Orders Management
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index')->middleware('permission:view-orders');
