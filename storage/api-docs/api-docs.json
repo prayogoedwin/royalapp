@@ -129,7 +129,7 @@
                 "tags": [
                     "Stats"
                 ],
-                "summary": "Count total order by user (cache)",
+                "summary": "Count orders by user for every status (cached)",
                 "operationId": "a4c7b71ee4bc4f4595555ba11750c31b",
                 "responses": {
                     "200": {
@@ -845,7 +845,7 @@
                 "tags": [
                     "Order Report"
                 ],
-                "summary": "Update order report",
+                "summary": "Update order report. Waktu selesai diisi server saat status Done.",
                 "operationId": "61598a7ef02a141f885b2653af0a1e5c",
                 "parameters": [
                     {
@@ -1299,11 +1299,6 @@
                         "type": "number",
                         "format": "float",
                         "example": 15000
-                    },
-                    "deliver_datetime": {
-                        "type": "string",
-                        "format": "date-time",
-                        "example": "2026-04-10T08:30:00+07:00"
                     },
                     "notes": {
                         "type": "string",

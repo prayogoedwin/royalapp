@@ -4,18 +4,18 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
-use App\Models\OrderStatus;
 use App\Models\OrderEtollTransaction;
 use App\Models\OrderExpense;
 use App\Models\OrderPhoto;
 use App\Models\OrderReport;
+use App\Models\OrderStatus;
 use App\Models\OrderVehicleIssue;
 use App\Support\OrderCategoryOptions;
 use App\Support\UploadPath;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use OpenApi\Annotations as OA;
 use Illuminate\Support\Facades\Storage;
+use OpenApi\Annotations as OA;
 
 class OrderApiController extends Controller
 {
@@ -62,6 +62,7 @@ class OrderApiController extends Controller
     private function userOrderQuery(Request $request)
     {
         $employeeId = $this->userEmployeeId($request);
+
         return Order::query()->whereHas('orderCrews', fn ($q) => $q->where('employee_id', $employeeId));
     }
 
@@ -76,7 +77,7 @@ class OrderApiController extends Controller
     public function myOrders(Request $request): JsonResponse
     {
         $employeeId = $this->userEmployeeId($request);
-        if (!$employeeId) {
+        if (! $employeeId) {
             return $this->errorResponse('Employee not linked to user.', 404);
         }
 
@@ -133,7 +134,7 @@ class OrderApiController extends Controller
     public function show(Request $request, int $orderId): JsonResponse
     {
         $order = $this->findUserOrder($request, $orderId);
-        if (!$order) {
+        if (! $order) {
             return $this->errorResponse('Order not found.', 404);
         }
 
@@ -157,7 +158,7 @@ class OrderApiController extends Controller
     public function photos(Request $request, int $orderId): JsonResponse
     {
         $order = $this->findUserOrder($request, $orderId);
-        if (!$order) {
+        if (! $order) {
             return $this->errorResponse('Order not found.', 404);
         }
 
@@ -168,7 +169,7 @@ class OrderApiController extends Controller
     public function storePhoto(Request $request, int $orderId): JsonResponse
     {
         $order = $this->findUserOrder($request, $orderId);
-        if (!$order) {
+        if (! $order) {
             return $this->errorResponse('Order not found.', 404);
         }
 
@@ -194,12 +195,12 @@ class OrderApiController extends Controller
     public function updatePhoto(Request $request, int $orderId, int $photoId): JsonResponse
     {
         $order = $this->findUserOrder($request, $orderId);
-        if (!$order) {
+        if (! $order) {
             return $this->errorResponse('Order not found.', 404);
         }
 
         $photo = $order->orderPhotos()->find($photoId);
-        if (!$photo) {
+        if (! $photo) {
             return $this->errorResponse('Photo not found.', 404);
         }
 
@@ -226,11 +227,11 @@ class OrderApiController extends Controller
     public function destroyPhoto(Request $request, int $orderId, int $photoId): JsonResponse
     {
         $order = $this->findUserOrder($request, $orderId);
-        if (!$order) {
+        if (! $order) {
             return $this->errorResponse('Order not found.', 404);
         }
         $photo = $order->orderPhotos()->find($photoId);
-        if (!$photo) {
+        if (! $photo) {
             return $this->errorResponse('Photo not found.', 404);
         }
         if ($photo->path) {
@@ -245,7 +246,10 @@ class OrderApiController extends Controller
     public function expenses(Request $request, int $orderId): JsonResponse
     {
         $order = $this->findUserOrder($request, $orderId);
-        if (!$order) return $this->errorResponse('Order not found.', 404);
+        if (! $order) {
+            return $this->errorResponse('Order not found.', 404);
+        }
+
         return $this->okResponse($order->orderExpenses()->latest()->get());
     }
 
@@ -253,9 +257,11 @@ class OrderApiController extends Controller
     public function storeExpense(Request $request, int $orderId): JsonResponse
     {
         $order = $this->findUserOrder($request, $orderId);
-        if (!$order) return $this->errorResponse('Order not found.', 404);
+        if (! $order) {
+            return $this->errorResponse('Order not found.', 404);
+        }
         $validated = $request->validate([
-            'expense_category' => ['required', 'in:' . implode(',', array_keys(OrderCategoryOptions::expenseCategories()))],
+            'expense_category' => ['required', 'in:'.implode(',', array_keys(OrderCategoryOptions::expenseCategories()))],
             'description' => ['nullable', 'string'],
             'amount' => ['required', 'numeric', 'min:0'],
             'receipt_photo' => ['nullable', 'image', 'max:4096'],
@@ -266,6 +272,7 @@ class OrderApiController extends Controller
         $validated['order_id'] = $order->id;
         $validated['created_by'] = $request->user()->id;
         $expense = OrderExpense::create($validated);
+
         return $this->okResponse($expense, 'Created', 201);
     }
 
@@ -273,20 +280,27 @@ class OrderApiController extends Controller
     public function updateExpense(Request $request, int $orderId, int $expenseId): JsonResponse
     {
         $order = $this->findUserOrder($request, $orderId);
-        if (!$order) return $this->errorResponse('Order not found.', 404);
+        if (! $order) {
+            return $this->errorResponse('Order not found.', 404);
+        }
         $expense = $order->orderExpenses()->find($expenseId);
-        if (!$expense) return $this->errorResponse('Expense not found.', 404);
+        if (! $expense) {
+            return $this->errorResponse('Expense not found.', 404);
+        }
         $validated = $request->validate([
-            'expense_category' => ['sometimes', 'in:' . implode(',', array_keys(OrderCategoryOptions::expenseCategories()))],
+            'expense_category' => ['sometimes', 'in:'.implode(',', array_keys(OrderCategoryOptions::expenseCategories()))],
             'description' => ['nullable', 'string'],
             'amount' => ['sometimes', 'numeric', 'min:0'],
             'receipt_photo' => ['nullable', 'image', 'max:4096'],
         ]);
         if ($request->hasFile('receipt_photo')) {
-            if ($expense->receipt_photo) Storage::disk('public')->delete($expense->receipt_photo);
+            if ($expense->receipt_photo) {
+                Storage::disk('public')->delete($expense->receipt_photo);
+            }
             $validated['receipt_photo'] = $request->file('receipt_photo')->store(UploadPath::dir('order-expenses'), 'public');
         }
         $expense->update($validated);
+
         return $this->okResponse($expense->fresh());
     }
 
@@ -294,11 +308,18 @@ class OrderApiController extends Controller
     public function destroyExpense(Request $request, int $orderId, int $expenseId): JsonResponse
     {
         $order = $this->findUserOrder($request, $orderId);
-        if (!$order) return $this->errorResponse('Order not found.', 404);
+        if (! $order) {
+            return $this->errorResponse('Order not found.', 404);
+        }
         $expense = $order->orderExpenses()->find($expenseId);
-        if (!$expense) return $this->errorResponse('Expense not found.', 404);
-        if ($expense->receipt_photo) Storage::disk('public')->delete($expense->receipt_photo);
+        if (! $expense) {
+            return $this->errorResponse('Expense not found.', 404);
+        }
+        if ($expense->receipt_photo) {
+            Storage::disk('public')->delete($expense->receipt_photo);
+        }
         $expense->delete();
+
         return $this->okResponse([], 'Expense deleted.');
     }
 
@@ -306,16 +327,18 @@ class OrderApiController extends Controller
     public function updateReport(Request $request, int $orderId): JsonResponse
     {
         $order = $this->findUserOrder($request, $orderId);
-        if (!$order) return $this->errorResponse('Order not found.', 404);
+        if (! $order) {
+            return $this->errorResponse('Order not found.', 404);
+        }
         $validated = $request->validate([
             'km_awal' => ['nullable', 'numeric', 'min:0'],
             'km_akhir' => ['nullable', 'numeric', 'min:0'],
             'saldo_etoll_before' => ['nullable', 'numeric', 'min:0'],
             'saldo_etoll_after' => ['nullable', 'numeric', 'min:0'],
-            'deliver_datetime' => ['nullable', 'date'],
             'notes' => ['nullable', 'string'],
             'order_status_id' => ['nullable', 'exists:order_statuses,id'],
         ]);
+        $statusId = (int) ($validated['order_status_id'] ?? $order->order_status_id);
         $report = OrderReport::updateOrCreate(
             ['order_id' => $order->id],
             [
@@ -323,15 +346,16 @@ class OrderApiController extends Controller
                 'km_akhir' => $validated['km_akhir'] ?? null,
                 'saldo_etoll_before' => $validated['saldo_etoll_before'] ?? null,
                 'saldo_etoll_after' => $validated['saldo_etoll_after'] ?? null,
-                'deliver_datetime' => $validated['deliver_datetime'] ?? null,
+                'deliver_datetime' => $order->completionTimeForStatus($statusId),
                 'notes' => $validated['notes'] ?? null,
                 'updated_by' => $request->user()->id,
                 'created_by' => $order->orderReport?->created_by ?? $request->user()->id,
             ]
         );
-        if (!empty($validated['order_status_id'])) {
+        if (! empty($validated['order_status_id'])) {
             $order->update(['order_status_id' => $validated['order_status_id']]);
         }
+
         return $this->okResponse($report);
     }
 
@@ -339,12 +363,15 @@ class OrderApiController extends Controller
     public function etolls(Request $request, int $orderId): JsonResponse
     {
         $order = $this->findUserOrder($request, $orderId);
-        if (!$order) return $this->errorResponse('Order not found.', 404);
+        if (! $order) {
+            return $this->errorResponse('Order not found.', 404);
+        }
         $rows = $order->orderEtollTransactions()
             ->latest()
             ->get()
             ->map(fn (OrderEtollTransaction $trx) => $this->etollPayload($trx))
             ->values();
+
         return $this->okResponse($rows);
     }
 
@@ -352,7 +379,9 @@ class OrderApiController extends Controller
     public function storeEtoll(Request $request, int $orderId): JsonResponse
     {
         $order = $this->findUserOrder($request, $orderId);
-        if (!$order) return $this->errorResponse('Order not found.', 404);
+        if (! $order) {
+            return $this->errorResponse('Order not found.', 404);
+        }
         $validated = $request->validate([
             'amount' => ['required_without:usage_amount', 'nullable', 'numeric', 'min:0'],
             'usage_amount' => ['required_without:amount', 'nullable', 'numeric', 'min:0'],
@@ -371,6 +400,7 @@ class OrderApiController extends Controller
             'receipt_photo' => $validated['receipt_photo'] ?? null,
             'created_by' => $request->user()->id,
         ]);
+
         return $this->okResponse($this->etollPayload($trx), 'Created', 201);
     }
 
@@ -378,9 +408,13 @@ class OrderApiController extends Controller
     public function updateEtoll(Request $request, int $orderId, int $trxId): JsonResponse
     {
         $order = $this->findUserOrder($request, $orderId);
-        if (!$order) return $this->errorResponse('Order not found.', 404);
+        if (! $order) {
+            return $this->errorResponse('Order not found.', 404);
+        }
         $trx = $order->orderEtollTransactions()->find($trxId);
-        if (!$trx) return $this->errorResponse('E-toll transaction not found.', 404);
+        if (! $trx) {
+            return $this->errorResponse('E-toll transaction not found.', 404);
+        }
         $validated = $request->validate([
             'amount' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'usage_amount' => ['sometimes', 'nullable', 'numeric', 'min:0'],
@@ -394,10 +428,13 @@ class OrderApiController extends Controller
         }
         unset($validated['amount']);
         if ($request->hasFile('receipt_photo')) {
-            if ($trx->receipt_photo) Storage::disk('public')->delete($trx->receipt_photo);
+            if ($trx->receipt_photo) {
+                Storage::disk('public')->delete($trx->receipt_photo);
+            }
             $validated['receipt_photo'] = $request->file('receipt_photo')->store(UploadPath::dir('order-etoll'), 'public');
         }
         $trx->update($validated);
+
         return $this->okResponse($this->etollPayload($trx->fresh()));
     }
 
@@ -405,11 +442,18 @@ class OrderApiController extends Controller
     public function destroyEtoll(Request $request, int $orderId, int $trxId): JsonResponse
     {
         $order = $this->findUserOrder($request, $orderId);
-        if (!$order) return $this->errorResponse('Order not found.', 404);
+        if (! $order) {
+            return $this->errorResponse('Order not found.', 404);
+        }
         $trx = $order->orderEtollTransactions()->find($trxId);
-        if (!$trx) return $this->errorResponse('E-toll transaction not found.', 404);
-        if ($trx->receipt_photo) Storage::disk('public')->delete($trx->receipt_photo);
+        if (! $trx) {
+            return $this->errorResponse('E-toll transaction not found.', 404);
+        }
+        if ($trx->receipt_photo) {
+            Storage::disk('public')->delete($trx->receipt_photo);
+        }
         $trx->delete();
+
         return $this->okResponse([], 'E-toll transaction deleted.');
     }
 
@@ -417,7 +461,10 @@ class OrderApiController extends Controller
     public function vehicleIssues(Request $request, int $orderId): JsonResponse
     {
         $order = $this->findUserOrder($request, $orderId);
-        if (!$order) return $this->errorResponse('Order not found.', 404);
+        if (! $order) {
+            return $this->errorResponse('Order not found.', 404);
+        }
+
         return $this->okResponse($order->orderVehicleIssues()->latest()->get());
     }
 
@@ -425,9 +472,11 @@ class OrderApiController extends Controller
     public function storeVehicleIssue(Request $request, int $orderId): JsonResponse
     {
         $order = $this->findUserOrder($request, $orderId);
-        if (!$order) return $this->errorResponse('Order not found.', 404);
+        if (! $order) {
+            return $this->errorResponse('Order not found.', 404);
+        }
         $validated = $request->validate([
-            'issue_category' => ['required', 'in:' . implode(',', array_keys(OrderCategoryOptions::issueCategories()))],
+            'issue_category' => ['required', 'in:'.implode(',', array_keys(OrderCategoryOptions::issueCategories()))],
             'description' => ['required', 'string'],
             'priority' => ['required', 'in:low,medium,high,urgent'],
             'is_resolved' => ['nullable', 'boolean'],
@@ -444,11 +493,12 @@ class OrderApiController extends Controller
         $validated['order_id'] = $order->id;
         $validated['unit_code'] = $order->unit_code;
         $validated['created_by'] = $request->user()->id;
-        if (!empty($validated['is_resolved'])) {
+        if (! empty($validated['is_resolved'])) {
             $validated['resolved_at'] = now();
             $validated['resolved_by'] = $request->user()->id;
         }
         $issue = OrderVehicleIssue::create($validated);
+
         return $this->okResponse($issue, 'Created', 201);
     }
 
@@ -456,11 +506,15 @@ class OrderApiController extends Controller
     public function updateVehicleIssue(Request $request, int $orderId, int $issueId): JsonResponse
     {
         $order = $this->findUserOrder($request, $orderId);
-        if (!$order) return $this->errorResponse('Order not found.', 404);
+        if (! $order) {
+            return $this->errorResponse('Order not found.', 404);
+        }
         $issue = $order->orderVehicleIssues()->find($issueId);
-        if (!$issue) return $this->errorResponse('Vehicle issue not found.', 404);
+        if (! $issue) {
+            return $this->errorResponse('Vehicle issue not found.', 404);
+        }
         $validated = $request->validate([
-            'issue_category' => ['sometimes', 'in:' . implode(',', array_keys(OrderCategoryOptions::issueCategories()))],
+            'issue_category' => ['sometimes', 'in:'.implode(',', array_keys(OrderCategoryOptions::issueCategories()))],
             'description' => ['sometimes', 'string'],
             'priority' => ['sometimes', 'in:low,medium,high,urgent'],
             'is_resolved' => ['nullable', 'boolean'],
@@ -469,11 +523,15 @@ class OrderApiController extends Controller
             'repair_photo' => ['nullable', 'image', 'max:4096'],
         ]);
         if ($request->hasFile('issue_photo')) {
-            if ($issue->issue_photo) Storage::disk('public')->delete($issue->issue_photo);
+            if ($issue->issue_photo) {
+                Storage::disk('public')->delete($issue->issue_photo);
+            }
             $validated['issue_photo'] = $request->file('issue_photo')->store(UploadPath::dir('vehicle-issues/issue'), 'public');
         }
         if ($request->hasFile('repair_photo')) {
-            if ($issue->repair_photo) Storage::disk('public')->delete($issue->repair_photo);
+            if ($issue->repair_photo) {
+                Storage::disk('public')->delete($issue->repair_photo);
+            }
             $validated['repair_photo'] = $request->file('repair_photo')->store(UploadPath::dir('vehicle-issues/repair'), 'public');
         }
         if (array_key_exists('is_resolved', $validated)) {
@@ -486,6 +544,7 @@ class OrderApiController extends Controller
             }
         }
         $issue->update($validated);
+
         return $this->okResponse($issue->fresh());
     }
 
@@ -493,12 +552,21 @@ class OrderApiController extends Controller
     public function destroyVehicleIssue(Request $request, int $orderId, int $issueId): JsonResponse
     {
         $order = $this->findUserOrder($request, $orderId);
-        if (!$order) return $this->errorResponse('Order not found.', 404);
+        if (! $order) {
+            return $this->errorResponse('Order not found.', 404);
+        }
         $issue = $order->orderVehicleIssues()->find($issueId);
-        if (!$issue) return $this->errorResponse('Vehicle issue not found.', 404);
-        if ($issue->issue_photo) Storage::disk('public')->delete($issue->issue_photo);
-        if ($issue->repair_photo) Storage::disk('public')->delete($issue->repair_photo);
+        if (! $issue) {
+            return $this->errorResponse('Vehicle issue not found.', 404);
+        }
+        if ($issue->issue_photo) {
+            Storage::disk('public')->delete($issue->issue_photo);
+        }
+        if ($issue->repair_photo) {
+            Storage::disk('public')->delete($issue->repair_photo);
+        }
         $issue->delete();
+
         return $this->okResponse([], 'Vehicle issue deleted.');
     }
 }

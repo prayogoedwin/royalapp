@@ -248,19 +248,42 @@
             @if($order->orderPhotos->isEmpty())
                 <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Belum ada foto. Anda dapat menambahkan foto baru di bawah.</p>
             @else
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    @foreach($order->orderPhotos as $photo)
-                        <div class="space-y-2">
-                            <img src="{{ asset('storage/'.$photo->path) }}" alt="{{ $photo->title }}" class="rounded-md w-full object-cover max-h-32 bg-gray-100 dark:bg-gray-900">
-                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $photo->title }}</p>
-                            @if($photo->description)
-                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $photo->description }}</p>
-                            @endif
-                            @if(auth()->user()->hasPermission('delete-order-photos') || auth()->user()->hasPermission('edit-orders'))
-                                <button type="submit" form="delete-photo-{{ $photo->id }}" class="text-xs text-red-600 dark:text-red-400 hover:underline">Delete</button>
-                            @endif
+                <div class="mb-4" x-data="{ open: false, src: '', title: '' }" @keydown.escape.window="open = false">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        @foreach($order->orderPhotos as $photo)
+                            <div class="space-y-2">
+                                <button
+                                    type="button"
+                                    class="block w-full cursor-zoom-in"
+                                    @click="open = true; src = @js(asset('storage/'.$photo->path)); title = @js($photo->title ?? 'Foto')"
+                                >
+                                    <img src="{{ asset('storage/'.$photo->path) }}" alt="{{ $photo->title }}" class="rounded-md w-full object-cover max-h-32 bg-gray-100 dark:bg-gray-900">
+                                </button>
+                                <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $photo->title }}</p>
+                                @if($photo->description)
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ $photo->description }}</p>
+                                @endif
+                                @if(auth()->user()->hasPermission('delete-order-photos') || auth()->user()->hasPermission('edit-orders'))
+                                    <button type="submit" form="delete-photo-{{ $photo->id }}" class="text-xs text-red-600 dark:text-red-400 hover:underline">Delete</button>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <template x-teleport="body">
+                        <div
+                            x-show="open"
+                            x-cloak
+                            class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+                            @click.self="open = false"
+                        >
+                            <button type="button" class="absolute top-4 right-4 text-white text-sm" @click="open = false">Tutup</button>
+                            <figure class="max-h-[90vh] max-w-5xl">
+                                <img :src="src" :alt="title" class="max-h-[85vh] max-w-full object-contain">
+                                <figcaption class="mt-2 text-center text-sm text-white" x-text="title"></figcaption>
+                            </figure>
                         </div>
-                    @endforeach
+                    </template>
                 </div>
             @endif
 
@@ -346,12 +369,11 @@
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ __('Dihitung otomatis (KM Akhir − KM Awal).') }}</p>
                 </div>
                 <div>
-                    <x-forms.input
-                        label="Deliver"
-                        name="deliver_datetime"
-                        type="datetime-local"
-                        value="{{ old('deliver_datetime', ($order->orderReport?->deliver_datetime ? $order->orderReport->deliver_datetime->format('Y-m-d\TH:i') : null)) }}"
-                    />
+                    <span class="block ml-1 text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Waktu Selesai</span>
+                    <div class="w-full px-4 py-1.5 rounded-lg text-gray-800 dark:text-gray-100 bg-gray-100 dark:bg-gray-600 border border-gray-200 dark:border-gray-600 cursor-not-allowed select-none">
+                        {{ $order->orderReport?->deliver_datetime?->format('d M Y H:i') ?? '—' }}
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ __('Terisi otomatis saat status menjadi Done.') }}</p>
                 </div>
                 <div>
                     <x-forms.input

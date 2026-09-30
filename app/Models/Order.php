@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -106,5 +107,24 @@ class Order extends Model
     public function vehicleMaintenances(): HasMany
     {
         return $this->hasMany(VehicleMaintenance::class);
+    }
+
+    /**
+     * Waktu selesai diisi sekali, saat status menjadi Done. Nilai yang sudah ada tidak ditimpa.
+     */
+    public function completionTimeForStatus(int $statusId): ?CarbonInterface
+    {
+        $existing = $this->orderReport?->deliver_datetime;
+
+        if ($existing !== null) {
+            return $existing;
+        }
+
+        $isDone = OrderStatus::query()
+            ->whereKey($statusId)
+            ->whereRaw('LOWER(name) = ?', ['done'])
+            ->exists();
+
+        return $isDone ? now() : null;
     }
 }

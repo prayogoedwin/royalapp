@@ -125,7 +125,7 @@
                                 <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->orderStatus?->name ?? '—' }}</dd>
                             </div>
                             <div>
-                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Deliver</dt>
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Waktu Selesai</dt>
                                 <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->orderReport->deliver_datetime?->format('d M Y H:i') ?? '-' }}</dd>
                             </div>
                             <div>
@@ -189,20 +189,43 @@
                     @if($order->orderPhotos->isEmpty())
                         <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada foto untuk order ini.</p>
                     @else
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            @foreach($order->orderPhotos as $photo)
-                                <div class="space-y-2">
-                                    <img src="{{ asset('storage/'.$photo->path) }}"
-                                         alt="{{ $photo->title }}"
-                                         class="rounded-md w-full object-cover max-h-40 bg-gray-100 dark:bg-gray-900">
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $photo->title }}</p>
-                                        @if($photo->description)
-                                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ $photo->description }}</p>
-                                        @endif
+                        <div x-data="{ open: false, src: '', title: '' }" @keydown.escape.window="open = false">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                @foreach($order->orderPhotos as $photo)
+                                    <div class="space-y-2">
+                                        <button
+                                            type="button"
+                                            class="block w-full cursor-zoom-in"
+                                            @click="open = true; src = @js(asset('storage/'.$photo->path)); title = @js($photo->title ?? 'Foto')"
+                                        >
+                                            <img src="{{ asset('storage/'.$photo->path) }}"
+                                                 alt="{{ $photo->title }}"
+                                                 class="rounded-md w-full object-cover max-h-40 bg-gray-100 dark:bg-gray-900">
+                                        </button>
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $photo->title }}</p>
+                                            @if($photo->description)
+                                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $photo->description }}</p>
+                                            @endif
+                                        </div>
                                     </div>
+                                @endforeach
+                            </div>
+
+                            <template x-teleport="body">
+                                <div
+                                    x-show="open"
+                                    x-cloak
+                                    class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+                                    @click.self="open = false"
+                                >
+                                    <button type="button" class="absolute top-4 right-4 text-white text-sm" @click="open = false">Tutup</button>
+                                    <figure class="max-h-[90vh] max-w-5xl">
+                                        <img :src="src" :alt="title" class="max-h-[85vh] max-w-full object-contain">
+                                        <figcaption class="mt-2 text-center text-sm text-white" x-text="title"></figcaption>
+                                    </figure>
                                 </div>
-                            @endforeach
+                            </template>
                         </div>
                     @endif
                 </div>

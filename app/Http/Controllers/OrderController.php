@@ -7,16 +7,16 @@ use App\Models\Employee;
 use App\Models\Order;
 use App\Models\OrderAmbulance;
 use App\Models\OrderCrew;
-use App\Models\OrderPhoto;
-use App\Models\OrderStatus;
-use App\Models\OrderReport;
-use App\Models\OrderExpense;
 use App\Models\OrderEtollTransaction;
+use App\Models\OrderExpense;
+use App\Models\OrderPhoto;
+use App\Models\OrderReport;
+use App\Models\OrderStatus;
 use App\Models\OrderTowing;
-use App\Support\OrderOptions;
-use App\Support\OrderCategoryOptions;
-use App\Support\UploadPath;
 use App\Models\Unit;
+use App\Support\OrderCategoryOptions;
+use App\Support\OrderOptions;
+use App\Support\UploadPath;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -89,7 +89,7 @@ class OrderController extends Controller
         if ($request->ajax()) {
             $orders = Order::with(['division', 'orderStatus'])
                 ->select('orders.*');
-            
+
             return DataTables::of($orders)
                 ->addColumn('division_name', function ($order) {
                     return $order->division->nama;
@@ -103,30 +103,31 @@ class OrderController extends Controller
                         'gray' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
                     ];
                     $color = $colors[$order->orderStatus->color ?? 'yellow'] ?? 'bg-gray-100 text-gray-800';
-                    return '<span class="px-2 py-1 rounded-full text-xs font-medium ' . $color . '">' . $order->orderStatus->name . '</span>';
+
+                    return '<span class="px-2 py-1 rounded-full text-xs font-medium '.$color.'">'.$order->orderStatus->name.'</span>';
                 })
                 ->addColumn('actions', function ($order) {
                     $actions = '';
-                    
+
                     if (auth()->user()->hasPermission('show-orders')) {
-                        $actions .= '<a href="' . route('orders.show', $order) . '" class="text-green-600 dark:text-green-400 hover:underline mr-3">View</a>';
+                        $actions .= '<a href="'.route('orders.show', $order).'" class="text-green-600 dark:text-green-400 hover:underline mr-3">View</a>';
                     }
-                    
+
                     if (auth()->user()->hasPermission('edit-orders')) {
-                        $actions .= '<a href="' . route('orders.edit', $order) . '" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Edit</a>';
+                        $actions .= '<a href="'.route('orders.edit', $order).'" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Edit</a>';
                     }
-                    
+
                     if (auth()->user()->hasPermission('delete-orders')) {
-                        $actions .= '<form action="' . route('orders.destroy', $order) . '" method="POST" class="inline" onsubmit="return confirm(\'Are you sure?\')">
-                            ' . csrf_field() . method_field('DELETE') . '
+                        $actions .= '<form action="'.route('orders.destroy', $order).'" method="POST" class="inline" onsubmit="return confirm(\'Are you sure?\')">
+                            '.csrf_field().method_field('DELETE').'
                             <button type="submit" class="text-red-600 dark:text-red-400 hover:underline">Delete</button>
                         </form>';
                     }
-                    
+
                     return $actions ?: '-';
                 })
                 ->editColumn('price', function ($order) {
-                    return 'Rp ' . number_format($order->price, 0, ',', '.');
+                    return 'Rp '.number_format($order->price, 0, ',', '.');
                 })
                 ->editColumn('pickup_datetime', function ($order) {
                     return $order->pickup_datetime->format('M d, Y H:i');
@@ -204,10 +205,10 @@ class OrderController extends Controller
             // so generating from non-trashed-only can collide and fail every submit.
             $offset = strlen($prefix) + 2; // 1-based MySQL SUBSTRING after "RA." / "RT."
             $lastNumber = (int) Order::withTrashed()
-                ->where('order_number', 'like', $prefix . '.%')
+                ->where('order_number', 'like', $prefix.'.%')
                 ->selectRaw('MAX(CAST(SUBSTRING(order_number, ?) AS UNSIGNED)) as max_num', [$offset])
                 ->value('max_num');
-            $orderNumber = $prefix . '.' . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+            $orderNumber = $prefix.'.'.str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
 
             $order = Order::create([
                 'order_number' => $orderNumber,
@@ -270,7 +271,7 @@ class OrderController extends Controller
 
                     OrderPhoto::create([
                         'order_id' => $order->id,
-                        'title' => $validated['photo_titles'][$index] ?? 'Photo ' . ($index + 1),
+                        'title' => $validated['photo_titles'][$index] ?? 'Photo '.($index + 1),
                         'description' => $validated['photo_descriptions'][$index] ?? null,
                         'path' => $path,
                         'created_by' => auth()->id(),
@@ -280,22 +281,22 @@ class OrderController extends Controller
 
             DB::commit();
 
-            return to_route('orders.index')->with('status', 'Order created successfully with number: ' . $orderNumber);
+            return to_route('orders.index')->with('status', 'Order created successfully with number: '.$orderNumber);
         } catch (\Exception $e) {
             DB::rollBack();
             report($e);
 
-            return back()->withInput()->withErrors(['error' => 'Failed to create order: ' . $e->getMessage()]);
+            return back()->withInput()->withErrors(['error' => 'Failed to create order: '.$e->getMessage()]);
         }
     }
 
     public function show(Order $order): View
     {
         $order->load([
-            'division', 
-            'orderStatus', 
-            'orderAmbulance', 
-            'orderTowing', 
+            'division',
+            'orderStatus',
+            'orderAmbulance',
+            'orderTowing',
             'orderCrews.employee.position',
             'orderPhotos',
             'orderReport',
@@ -303,9 +304,9 @@ class OrderController extends Controller
             'orderEtollTransactions',
             'orderVehicleIssues',
             'createdBy',
-            'updatedBy'
+            'updatedBy',
         ]);
-        
+
         return view('orders.show', compact('order'));
     }
 
@@ -352,11 +353,12 @@ class OrderController extends Controller
                 'order_status_id' => ['required', 'exists:order_statuses,id'],
                 'saldo_etoll_before' => ['nullable', 'numeric', 'min:0'],
                 'saldo_etoll_after' => ['nullable', 'numeric', 'min:0'],
-                'deliver_datetime' => ['nullable', 'date'],
                 'notes' => ['nullable', 'string'],
             ]);
             DB::beginTransaction();
             try {
+                $deliverDatetime = $order->completionTimeForStatus((int) $validated['order_status_id']);
+
                 $order->update([
                     'order_status_id' => $validated['order_status_id'],
                     'updated_by' => auth()->id(),
@@ -369,17 +371,19 @@ class OrderController extends Controller
                         'km_akhir' => $validated['km_akhir'] ?? 0,
                         'saldo_etoll_before' => $validated['saldo_etoll_before'] ?? null,
                         'saldo_etoll_after' => $validated['saldo_etoll_after'] ?? null,
-                        'deliver_datetime' => $validated['deliver_datetime'] ?? null,
+                        'deliver_datetime' => $deliverDatetime,
                         'notes' => $validated['notes'] ?? null,
                         'updated_by' => auth()->id(),
-                        'created_by' => $order->orderReport->created_by ?? auth()->id(),
+                        'created_by' => $order->orderReport?->created_by ?? auth()->id(),
                     ]
                 );
                 DB::commit();
+
                 return redirect()->route('orders.edit', $order)->with('status', 'Order report berhasil diupdate.');
             } catch (\Exception $e) {
                 DB::rollBack();
-                return back()->withErrors(['error' => 'Gagal update order report: ' . $e->getMessage()]);
+
+                return back()->withErrors(['error' => 'Gagal update order report: '.$e->getMessage()]);
             }
         }
 
@@ -389,7 +393,7 @@ class OrderController extends Controller
             }
             $validated = $request->validate([
                 'expenses' => ['nullable', 'array'],
-                'expenses.*.expense_category' => ['required_with:expenses.*.amount', 'in:' . implode(',', array_keys(OrderCategoryOptions::expenseCategories()))],
+                'expenses.*.expense_category' => ['required_with:expenses.*.amount', 'in:'.implode(',', array_keys(OrderCategoryOptions::expenseCategories()))],
                 'expenses.*.description' => ['nullable', 'string'],
                 'expenses.*.amount' => ['nullable', 'numeric', 'min:0'],
             ]);
@@ -397,7 +401,7 @@ class OrderController extends Controller
             try {
                 $items = $validated['expenses'] ?? [];
                 foreach ($items as $i => $item) {
-                    if (!isset($item['amount']) || $item['amount'] === null) {
+                    if (! isset($item['amount']) || $item['amount'] === null) {
                         continue;
                     }
                     $receiptPath = null;
@@ -415,10 +419,12 @@ class OrderController extends Controller
                     ]);
                 }
                 DB::commit();
+
                 return redirect()->route('orders.edit', $order)->with('status', 'Order expenses berhasil disimpan.');
             } catch (\Exception $e) {
                 DB::rollBack();
-                return back()->withErrors(['error' => 'Gagal menyimpan order expenses: ' . $e->getMessage()]);
+
+                return back()->withErrors(['error' => 'Gagal menyimpan order expenses: '.$e->getMessage()]);
             }
         }
 
@@ -436,7 +442,7 @@ class OrderController extends Controller
                 foreach ($rows as $i => $row) {
                     $amount = $row['amount'] ?? null;
                     $hasFile = $request->hasFile('etolls.'.$i.'.receipt_photo');
-                    if ($amount === null && !$hasFile) {
+                    if ($amount === null && ! $hasFile) {
                         continue;
                     }
                     $receiptPath = null;
@@ -455,10 +461,12 @@ class OrderController extends Controller
                     ]);
                 }
                 DB::commit();
+
                 return redirect()->route('orders.edit', $order)->with('status', 'Data e-toll berhasil disimpan.');
             } catch (\Exception $e) {
                 DB::rollBack();
-                return back()->withErrors(['error' => 'Gagal menyimpan data e-toll: ' . $e->getMessage()]);
+
+                return back()->withErrors(['error' => 'Gagal menyimpan data e-toll: '.$e->getMessage()]);
             }
         }
 
@@ -474,10 +482,12 @@ class OrderController extends Controller
             try {
                 $order->orderCrews()->delete();
                 $crewIds = $validated['crew_ids'] ?? [];
-                if (!empty($crewIds)) {
+                if (! empty($crewIds)) {
                     foreach ($crewIds as $employeeId) {
                         $employee = Employee::with('position')->find($employeeId);
-                        if (!$employee) continue;
+                        if (! $employee) {
+                            continue;
+                        }
                         OrderCrew::create([
                             'order_id' => $order->id,
                             'employee_id' => $employeeId,
@@ -487,10 +497,12 @@ class OrderController extends Controller
                     }
                 }
                 DB::commit();
+
                 return redirect()->route('orders.edit', $order)->with('status', 'Crew berhasil diupdate.');
             } catch (\Exception $e) {
                 DB::rollBack();
-                return back()->withErrors(['error' => 'Gagal update crew: ' . $e->getMessage()]);
+
+                return back()->withErrors(['error' => 'Gagal update crew: '.$e->getMessage()]);
             }
         }
 
@@ -511,7 +523,7 @@ class OrderController extends Controller
                         $path = $photo->store(UploadPath::dir('orders'), 'public');
                         OrderPhoto::create([
                             'order_id' => $order->id,
-                            'title' => $validated['photo_titles'][$index] ?? 'Photo ' . ($index + 1),
+                            'title' => $validated['photo_titles'][$index] ?? 'Photo '.($index + 1),
                             'description' => $validated['photo_descriptions'][$index] ?? null,
                             'path' => $path,
                             'created_by' => auth()->id(),
@@ -519,10 +531,12 @@ class OrderController extends Controller
                     }
                 }
                 DB::commit();
+
                 return redirect()->route('orders.edit', $order)->with('status', 'Foto berhasil ditambah.');
             } catch (\Exception $e) {
                 DB::rollBack();
-                return back()->withErrors(['error' => 'Gagal menambah foto: ' . $e->getMessage()]);
+
+                return back()->withErrors(['error' => 'Gagal menambah foto: '.$e->getMessage()]);
             }
         }
 
@@ -540,8 +554,8 @@ class OrderController extends Controller
             'destination_address' => ['required', 'string'],
             'pickup_datetime' => ['required', 'date'],
             'price' => ['required', 'numeric', 'min:0'],
-            'payment_method' => ['nullable', 'in:' . implode(',', array_keys(OrderOptions::paymentMethods()))],
-            'payment_status' => ['required', 'in:' . implode(',', array_keys(OrderOptions::paymentStatuses()))],
+            'payment_method' => ['nullable', 'in:'.implode(',', array_keys(OrderOptions::paymentMethods()))],
+            'payment_status' => ['required', 'in:'.implode(',', array_keys(OrderOptions::paymentStatuses()))],
             'notes' => ['nullable', 'string'],
             'patient_condition' => ['nullable', 'string'],
             'medical_needs' => ['nullable', 'string'],
@@ -573,6 +587,17 @@ class OrderController extends Controller
                 'updated_by' => auth()->id(),
             ]);
 
+            $report = $order->orderReport;
+            if ($report !== null && $report->deliver_datetime === null) {
+                $completionTime = $order->completionTimeForStatus((int) $validated['order_status_id']);
+                if ($completionTime !== null) {
+                    $report->update([
+                        'deliver_datetime' => $completionTime,
+                        'updated_by' => auth()->id(),
+                    ]);
+                }
+            }
+
             $division = Division::find($divisionId);
             if ($division && $division->nama === 'Royal Ambulance') {
                 OrderAmbulance::updateOrCreate(
@@ -598,10 +623,12 @@ class OrderController extends Controller
             }
 
             DB::commit();
+
             return redirect()->route('orders.edit', $order)->with('status', 'Order berhasil diupdate.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withInput()->withErrors(['error' => 'Gagal update order: ' . $e->getMessage()]);
+
+            return back()->withInput()->withErrors(['error' => 'Gagal update order: '.$e->getMessage()]);
         }
     }
 
@@ -615,23 +642,23 @@ class OrderController extends Controller
                 $photo->update(['deleted_by' => auth()->id()]);
                 $photo->delete();
             }
-            
+
             // Soft delete related records
             if ($order->orderAmbulance) {
                 $order->orderAmbulance->update(['deleted_by' => auth()->id()]);
                 $order->orderAmbulance->delete();
             }
-            
+
             if ($order->orderTowing) {
                 $order->orderTowing->update(['deleted_by' => auth()->id()]);
                 $order->orderTowing->delete();
             }
-            
+
             foreach ($order->orderCrews as $crew) {
                 $crew->update(['deleted_by' => auth()->id()]);
                 $crew->delete();
             }
-            
+
             // Soft delete order
             $order->update(['deleted_by' => auth()->id()]);
             $order->delete();
@@ -641,20 +668,21 @@ class OrderController extends Controller
             return to_route('orders.index')->with('status', 'Order deleted successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to delete order: ' . $e->getMessage()]);
+
+            return back()->withErrors(['error' => 'Failed to delete order: '.$e->getMessage()]);
         }
     }
-    
+
     public function deletePhoto(OrderPhoto $photo): RedirectResponse
     {
         try {
             Storage::disk('public')->delete($photo->path);
             $photo->update(['deleted_by' => auth()->id()]);
             $photo->delete();
-            
+
             return back()->with('status', 'Photo deleted successfully.');
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to delete photo: ' . $e->getMessage()]);
+            return back()->withErrors(['error' => 'Failed to delete photo: '.$e->getMessage()]);
         }
     }
 

@@ -9,7 +9,7 @@ use OpenApi\Attributes as OA;
     required: ['email', 'password'],
     properties: [
         new OA\Property(property: 'email', type: 'string', format: 'email', example: 'superadmin@royalapp.com'),
-        new OA\Property(property: 'password', type: 'string', example: 'password')
+        new OA\Property(property: 'password', type: 'string', example: 'password'),
     ]
 )]
 #[OA\Schema(
@@ -17,7 +17,7 @@ use OpenApi\Attributes as OA;
     required: ['name', 'email'],
     properties: [
         new OA\Property(property: 'name', type: 'string', example: 'Joko Santoso'),
-        new OA\Property(property: 'email', type: 'string', format: 'email', example: 'joko@royalapp.com')
+        new OA\Property(property: 'email', type: 'string', format: 'email', example: 'joko@royalapp.com'),
     ]
 )]
 #[OA\Schema(
@@ -26,7 +26,7 @@ use OpenApi\Attributes as OA;
     properties: [
         new OA\Property(property: 'current_password', type: 'string', example: 'old-password'),
         new OA\Property(property: 'password', type: 'string', example: 'new-password-123'),
-        new OA\Property(property: 'password_confirmation', type: 'string', example: 'new-password-123')
+        new OA\Property(property: 'password_confirmation', type: 'string', example: 'new-password-123'),
     ]
 )]
 #[OA\Schema(
@@ -36,23 +36,22 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'km_akhir', type: 'number', format: 'float', example: 150480),
         new OA\Property(property: 'saldo_etoll_before', type: 'number', format: 'float', example: 20000),
         new OA\Property(property: 'saldo_etoll_after', type: 'number', format: 'float', example: 15000),
-        new OA\Property(property: 'deliver_datetime', type: 'string', format: 'date-time', example: '2026-04-10T08:30:00+07:00'),
         new OA\Property(property: 'notes', type: 'string', example: 'Pasien diturunkan dengan aman'),
-        new OA\Property(property: 'order_status_id', type: 'integer', example: 3)
+        new OA\Property(property: 'order_status_id', type: 'integer', example: 3),
     ]
 )]
 #[OA\Schema(
     schema: 'OrderEtollRequest',
     properties: [
         new OA\Property(property: 'amount', type: 'number', format: 'float', example: 5000),
-        new OA\Property(property: 'receipt_photo', type: 'string', format: 'binary')
+        new OA\Property(property: 'receipt_photo', type: 'string', format: 'binary'),
     ]
 )]
 #[OA\Schema(
     schema: 'CategoryItem',
     properties: [
         new OA\Property(property: 'value', type: 'string', example: 'solar'),
-        new OA\Property(property: 'label', type: 'string', example: 'Solar/BBM')
+        new OA\Property(property: 'label', type: 'string', example: 'Solar/BBM'),
     ]
 )]
 #[OA\Schema(
@@ -70,7 +69,7 @@ use OpenApi\Attributes as OA;
             nullable: true,
             properties: [
                 new OA\Property(property: 'patient_condition', type: 'string', nullable: true, example: 'Lemah'),
-                new OA\Property(property: 'medical_needs', type: 'string', nullable: true, example: 'Kursi roda')
+                new OA\Property(property: 'medical_needs', type: 'string', nullable: true, example: 'Kursi roda'),
             ]
         ),
         new OA\Property(
@@ -79,14 +78,14 @@ use OpenApi\Attributes as OA;
             nullable: true,
             properties: [
                 new OA\Property(property: 'car_type', type: 'string', nullable: true, example: 'SUV'),
-                new OA\Property(property: 'car_condition', type: 'string', nullable: true, example: 'Mogok')
+                new OA\Property(property: 'car_condition', type: 'string', nullable: true, example: 'Mogok'),
             ]
         ),
         new OA\Property(property: 'order_report', type: 'object', nullable: true),
         new OA\Property(property: 'order_etoll_transactions', type: 'array', items: new OA\Items(type: 'object')),
         new OA\Property(property: 'order_expenses', type: 'array', items: new OA\Items(type: 'object')),
         new OA\Property(property: 'order_photos', type: 'array', items: new OA\Items(type: 'object')),
-        new OA\Property(property: 'order_vehicle_issues', type: 'array', items: new OA\Items(type: 'object'))
+        new OA\Property(property: 'order_vehicle_issues', type: 'array', items: new OA\Items(type: 'object')),
     ]
 )]
 class ApiDocumentation
@@ -126,11 +125,17 @@ class ApiDocumentation
     )]
     public function updatePassword(): void {}
 
-    #[OA\Get(path: '/api/stats/orders/total', tags: ['Stats'], summary: 'Count total order by user (cache)', security: [['sanctum' => []]], responses: [new OA\Response(response: 200, description: 'OK')])]
+    #[OA\Get(path: '/api/stats/orders/total', tags: ['Stats'], summary: 'Count orders by user for every status (cached)', security: [['sanctum' => []]], responses: [new OA\Response(response: 200, description: 'OK')])]
     public function totalOrders(): void {}
 
-    #[OA\Get(path: '/api/stats/tasks/total', tags: ['Stats'], summary: 'Count total task by user', security: [['sanctum' => []]], responses: [new OA\Response(response: 200, description: 'OK')])]
+    #[OA\Get(path: '/api/stats/tasks/total', tags: ['Stats'], summary: 'Count total and pending tasks by user', security: [['sanctum' => []]], responses: [new OA\Response(response: 200, description: 'OK')])]
     public function totalTasks(): void {}
+
+    #[OA\Get(path: '/api/tasks', tags: ['Tasks'], summary: 'List tasks assigned to logged-in employee', security: [['sanctum' => []]], responses: [new OA\Response(response: 200, description: 'OK')])]
+    public function tasksIndex(): void {}
+
+    #[OA\Get(path: '/api/tasks/{task}', tags: ['Tasks'], summary: 'Task detail assigned to logged-in employee', security: [['sanctum' => []]], responses: [new OA\Response(response: 200, description: 'OK')])]
+    public function tasksShow(): void {}
 
     #[OA\Post(
         path: '/api/absensi/masuk',
@@ -147,7 +152,7 @@ class ApiDocumentation
                     new OA\Property(property: 'lat', type: 'number', format: 'float', example: -6.200000),
                     new OA\Property(property: 'lng', type: 'number', format: 'float', example: 106.816666),
                     new OA\Property(property: 'keterangan', type: 'string', example: 'Masuk shift pagi'),
-                    new OA\Property(property: 'foto_masuk', type: 'string', format: 'binary')
+                    new OA\Property(property: 'foto_masuk', type: 'string', format: 'binary'),
                 ])
             )
         ),
@@ -170,7 +175,7 @@ class ApiDocumentation
                     new OA\Property(property: 'lat', type: 'number', format: 'float', example: -6.200000),
                     new OA\Property(property: 'lng', type: 'number', format: 'float', example: 106.816666),
                     new OA\Property(property: 'keterangan', type: 'string', example: 'Pulang shift pagi'),
-                    new OA\Property(property: 'foto_pulang', type: 'string', format: 'binary')
+                    new OA\Property(property: 'foto_pulang', type: 'string', format: 'binary'),
                 ])
             )
         ),
@@ -194,7 +199,7 @@ class ApiDocumentation
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(name: 'month', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 4)),
-            new OA\Parameter(name: 'year', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 2026))
+            new OA\Parameter(name: 'year', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 2026)),
         ],
         responses: [new OA\Response(response: 200, description: 'OK')]
     )]
@@ -236,7 +241,7 @@ class ApiDocumentation
             new OA\Parameter(name: 'page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 1)),
             new OA\Parameter(name: 'per_page', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 15)),
             new OA\Parameter(name: 'order_status_id', in: 'query', required: false, schema: new OA\Schema(type: 'integer', example: 3)),
-            new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', example: 'Done'))
+            new OA\Parameter(name: 'status', in: 'query', required: false, schema: new OA\Schema(type: 'string', example: 'Done')),
         ],
         responses: [new OA\Response(response: 200, description: 'OK')]
     )]
@@ -248,7 +253,7 @@ class ApiDocumentation
         summary: 'Detail order',
         security: [['sanctum' => []]],
         parameters: [
-            new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1))
+            new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1)),
         ],
         responses: [
             new OA\Response(
@@ -258,15 +263,15 @@ class ApiDocumentation
                     properties: [
                         new OA\Property(property: 'status', type: 'boolean', example: true),
                         new OA\Property(property: 'message', type: 'string', example: 'Success'),
-                        new OA\Property(property: 'data', ref: '#/components/schemas/OrderDetailData')
+                        new OA\Property(property: 'data', ref: '#/components/schemas/OrderDetailData'),
                     ]
                 )
-            )
+            ),
         ]
     )]
     public function orderDetail(): void {}
 
-    #[OA\Get(path: '/api/orders/{order}/photos', tags: ['Order Photos'], summary: 'List photos', security: [['sanctum' => []],], parameters: [new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
+    #[OA\Get(path: '/api/orders/{order}/photos', tags: ['Order Photos'], summary: 'List photos', security: [['sanctum' => []]], parameters: [new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
     #[OA\Post(
         path: '/api/orders/{order}/photos',
         tags: ['Order Photos'],
@@ -282,7 +287,7 @@ class ApiDocumentation
                     properties: [
                         new OA\Property(property: 'title', type: 'string', example: 'Foto Unit'),
                         new OA\Property(property: 'description', type: 'string', example: 'Foto sebelum berangkat'),
-                        new OA\Property(property: 'photo', type: 'string', format: 'binary')
+                        new OA\Property(property: 'photo', type: 'string', format: 'binary'),
                     ]
                 )
             )
@@ -296,7 +301,7 @@ class ApiDocumentation
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
-            new OA\Parameter(name: 'photo', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+            new OA\Parameter(name: 'photo', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
         ],
         requestBody: new OA\RequestBody(
             required: false,
@@ -305,7 +310,7 @@ class ApiDocumentation
                 schema: new OA\Schema(properties: [
                     new OA\Property(property: 'title', type: 'string', example: 'Foto Unit Update'),
                     new OA\Property(property: 'description', type: 'string', example: 'Foto update'),
-                    new OA\Property(property: 'photo', type: 'string', format: 'binary')
+                    new OA\Property(property: 'photo', type: 'string', format: 'binary'),
                 ])
             )
         ),
@@ -331,7 +336,7 @@ class ApiDocumentation
                         new OA\Property(property: 'expense_category', type: 'string', example: 'solar'),
                         new OA\Property(property: 'description', type: 'string', example: 'Isi BBM'),
                         new OA\Property(property: 'amount', type: 'number', format: 'float', example: 250000),
-                        new OA\Property(property: 'receipt_photo', type: 'string', format: 'binary')
+                        new OA\Property(property: 'receipt_photo', type: 'string', format: 'binary'),
                     ]
                 )
             )
@@ -345,7 +350,7 @@ class ApiDocumentation
     #[OA\Put(
         path: '/api/orders/{order}/report',
         tags: ['Order Report'],
-        summary: 'Update order report',
+        summary: 'Update order report. Waktu selesai diisi server saat status Done.',
         security: [['sanctum' => []]],
         parameters: [new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
         requestBody: new OA\RequestBody(required: false, content: new OA\JsonContent(ref: '#/components/schemas/OrderReportRequest')),
@@ -368,7 +373,7 @@ class ApiDocumentation
                     required: ['amount'],
                     properties: [
                         new OA\Property(property: 'amount', type: 'number', format: 'float', example: 5000),
-                        new OA\Property(property: 'receipt_photo', type: 'string', format: 'binary')
+                        new OA\Property(property: 'receipt_photo', type: 'string', format: 'binary'),
                     ]
                 )
             )
@@ -382,7 +387,7 @@ class ApiDocumentation
         security: [['sanctum' => []]],
         parameters: [
             new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
-            new OA\Parameter(name: 'trx', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))
+            new OA\Parameter(name: 'trx', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
         ],
         requestBody: new OA\RequestBody(
             required: false,
@@ -391,7 +396,7 @@ class ApiDocumentation
                 schema: new OA\Schema(
                     properties: [
                         new OA\Property(property: 'amount', type: 'number', format: 'float', example: 5000),
-                        new OA\Property(property: 'receipt_photo', type: 'string', format: 'binary')
+                        new OA\Property(property: 'receipt_photo', type: 'string', format: 'binary'),
                     ]
                 )
             )
@@ -419,7 +424,7 @@ class ApiDocumentation
                         new OA\Property(property: 'description', type: 'string', example: 'Rem tidak pakem'),
                         new OA\Property(property: 'priority', type: 'string', example: 'high'),
                         new OA\Property(property: 'issue_photo', type: 'string', format: 'binary'),
-                        new OA\Property(property: 'repair_photo', type: 'string', format: 'binary')
+                        new OA\Property(property: 'repair_photo', type: 'string', format: 'binary'),
                     ]
                 )
             )
