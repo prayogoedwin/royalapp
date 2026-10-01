@@ -141,7 +141,16 @@ class RolePermissionSeeder extends Seeder
 
         $createdRoles = [];
         foreach ($roles as $roleName) {
-            $createdRoles[$roleName] = Role::firstOrCreate(['name' => $roleName]);
+            $createdRoles[$roleName] = Role::firstOrCreate(
+                ['name' => $roleName],
+                ['key' => Role::uniqueKeyFromName($roleName)]
+            );
+
+            if (blank($createdRoles[$roleName]->key)) {
+                $createdRoles[$roleName]->forceFill([
+                    'key' => Role::uniqueKeyFromName($roleName),
+                ])->save();
+            }
         }
 
         $createdRoles['Super Admin']->permissions()->sync(Permission::all());
@@ -238,25 +247,25 @@ class RolePermissionSeeder extends Seeder
                 'name' => 'Super Admin',
                 'email' => 'superadmin@royalapp.com',
                 'password' => Hash::make('password'),
-                'role' => 'Super Admin'
+                'role' => 'Super Admin',
             ],
             [
                 'name' => 'Admin IT',
                 'email' => 'adminit@royalapp.com',
                 'password' => Hash::make('password'),
-                'role' => 'Admin IT'
+                'role' => 'Admin IT',
             ],
             [
                 'name' => 'Editor',
                 'email' => 'editor@royalapp.com',
                 'password' => Hash::make('password'),
-                'role' => 'Editor'
+                'role' => 'Editor',
             ],
             [
                 'name' => 'User',
                 'email' => 'user@royalapp.com',
                 'password' => Hash::make('password'),
-                'role' => 'User'
+                'role' => 'User',
             ],
         ];
 
