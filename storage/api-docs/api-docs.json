@@ -511,6 +511,62 @@
                 ]
             }
         },
+        "/api/master/positions": {
+            "get": {
+                "tags": [
+                    "Master"
+                ],
+                "summary": "List positions",
+                "operationId": "2df5e955d882b6eaa6eb8fe497bab64e",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 8
+                                                    },
+                                                    "nama": {
+                                                        "type": "string",
+                                                        "example": "Driver"
+                                                    },
+                                                    "key": {
+                                                        "type": "string",
+                                                        "example": "driver"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/orders": {
             "get": {
                 "tags": [

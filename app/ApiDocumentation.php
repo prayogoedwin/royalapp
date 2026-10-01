@@ -283,6 +283,37 @@ class ApiDocumentation
     public function masterRoles(): void {}
 
     #[OA\Get(
+        path: '/api/master/positions',
+        tags: ['Master'],
+        summary: 'List positions',
+        security: [['sanctum' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'OK',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Success'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'array',
+                            items: new OA\Items(
+                                properties: [
+                                    new OA\Property(property: 'id', type: 'integer', example: 8),
+                                    new OA\Property(property: 'nama', type: 'string', example: 'Driver'),
+                                    new OA\Property(property: 'key', type: 'string', example: 'driver'),
+                                ]
+                            )
+                        ),
+                    ]
+                )
+            ),
+        ]
+    )]
+    public function masterPositions(): void {}
+
+    #[OA\Get(
         path: '/api/orders',
         tags: ['Orders'],
         summary: 'Get order by user with pagination and status filter',
