@@ -148,8 +148,46 @@
                 "tags": [
                     "Stats"
                 ],
-                "summary": "Count total task by user",
+                "summary": "Count total and pending tasks by user",
                 "operationId": "6a36f85e10f1b25b3ff23642e1fafe1c",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/tasks": {
+            "get": {
+                "tags": [
+                    "Tasks"
+                ],
+                "summary": "List tasks assigned to logged-in employee",
+                "operationId": "86455b45a852b826cc92a003f660890f",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/tasks/{task}": {
+            "get": {
+                "tags": [
+                    "Tasks"
+                ],
+                "summary": "Task detail assigned to logged-in employee",
+                "operationId": "02d4493bea54d1892be6b599a143c9df",
                 "responses": {
                     "200": {
                         "description": "OK"
@@ -381,6 +419,25 @@
                 ],
                 "summary": "Get order issue categories",
                 "operationId": "a8cdfb659ac1a107faa58ebf82dda7d0",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/master/roles": {
+            "get": {
+                "tags": [
+                    "Master"
+                ],
+                "summary": "List roles",
+                "operationId": "6a9573d87efb70b117f3645cd5788eb8",
                 "responses": {
                     "200": {
                         "description": "OK"
@@ -1450,12 +1507,20 @@
             "description": "Stats"
         },
         {
+            "name": "Tasks",
+            "description": "Tasks"
+        },
+        {
             "name": "Absensi",
             "description": "Absensi"
         },
         {
             "name": "Orders",
             "description": "Orders"
+        },
+        {
+            "name": "Master",
+            "description": "Master"
         },
         {
             "name": "Order Photos",

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AbsensiApiController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\MasterApiController;
 use App\Http\Controllers\Api\OrderApiController;
 use App\Http\Controllers\Api\TaskApiController;
 use App\Http\Controllers\Api\UserController;
@@ -26,6 +27,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/order-statuses', [OrderApiController::class, 'statuses']);
     Route::get('/order-expense-categories', [OrderApiController::class, 'expenseCategories']);
     Route::get('/order-issue-categories', [OrderApiController::class, 'issueCategories']);
+    Route::get('/master/roles', [MasterApiController::class, 'roles']);
     Route::get('/orders', [OrderApiController::class, 'myOrders']);
     Route::get('/orders/{order}', [OrderApiController::class, 'show']);
 

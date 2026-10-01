@@ -233,6 +233,15 @@ class ApiDocumentation
     public function orderIssueCategories(): void {}
 
     #[OA\Get(
+        path: '/api/master/roles',
+        tags: ['Master'],
+        summary: 'List roles',
+        security: [['sanctum' => []]],
+        responses: [new OA\Response(response: 200, description: 'OK')]
+    )]
+    public function masterRoles(): void {}
+
+    #[OA\Get(
         path: '/api/orders',
         tags: ['Orders'],
         summary: 'Get order by user with pagination and status filter',
