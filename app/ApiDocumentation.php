@@ -102,7 +102,48 @@ class ApiDocumentation
     #[OA\Post(path: '/api/logout', tags: ['Auth'], summary: 'Logout', security: [['sanctum' => []]], responses: [new OA\Response(response: 200, description: 'OK')])]
     public function logout(): void {}
 
-    #[OA\Get(path: '/api/profile', tags: ['Profile'], summary: 'Get profile', security: [['sanctum' => []]], responses: [new OA\Response(response: 200, description: 'OK')])]
+    #[OA\Get(
+        path: '/api/profile',
+        tags: ['Profile'],
+        summary: 'Get profile (includes position from employee; empty array if no employee)',
+        security: [['sanctum' => []]],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'OK',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'status', type: 'boolean', example: true),
+                        new OA\Property(property: 'message', type: 'string', example: 'Success'),
+                        new OA\Property(
+                            property: 'data',
+                            type: 'object',
+                            properties: [
+                                new OA\Property(property: 'id', type: 'integer', example: 12),
+                                new OA\Property(property: 'name', type: 'string', example: 'Ridho Driver'),
+                                new OA\Property(property: 'email', type: 'string', example: 'ridhodriver@gmail.com'),
+                                new OA\Property(
+                                    property: 'position',
+                                    description: 'Position from employee relation. Empty array [] when user has no employee row or no position.',
+                                    oneOf: [
+                                        new OA\Schema(
+                                            type: 'object',
+                                            properties: [
+                                                new OA\Property(property: 'id', type: 'integer', example: 8),
+                                                new OA\Property(property: 'nama', type: 'string', example: 'Driver'),
+                                                new OA\Property(property: 'key', type: 'string', example: 'driver'),
+                                            ]
+                                        ),
+                                        new OA\Schema(type: 'array', items: new OA\Items, example: []),
+                                    ]
+                                ),
+                            ]
+                        ),
+                    ]
+                )
+            ),
+        ]
+    )]
     public function profile(): void {}
 
     #[OA\Put(

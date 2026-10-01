@@ -21,7 +21,16 @@ class PositionSeeder extends Seeder
         ];
 
         foreach ($positions as $positionName) {
-            Position::firstOrCreate(['nama' => $positionName]);
+            $position = Position::firstOrCreate(
+                ['nama' => $positionName],
+                ['key' => Position::uniqueKeyFromNama($positionName)]
+            );
+
+            if (blank($position->key)) {
+                $position->forceFill([
+                    'key' => Position::uniqueKeyFromNama($positionName),
+                ])->save();
+            }
         }
     }
 }

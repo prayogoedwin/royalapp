@@ -54,11 +54,72 @@
                 "tags": [
                     "Profile"
                 ],
-                "summary": "Get profile",
+                "summary": "Get profile (includes position from employee; empty array if no employee)",
                 "operationId": "a832fc4a7e6b315809e1bc9246a30d9c",
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Success"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 12
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Ridho Driver"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "ridhodriver@gmail.com"
+                                                },
+                                                "position": {
+                                                    "description": "Position from employee relation. Empty array [] when user has no employee row or no position.",
+                                                    "oneOf": [
+                                                        {
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "integer",
+                                                                    "example": 8
+                                                                },
+                                                                "nama": {
+                                                                    "type": "string",
+                                                                    "example": "Driver"
+                                                                },
+                                                                "key": {
+                                                                    "type": "string",
+                                                                    "example": "driver"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        },
+                                                        {
+                                                            "type": "array",
+                                                            "items": {},
+                                                            "example": []
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [

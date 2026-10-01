@@ -47,11 +47,34 @@ class UserController extends Controller
      */
     public function me(Request $request): JsonResponse
     {
+        $user = $request->user()->load(['roles.permissions', 'employee.position']);
+
+        $data = $user->toArray();
+        $data['position'] = $this->profilePositionPayload($user);
+
         return response()->json([
             'status' => true,
             'message' => 'Success',
-            'data' => $request->user()->load('roles.permissions'),
+            'data' => $data,
         ]);
+    }
+
+    /**
+     * @return array{id: int, nama: string, key: string}|list<never>
+     */
+    private function profilePositionPayload(User $user): array
+    {
+        $position = $user->employee?->position;
+
+        if (! $position) {
+            return [];
+        }
+
+        return [
+            'id' => $position->id,
+            'nama' => $position->nama,
+            'key' => $position->key,
+        ];
     }
 
     /**
