@@ -54,7 +54,7 @@
                 "tags": [
                     "Profile"
                 ],
-                "summary": "Get profile (includes position from employee; empty array if no employee)",
+                "summary": "Get profile (includes roles + position from employee; empty position array if no employee)",
                 "operationId": "a832fc4a7e6b315809e1bc9246a30d9c",
                 "responses": {
                     "200": {
@@ -84,6 +84,26 @@
                                                 "email": {
                                                     "type": "string",
                                                     "example": "ridhodriver@gmail.com"
+                                                },
+                                                "roles": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 10
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Coordinator"
+                                                            },
+                                                            "key": {
+                                                                "type": "string",
+                                                                "example": "coordinator"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
                                                 },
                                                 "position": {
                                                     "description": "Position from employee relation. Empty array [] when user has no employee row or no position.",

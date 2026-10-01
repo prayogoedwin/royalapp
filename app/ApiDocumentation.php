@@ -105,7 +105,7 @@ class ApiDocumentation
     #[OA\Get(
         path: '/api/profile',
         tags: ['Profile'],
-        summary: 'Get profile (includes position from employee; empty array if no employee)',
+        summary: 'Get profile (includes roles + position from employee; empty position array if no employee)',
         security: [['sanctum' => []]],
         responses: [
             new OA\Response(
@@ -122,6 +122,17 @@ class ApiDocumentation
                                 new OA\Property(property: 'id', type: 'integer', example: 12),
                                 new OA\Property(property: 'name', type: 'string', example: 'Ridho Driver'),
                                 new OA\Property(property: 'email', type: 'string', example: 'ridhodriver@gmail.com'),
+                                new OA\Property(
+                                    property: 'roles',
+                                    type: 'array',
+                                    items: new OA\Items(
+                                        properties: [
+                                            new OA\Property(property: 'id', type: 'integer', example: 10),
+                                            new OA\Property(property: 'name', type: 'string', example: 'Coordinator'),
+                                            new OA\Property(property: 'key', type: 'string', example: 'coordinator'),
+                                        ]
+                                    )
+                                ),
                                 new OA\Property(
                                     property: 'position',
                                     description: 'Position from employee relation. Empty array [] when user has no employee row or no position.',
