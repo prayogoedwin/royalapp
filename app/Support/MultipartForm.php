@@ -64,7 +64,7 @@ class MultipartForm
                 continue;
             }
 
-            $request->request->set($name, $body);
+            $request->request->set($name, is_string($body) ? trim($body) : $body);
         }
     }
 }

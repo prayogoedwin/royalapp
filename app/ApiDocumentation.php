@@ -523,6 +523,32 @@ class ApiDocumentation
         ),
         responses: [new OA\Response(response: 201, description: 'Created')]
     )]
+    #[OA\Post(
+        path: '/api/orders/{order}/vehicle-issues/{issue}',
+        tags: ['Order Vehicle Issues'],
+        summary: 'Update vehicle issue (prefer POST multipart; PUT also supported)',
+        security: [['sanctum' => []]],
+        parameters: [
+            new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+            new OA\Parameter(name: 'issue', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    properties: [
+                        new OA\Property(property: 'issue_category', type: 'string', enum: ['mechanical', 'body', 'interior', 'safety', 'medical_equipment', 'other'], example: 'other'),
+                        new OA\Property(property: 'description', type: 'string', example: 'Tambah angin'),
+                        new OA\Property(property: 'priority', type: 'string', enum: ['low', 'medium', 'high', 'urgent'], example: 'low'),
+                        new OA\Property(property: 'issue_photo', type: 'string', format: 'binary'),
+                        new OA\Property(property: 'repair_photo', type: 'string', format: 'binary'),
+                    ]
+                )
+            )
+        ),
+        responses: [new OA\Response(response: 200, description: 'OK')]
+    )]
     #[OA\Put(
         path: '/api/orders/{order}/vehicle-issues/{issue}',
         tags: ['Order Vehicle Issues'],

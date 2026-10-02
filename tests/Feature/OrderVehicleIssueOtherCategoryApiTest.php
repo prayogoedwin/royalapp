@@ -112,6 +112,78 @@ class OrderVehicleIssueOtherCategoryApiTest extends TestCase
             ->assertJsonPath('data.priority', 'low');
     }
 
+    public function test_update_vehicle_issue_ignores_empty_priority_from_multipart(): void
+    {
+        [$user, $order] = $this->crewOrder();
+        $issue = OrderVehicleIssue::create([
+            'order_id' => $order->id,
+            'issue_category' => 'mechanical',
+            'description' => 'Rem tidak pakem',
+            'priority' => 'high',
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $boundary = '----RoyalBoundaryEmpty';
+        $body = implode("\r\n", [
+            '--'.$boundary,
+            'Content-Disposition: form-data; name="description"',
+            '',
+            'Update tanpa priority',
+            '--'.$boundary,
+            'Content-Disposition: form-data; name="priority"',
+            '',
+            '',
+            '--'.$boundary,
+            'Content-Disposition: form-data; name="issue_category"',
+            '',
+            'string',
+            '--'.$boundary.'--',
+            '',
+        ]);
+
+        $this->call(
+            'PUT',
+            '/api/orders/'.$order->id.'/vehicle-issues/'.$issue->id,
+            [],
+            [],
+            [],
+            [
+                'CONTENT_TYPE' => 'multipart/form-data; boundary='.$boundary,
+                'HTTP_ACCEPT' => 'application/json',
+            ],
+            $body,
+        )
+            ->assertOk()
+            ->assertJsonPath('data.description', 'Update tanpa priority')
+            ->assertJsonPath('data.priority', 'high')
+            ->assertJsonPath('data.issue_category', 'mechanical');
+    }
+
+    public function test_update_vehicle_issue_via_post_multipart(): void
+    {
+        [$user, $order] = $this->crewOrder();
+        $issue = OrderVehicleIssue::create([
+            'order_id' => $order->id,
+            'issue_category' => 'mechanical',
+            'description' => 'Rem tidak pakem',
+            'priority' => 'high',
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $this->post('/api/orders/'.$order->id.'/vehicle-issues/'.$issue->id, [
+            'issue_category' => 'other',
+            'description' => 'Tambah angin',
+            'priority' => 'low',
+        ], [
+            'Accept' => 'application/json',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.issue_category', 'other')
+            ->assertJsonPath('data.priority', 'low');
+    }
+
     /**
      * @return array{0: User, 1: Order}
      */

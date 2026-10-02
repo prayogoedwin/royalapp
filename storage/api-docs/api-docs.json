@@ -1462,6 +1462,87 @@
                     }
                 ]
             },
+            "post": {
+                "tags": [
+                    "Order Vehicle Issues"
+                ],
+                "summary": "Update vehicle issue (prefer POST multipart; PUT also supported)",
+                "operationId": "8d17b0a1db4e05a20de1e54faec5973b",
+                "parameters": [
+                    {
+                        "name": "order",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "issue",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "issue_category": {
+                                        "type": "string",
+                                        "example": "other",
+                                        "enum": [
+                                            "mechanical",
+                                            "body",
+                                            "interior",
+                                            "safety",
+                                            "medical_equipment",
+                                            "other"
+                                        ]
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Tambah angin"
+                                    },
+                                    "priority": {
+                                        "type": "string",
+                                        "example": "low",
+                                        "enum": [
+                                            "low",
+                                            "medium",
+                                            "high",
+                                            "urgent"
+                                        ]
+                                    },
+                                    "issue_photo": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "repair_photo": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
             "delete": {
                 "tags": [
                     "Order Vehicle Issues"

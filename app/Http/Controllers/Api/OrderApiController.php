@@ -513,15 +513,23 @@ class OrderApiController extends Controller
         if (! $issue) {
             return $this->errorResponse('Vehicle issue not found.', 404);
         }
+
+        $this->normalizeOptionalVehicleIssueFields($request);
+
         $validated = $request->validate([
-            'issue_category' => ['sometimes', 'in:'.implode(',', array_keys(OrderCategoryOptions::issueCategories()))],
-            'description' => ['sometimes', 'string'],
-            'priority' => ['sometimes', 'in:low,medium,high,urgent'],
+            'issue_category' => ['sometimes', 'nullable', 'in:'.implode(',', array_keys(OrderCategoryOptions::issueCategories()))],
+            'description' => ['sometimes', 'nullable', 'string'],
+            'priority' => ['sometimes', 'nullable', 'in:low,medium,high,urgent'],
             'is_resolved' => ['nullable', 'boolean'],
             'resolution_notes' => ['nullable', 'string'],
             'issue_photo' => ['nullable', 'image', 'max:4096'],
             'repair_photo' => ['nullable', 'image', 'max:4096'],
         ]);
+
+        $validated = collect($validated)
+            ->reject(fn ($value, $key) => in_array($key, ['issue_category', 'description', 'priority', 'resolution_notes'], true) && $value === null)
+            ->all();
+
         if ($request->hasFile('issue_photo')) {
             if ($issue->issue_photo) {
                 Storage::disk('public')->delete($issue->issue_photo);
@@ -546,6 +554,37 @@ class OrderApiController extends Controller
         $issue->update($validated);
 
         return $this->okResponse($issue->fresh());
+    }
+
+    private function normalizeOptionalVehicleIssueFields(Request $request): void
+    {
+        foreach (['issue_category', 'description', 'priority', 'resolution_notes'] as $field) {
+            if (! $request->exists($field)) {
+                continue;
+            }
+
+            $value = $request->input($field);
+            if (! is_string($value)) {
+                continue;
+            }
+
+            $value = trim($value);
+            if ($value === '' || strcasecmp($value, 'string') === 0) {
+                $request->request->remove($field);
+                $request->query->remove($field);
+
+                continue;
+            }
+
+            $request->merge([$field => $value]);
+        }
+
+        foreach (['issue_photo', 'repair_photo'] as $fileField) {
+            $file = $request->file($fileField);
+            if ($file && (! $file->isValid() || $file->getSize() === 0)) {
+                $request->files->remove($fileField);
+            }
+        }
     }
 
     /** @OA\Delete(path="/api/orders/{order}/vehicle-issues/{issue}", tags={"Order Vehicle Issues"}, summary="Delete vehicle issue", security={{"sanctum":{}}}, @OA\Parameter(name="order", in="path", required=true, @OA\Schema(type="integer")), @OA\Parameter(name="issue", in="path", required=true, @OA\Schema(type="integer")), @OA\Response(response=200, description="Deleted")) */
