@@ -1303,7 +1303,15 @@
                                 "properties": {
                                     "issue_category": {
                                         "type": "string",
-                                        "example": "mechanical"
+                                        "example": "other",
+                                        "enum": [
+                                            "mechanical",
+                                            "body",
+                                            "interior",
+                                            "safety",
+                                            "medical_equipment",
+                                            "other"
+                                        ]
                                     },
                                     "description": {
                                         "type": "string",
@@ -1344,7 +1352,7 @@
                 "tags": [
                     "Order Vehicle Issues"
                 ],
-                "summary": "Update vehicle issue",
+                "summary": "Update vehicle issue (JSON body; multipart on PUT is ignored by PHP)",
                 "operationId": "7cc07d680e5d9c183fa6047acadb5d60",
                 "parameters": [
                     {
@@ -1364,6 +1372,44 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "issue_category": {
+                                        "type": "string",
+                                        "example": "other",
+                                        "enum": [
+                                            "mechanical",
+                                            "body",
+                                            "interior",
+                                            "safety",
+                                            "medical_equipment",
+                                            "other"
+                                        ]
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Tambah angin"
+                                    },
+                                    "priority": {
+                                        "type": "string",
+                                        "example": "low",
+                                        "enum": [
+                                            "low",
+                                            "medium",
+                                            "high",
+                                            "urgent"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "OK"

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->constrained('orders')->cascadeOnDelete();
             $table->string('unit_code')->nullable();
-            $table->enum('issue_category', ['mechanical', 'body', 'interior', 'safety', 'medical_equipment']);
+            $table->enum('issue_category', ['mechanical', 'body', 'interior', 'safety', 'medical_equipment', 'other']);
             $table->text('description');
             $table->enum('priority', ['low', 'medium', 'high', 'urgent'])->default('medium');
             $table->string('issue_photo')->nullable();
