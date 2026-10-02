@@ -64,6 +64,54 @@ class OrderVehicleIssueOtherCategoryApiTest extends TestCase
             ->assertJsonPath('data.priority', 'low');
     }
 
+    public function test_update_vehicle_issue_reads_multipart_put_body(): void
+    {
+        [$user, $order] = $this->crewOrder();
+        $issue = OrderVehicleIssue::create([
+            'order_id' => $order->id,
+            'issue_category' => 'mechanical',
+            'description' => 'Rem tidak pakem',
+            'priority' => 'high',
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $boundary = '----RoyalBoundary';
+        $body = implode("\r\n", [
+            '--'.$boundary,
+            'Content-Disposition: form-data; name="issue_category"',
+            '',
+            'other',
+            '--'.$boundary,
+            'Content-Disposition: form-data; name="description"',
+            '',
+            'Tambah angin',
+            '--'.$boundary,
+            'Content-Disposition: form-data; name="priority"',
+            '',
+            'low',
+            '--'.$boundary.'--',
+            '',
+        ]);
+
+        $this->call(
+            'PUT',
+            '/api/orders/'.$order->id.'/vehicle-issues/'.$issue->id,
+            [],
+            [],
+            [],
+            [
+                'CONTENT_TYPE' => 'multipart/form-data; boundary='.$boundary,
+                'HTTP_ACCEPT' => 'application/json',
+            ],
+            $body,
+        )
+            ->assertOk()
+            ->assertJsonPath('data.issue_category', 'other')
+            ->assertJsonPath('data.description', 'Tambah angin')
+            ->assertJsonPath('data.priority', 'low');
+    }
+
     /**
      * @return array{0: User, 1: Order}
      */
