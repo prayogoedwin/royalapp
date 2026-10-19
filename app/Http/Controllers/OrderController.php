@@ -89,7 +89,7 @@ class OrderController extends Controller
         if ($request->ajax()) {
             $orders = Order::with(['division', 'orderStatus'])
                 ->select('orders.*')
-                ->orderBy('pickup_datetime')
+                ->orderBy('created_at')
                 ->orderBy('id');
 
             return DataTables::of($orders)
@@ -133,6 +133,9 @@ class OrderController extends Controller
                 })
                 ->editColumn('pickup_datetime', function ($order) {
                     return $order->pickup_datetime->format('M d, Y H:i');
+                })
+                ->editColumn('created_at', function ($order) {
+                    return $order->created_at?->format('M d, Y H:i') ?? '-';
                 })
                 ->rawColumns(['status_badge', 'actions'])
                 ->make(true);

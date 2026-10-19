@@ -34,23 +34,26 @@ class TaskController extends Controller
                         'gray' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
                     ];
                     $color = $colors[$task->orderStatus?->color ?? 'gray'] ?? $colors['gray'];
-                    return '<span class="px-2 py-1 rounded-full text-xs font-medium ' . $color . '">' . e($name) . '</span>';
+
+                    return '<span class="px-2 py-1 rounded-full text-xs font-medium '.$color.'">'.e($name).'</span>';
                 })
                 ->addColumn('crew_count', fn (Task $task) => (string) ($task->task_crews_count ?? 0))
                 ->addColumn('created_by_name', fn (Task $task) => e($task->createdBy?->name ?? '-'))
+                ->editColumn('created_at', fn (Task $task) => $task->created_at?->format('M d, Y H:i') ?? '-')
                 ->addColumn('actions', function (Task $task) {
                     $actions = '';
                     if (auth()->user()->hasPermission('show-tasks')) {
-                        $actions .= '<a href="' . route('tasks.show', $task) . '" class="text-green-600 dark:text-green-400 hover:underline mr-3">View</a>';
+                        $actions .= '<a href="'.route('tasks.show', $task).'" class="text-green-600 dark:text-green-400 hover:underline mr-3">View</a>';
                     }
                     if (auth()->user()->hasPermission('edit-tasks')) {
-                        $actions .= '<a href="' . route('tasks.edit', $task) . '" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Edit</a>';
+                        $actions .= '<a href="'.route('tasks.edit', $task).'" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Edit</a>';
                     }
                     if (auth()->user()->hasPermission('delete-tasks')) {
-                        $actions .= '<form action="' . route('tasks.destroy', $task) . '" method="POST" class="inline" onsubmit="return confirm(\'Delete task?\')">'
-                            . csrf_field() . method_field('DELETE')
-                            . '<button type="submit" class="text-red-600 dark:text-red-400 hover:underline">Delete</button></form>';
+                        $actions .= '<form action="'.route('tasks.destroy', $task).'" method="POST" class="inline" onsubmit="return confirm(\'Delete task?\')">'
+                            .csrf_field().method_field('DELETE')
+                            .'<button type="submit" class="text-red-600 dark:text-red-400 hover:underline">Delete</button></form>';
                     }
+
                     return $actions ?: '-';
                 })
                 ->rawColumns(['status_badge', 'actions'])
@@ -78,7 +81,7 @@ class TaskController extends Controller
                 ->get()
                 ->map(fn (Employee $employee) => [
                     'id' => $employee->id,
-                    'name' => trim($employee->full_name . ($employee->position?->nama ? ' - ' . $employee->position->nama : '')),
+                    'name' => trim($employee->full_name.($employee->position?->nama ? ' - '.$employee->position->nama : '')),
                 ]);
         }
 
@@ -115,10 +118,12 @@ class TaskController extends Controller
             }
 
             DB::commit();
+
             return redirect()->route('tasks.show', $task)->with('status', 'Task created successfully.');
         } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->withInput()->withErrors(['error' => 'Failed to create task: ' . $e->getMessage()]);
+
+            return back()->withInput()->withErrors(['error' => 'Failed to create task: '.$e->getMessage()]);
         }
     }
 
@@ -131,6 +136,7 @@ class TaskController extends Controller
             'taskComments.createdBy',
             'createdBy',
         ]);
+
         return view('tasks.show', compact('task'));
     }
 
@@ -162,7 +168,7 @@ class TaskController extends Controller
                 ->get()
                 ->map(fn (Employee $employee) => [
                     'id' => $employee->id,
-                    'name' => trim($employee->full_name . ($employee->position?->nama ? ' - ' . $employee->position->nama : '')),
+                    'name' => trim($employee->full_name.($employee->position?->nama ? ' - '.$employee->position->nama : '')),
                 ]);
         }
 
@@ -181,19 +187,19 @@ class TaskController extends Controller
 
         if ($keyword !== '') {
             $query->where(function ($q) use ($keyword) {
-                $q->where('full_name', 'like', '%' . $keyword . '%')
-                    ->orWhere('nik', 'like', '%' . $keyword . '%')
-                    ->orWhere('phone', 'like', '%' . $keyword . '%')
+                $q->where('full_name', 'like', '%'.$keyword.'%')
+                    ->orWhere('nik', 'like', '%'.$keyword.'%')
+                    ->orWhere('phone', 'like', '%'.$keyword.'%')
                     ->orWhereHas('user', function ($uq) use ($keyword) {
-                        $uq->where('name', 'like', '%' . $keyword . '%')
-                            ->orWhere('email', 'like', '%' . $keyword . '%');
+                        $uq->where('name', 'like', '%'.$keyword.'%')
+                            ->orWhere('email', 'like', '%'.$keyword.'%');
                     });
             });
         }
 
         $items = $query->limit(20)->get()->map(fn (Employee $employee) => [
             'id' => $employee->id,
-            'name' => trim($employee->full_name . ($employee->position?->nama ? ' - ' . $employee->position->nama : '')),
+            'name' => trim($employee->full_name.($employee->position?->nama ? ' - '.$employee->position->nama : '')),
         ]);
 
         return response()->json($items);
@@ -230,10 +236,12 @@ class TaskController extends Controller
             }
 
             DB::commit();
+
             return redirect()->route('tasks.show', $task)->with('status', 'Task updated successfully.');
         } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->withInput()->withErrors(['error' => 'Failed to update task: ' . $e->getMessage()]);
+
+            return back()->withInput()->withErrors(['error' => 'Failed to update task: '.$e->getMessage()]);
         }
     }
 
@@ -241,6 +249,7 @@ class TaskController extends Controller
     {
         $task->update(['deleted_by' => auth()->id()]);
         $task->delete();
+
         return redirect()->route('tasks.index')->with('status', 'Task deleted successfully.');
     }
 
@@ -294,6 +303,7 @@ class TaskController extends Controller
             Storage::disk('public')->delete($taskAttachment->file_path);
         }
         $taskAttachment->delete();
+
         return back()->with('status', 'Task attachment deleted.');
     }
 
@@ -348,7 +358,7 @@ class TaskController extends Controller
             Storage::disk('public')->delete($taskComment->file_path);
         }
         $taskComment->delete();
+
         return back()->with('status', 'Task comment deleted.');
     }
 }
-

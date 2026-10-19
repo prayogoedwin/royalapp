@@ -29,6 +29,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Crew</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Created By</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Created At</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Actions</th>
                     </tr>
                 </thead>
@@ -54,9 +55,10 @@
                     { data: 'status_badge', name: 'order_status_id', orderable: false, searchable: false },
                     { data: 'crew_count', name: 'task_crews_count', searchable: false },
                     { data: 'created_by_name', name: 'createdBy.name', orderable: false, searchable: false },
+                    { data: 'created_at', name: 'created_at' },
                     { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-right whitespace-nowrap' }
                 ],
-                order: [[0, 'desc']],
+                order: [[5, 'asc']],
                 language: {
                     search: "_INPUT_",
                     searchPlaceholder: "Search tasks..."
