@@ -9,7 +9,7 @@
         <span class="text-gray-500 dark:text-gray-400">{{ __('Tasks') }}</span>
     </div>
 
-    <div class="mb-6 flex justify-between items-center">
+    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
         <div>
             <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ __('Tasks') }}</h1>
             <p class="text-gray-600 dark:text-gray-400 mt-1">{{ __('Manage internal tasks') }}</p>
@@ -20,8 +20,8 @@
     </div>
 
     <div class="min-w-0 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-        <div class="p-4 min-w-0 overflow-x-auto overscroll-x-contain" style="-webkit-overflow-scrolling: touch;">
-            <table id="tasks-table" class="min-w-full w-max divide-y divide-gray-200 dark:divide-gray-700">
+        <div class="p-4 dt-scroll-x">
+            <table id="tasks-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-900">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">ID</th>
@@ -39,22 +39,7 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-    <style>
-        #tasks-table_wrapper {
-            min-width: 0;
-        }
-
-        #tasks-table_wrapper .dataTables_scroll,
-        #tasks-table_wrapper .dataTables_scrollBody {
-            overflow-x: auto !important;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        #tasks-table_wrapper table.dataTable {
-            width: 100% !important;
-            min-width: 640px;
-        }
-    </style>
+    @include('partials.datatables-mobile')
     <script>
         $(function() {
             $('#tasks-table').DataTable({

@@ -7,15 +7,15 @@
         <span class="text-gray-500 dark:text-gray-400">Order Vehicle Issues</span>
     </div>
 
-    <div class="mb-6 flex justify-between items-center">
+    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
         <div>
             <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Order Vehicle Issues</h1>
             <p class="text-gray-600 dark:text-gray-400 mt-1">Daftar keluhan kendaraan per order</p>
         </div>
     </div>
 
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="overflow-x-auto">
+    <div class="min-w-0 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="dt-scroll-x">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-900">
                     <tr>

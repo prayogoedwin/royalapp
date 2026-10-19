@@ -53,7 +53,7 @@
         $statusColors = \App\Models\Absensi::STATUS_COLORS;
     @endphp
 
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="min-w-0 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         <div class="p-4 border-b border-gray-200 dark:border-gray-700">
             <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">
                 {{ \Illuminate\Support\Str::upper($month) }}
@@ -61,7 +61,7 @@
         </div>
 
         <div class="p-4">
-            <div class="overflow-x-auto">
+            <div class="dt-scroll-x">
                 <table class="min-w-full text-sm">
                     <thead>
                         <tr class="border-b border-gray-200 dark:border-gray-700 text-xs uppercase text-gray-500 dark:text-gray-400">

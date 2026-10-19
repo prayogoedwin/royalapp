@@ -57,6 +57,26 @@
         .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; }
         .dark .bg-sidebar { background-color: #1f2937; }
         .dark .text-sidebar-foreground { color: #f3f4f6; }
+
+        /* Mobile-friendly DataTables horizontal scroll */
+        .dataTables_wrapper {
+            min-width: 0;
+            width: 100%;
+        }
+        .dataTables_wrapper .dataTables_scroll,
+        .dataTables_wrapper .dataTables_scrollBody {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch;
+        }
+        .dataTables_wrapper table.dataTable {
+            width: 100% !important;
+        }
+        .dt-scroll-x {
+            min-width: 0;
+            overflow-x: auto;
+            overscroll-behavior-x: contain;
+            -webkit-overflow-scrolling: touch;
+        }
     </style>
     
     <script>

@@ -9,7 +9,7 @@
         <span class="text-gray-500 dark:text-gray-400">{{ __('Pools') }}</span>
     </div>
 
-    <div class="mb-6 flex justify-between items-center">
+    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
         <div>
             <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ __('Pools') }}</h1>
             <p class="text-gray-600 dark:text-gray-400 mt-1">{{ __('Manage pool locations') }}</p>
@@ -23,8 +23,8 @@
         </div>
     </div>
 
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="p-4">
+    <div class="min-w-0 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="p-4 dt-scroll-x">
             <table id="pools-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-900">
                     <tr>
@@ -56,12 +56,15 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.tailwindcss.min.css">
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    @include('partials.datatables-mobile')
 
     <script>
         $(document).ready(function() {
             $('#pools-table').DataTable({
                 processing: true,
                 serverSide: true,
+                scrollX: true,
+                autoWidth: false,
                 ajax: '{{ route('pools.index') }}',
                 columns: [
                     { data: 'pool_name', name: 'pool_name' },
