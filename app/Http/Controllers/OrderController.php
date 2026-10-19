@@ -88,7 +88,9 @@ class OrderController extends Controller
     {
         if ($request->ajax()) {
             $orders = Order::with(['division', 'orderStatus'])
-                ->select('orders.*');
+                ->select('orders.*')
+                ->orderBy('pickup_datetime')
+                ->orderBy('id');
 
             return DataTables::of($orders)
                 ->addColumn('division_name', function ($order) {

@@ -64,7 +64,7 @@
                     { data: 'status_badge', name: 'order_status_id' },
                     { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-right whitespace-nowrap' }
                 ],
-                order: [[3, 'desc']],
+                order: [[3, 'asc']],
                 language: {
                     search: "_INPUT_",
                     searchPlaceholder: "Search orders...",

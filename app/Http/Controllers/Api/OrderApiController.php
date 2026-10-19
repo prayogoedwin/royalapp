@@ -95,7 +95,7 @@ class OrderApiController extends Controller
             });
         }
 
-        $orders = $query->orderByDesc('id')->paginate($perPage);
+        $orders = $query->orderBy('id')->paginate($perPage);
 
         return $this->okResponse($orders);
     }
