@@ -124,6 +124,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('absensi/today', [AbsensiController::class, 'showAllEmployeesToday'])
         ->name('absensi.today.all')
         ->middleware('permission:view-presensi-all');
+    Route::get('absensi/today/pdf', [AbsensiController::class, 'exportAllEmployeesTodayPdf'])
+        ->name('absensi.today.pdf')
+        ->middleware('permission:view-presensi-all');
+    Route::get('absensi/today/excel', [AbsensiController::class, 'exportAllEmployeesTodayExcel'])
+        ->name('absensi.today.excel')
+        ->middleware('permission:view-presensi-all');
     Route::post('presensi/masuk', [AbsensiController::class, 'storeMasuk'])
         ->name('presensi.masuk')
         ->middleware('permission:create-absensi-masuk');

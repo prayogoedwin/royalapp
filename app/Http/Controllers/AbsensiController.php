@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\AbsensiTodayAllExport;
 use App\Models\Absensi;
 use App\Models\Employee;
 use App\Support\UploadPath;
@@ -9,7 +10,11 @@ use Carbon\Carbon;
 use Dompdf\Dompdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class AbsensiController extends Controller
 {
@@ -241,14 +246,80 @@ class AbsensiController extends Controller
         // Admin screen to mark attendance for all employees (filterable by date).
         // Permission gating is done via route middleware.
 
+        $tanggal = $this->resolveAbsensiAllTanggal($request);
+        $payload = $this->absensiAllEmployeesPayload($tanggal);
+
+        return view('absensi.today_all', [
+            ...$payload,
+            'isAdmin' => $request->user()?->hasPermission('edit-absensi-status') ?? false,
+            'canMasuk' => $request->user()?->hasPermission('create-absensi-masuk') ?? false,
+            'canPulang' => $request->user()?->hasPermission('create-absensi-pulang') ?? false,
+            'editMode' => $request->boolean('edit'),
+        ]);
+    }
+
+    public function exportAllEmployeesTodayPdf(Request $request): Response
+    {
+        $tanggal = $this->resolveAbsensiAllTanggal($request);
+        $payload = $this->absensiAllEmployeesPayload($tanggal);
+        $rows = $this->absensiAllEmployeeRows($payload);
+
+        $html = view('absensi.pdf.today_all', [
+            'tanggal' => $tanggal,
+            'rows' => $rows,
+            'statusOptions' => $payload['statusOptions'],
+        ])->render();
+
+        $dompdf = new Dompdf([
+            'isRemoteEnabled' => true,
+        ]);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('a4', 'landscape');
+        $dompdf->render();
+
+        $fileName = 'absensi-semua-pegawai-'.$tanggal.'.pdf';
+
+        return response($dompdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
+        ]);
+    }
+
+    public function exportAllEmployeesTodayExcel(Request $request): BinaryFileResponse
+    {
+        $tanggal = $this->resolveAbsensiAllTanggal($request);
+        $payload = $this->absensiAllEmployeesPayload($tanggal);
+        $rows = $this->absensiAllEmployeeRows($payload);
+
+        return Excel::download(
+            new AbsensiTodayAllExport($tanggal, $rows, $payload['statusOptions']),
+            'absensi-semua-pegawai-'.$tanggal.'.xlsx'
+        );
+    }
+
+    private function resolveAbsensiAllTanggal(Request $request): string
+    {
         $validated = $request->validate([
             'tanggal' => ['nullable', 'date'],
         ]);
 
-        $tanggal = isset($validated['tanggal'])
+        return isset($validated['tanggal'])
             ? Carbon::parse($validated['tanggal'])->toDateString()
             : Carbon::today()->toDateString();
+    }
 
+    /**
+     * @return array{
+     *     tanggal: string,
+     *     employees: Collection<int, Employee>,
+     *     pendingByEmployee: array<int, Absensi>,
+     *     todayAbsensis: Collection<int, Absensi>,
+     *     statusOptions: array<string, string>,
+     *     statusColors: array<string, string>
+     * }
+     */
+    private function absensiAllEmployeesPayload(string $tanggal): array
+    {
         $employees = Employee::query()
             ->with(['pool'])
             ->orderBy('full_name')
@@ -282,25 +353,43 @@ class AbsensiController extends Controller
             ->get()
             ->keyBy('employee_id');
 
-        $statusOptions = Absensi::STATUS_OPTIONS;
-        $statusColors = Absensi::STATUS_COLORS;
-
-        $isAdmin = $request->user()?->hasPermission('edit-absensi-status') ?? false;
-        $canMasuk = $request->user()?->hasPermission('create-absensi-masuk') ?? false;
-        $canPulang = $request->user()?->hasPermission('create-absensi-pulang') ?? false;
-
-        return view('absensi.today_all', [
+        return [
             'tanggal' => $tanggal,
             'employees' => $employees,
             'pendingByEmployee' => $pendingByEmployee,
             'todayAbsensis' => $todayAbsensis,
-            'isAdmin' => $isAdmin,
-            'statusOptions' => $statusOptions,
-            'statusColors' => $statusColors,
-            'canMasuk' => $canMasuk,
-            'canPulang' => $canPulang,
-            'editMode' => $request->boolean('edit'),
-        ]);
+            'statusOptions' => Absensi::STATUS_OPTIONS,
+            'statusColors' => Absensi::STATUS_COLORS,
+        ];
+    }
+
+    /**
+     * @param  array{
+     *     employees: Collection<int, Employee>,
+     *     pendingByEmployee: array<int, Absensi>,
+     *     todayAbsensis: Collection<int, Absensi>
+     * }  $payload
+     * @return list<array{pegawai: string, pool: string, jam_masuk: string, jam_pulang: string, status: string|null}>
+     */
+    private function absensiAllEmployeeRows(array $payload): array
+    {
+        $rows = [];
+
+        foreach ($payload['employees'] as $employee) {
+            $todayAbsensi = $payload['todayAbsensis']->get($employee->id);
+            $pendingCheckout = $payload['pendingByEmployee'][$employee->id] ?? null;
+            $absensiStatus = $pendingCheckout ?? $todayAbsensi;
+
+            $rows[] = [
+                'pegawai' => $employee->full_name,
+                'pool' => $employee->pool?->pool_name ?? '-',
+                'jam_masuk' => $absensiStatus?->jam_masuk?->format('H:i') ?? '-',
+                'jam_pulang' => $absensiStatus?->jam_pulang?->format('H:i') ?? '-',
+                'status' => $absensiStatus?->status,
+            ];
+        }
+
+        return $rows;
     }
 
     public function storeMasuk(Request $request): RedirectResponse
