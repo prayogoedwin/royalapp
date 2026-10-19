@@ -19,17 +19,17 @@
         @endif
     </div>
 
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="p-4">
-            <table id="tasks-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="p-4 overflow-x-auto overscroll-x-contain" style="-webkit-overflow-scrolling: touch;">
+            <table id="tasks-table" class="min-w-full w-max divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-900">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">ID</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Title</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Crew</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created By</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Title</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Crew</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Created By</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Actions</th>
                     </tr>
                 </thead>
             </table>
@@ -39,11 +39,29 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <style>
+        #tasks-table_wrapper {
+            min-width: 0;
+        }
+
+        #tasks-table_wrapper .dataTables_scroll,
+        #tasks-table_wrapper .dataTables_scrollBody {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #tasks-table_wrapper table.dataTable {
+            width: 100% !important;
+            min-width: 640px;
+        }
+    </style>
     <script>
         $(function() {
             $('#tasks-table').DataTable({
                 processing: true,
                 serverSide: true,
+                scrollX: true,
+                autoWidth: false,
                 ajax: '{{ route('tasks.index') }}',
                 columns: [
                     { data: 'id', name: 'id' },
@@ -58,7 +76,7 @@
                     search: "_INPUT_",
                     searchPlaceholder: "Search tasks..."
                 },
-                dom: '<"flex flex-col md:flex-row justify-between items-center mb-4"lf>rt<"flex flex-col md:flex-row justify-between items-center mt-4"ip>',
+                dom: '<"flex flex-col md:flex-row justify-between items-center mb-4 gap-3"lf>rt<"flex flex-col md:flex-row justify-between items-center mt-4 gap-3"ip>',
             });
         });
     </script>
