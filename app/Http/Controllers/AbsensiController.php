@@ -327,9 +327,18 @@ class AbsensiController extends Controller
 
         $employeeIds = $employees->pluck('id');
 
-        // Pending checkout untuk lintas hari: jam_masuk ada, jam_pulang kosong.
-        // Ambil window 3 hari ke belakang dari tanggal filter.
-        $rangeStart = Carbon::parse($tanggal)->subDays(3)->toDateString();
+        $todayAbsensis = Absensi::query()
+            ->whereIn('employee_id', $employeeIds)
+            ->whereDate('tanggal', $tanggal)
+            ->get()
+            ->keyBy('employee_id');
+
+        // Pending pulang: tampilan kolom hanya pakai record tanggal filter.
+        // Lookback 3 hari khusus form edit hari ini (shift lintas hari).
+        $isViewingToday = $tanggal === Carbon::today()->toDateString();
+        $rangeStart = $isViewingToday
+            ? Carbon::parse($tanggal)->subDays(3)->toDateString()
+            : $tanggal;
 
         $pendingAbsensis = Absensi::query()
             ->whereIn('employee_id', $employeeIds)
@@ -346,12 +355,6 @@ class AbsensiController extends Controller
                 $pendingByEmployee[$absensi->employee_id] = $absensi;
             }
         }
-
-        $todayAbsensis = Absensi::query()
-            ->whereIn('employee_id', $employeeIds)
-            ->whereDate('tanggal', $tanggal)
-            ->get()
-            ->keyBy('employee_id');
 
         return [
             'tanggal' => $tanggal,
@@ -377,15 +380,13 @@ class AbsensiController extends Controller
 
         foreach ($payload['employees'] as $employee) {
             $todayAbsensi = $payload['todayAbsensis']->get($employee->id);
-            $pendingCheckout = $payload['pendingByEmployee'][$employee->id] ?? null;
-            $absensiStatus = $pendingCheckout ?? $todayAbsensi;
 
             $rows[] = [
                 'pegawai' => $employee->full_name,
                 'pool' => $employee->pool?->pool_name ?? '-',
-                'jam_masuk' => $absensiStatus?->jam_masuk?->format('H:i') ?? '-',
-                'jam_pulang' => $absensiStatus?->jam_pulang?->format('H:i') ?? '-',
-                'status' => $absensiStatus?->status,
+                'jam_masuk' => $todayAbsensi?->jam_masuk?->format('H:i') ?? '-',
+                'jam_pulang' => $todayAbsensi?->jam_pulang?->format('H:i') ?? '-',
+                'status' => $todayAbsensi?->status,
             ];
         }
 

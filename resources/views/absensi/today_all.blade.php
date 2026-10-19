@@ -85,8 +85,8 @@
                             $todayAbsensi = $todayAbsensis->get($employee->id);
                             $pendingCheckout = $pendingByEmployee[$employee->id] ?? null;
 
-                            $absensiStatus = $pendingCheckout ?? $todayAbsensi;
-                            $status = $absensiStatus?->status;
+                            // Kolom tabel hanya record tanggal filter (bukan pending hari lain).
+                            $status = $todayAbsensi?->status;
                             $badgeClass = $status ? ($statusColors[$status] ?? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300')
                                 : 'bg-gray-50 text-gray-500 dark:bg-gray-700 dark:text-gray-300';
 
@@ -98,8 +98,8 @@
                         <tr>
                             <td class="py-2 pr-4 whitespace-nowrap">{{ $employee->full_name }}</td>
                             <td class="py-2 pr-4 whitespace-nowrap">{{ $employee->pool?->pool_name ?? '-' }}</td>
-                            <td class="py-2 pr-4 whitespace-nowrap">{{ $absensiStatus?->jam_masuk?->format('H:i') ?? '-' }}</td>
-                            <td class="py-2 pr-4 whitespace-nowrap">{{ $absensiStatus?->jam_pulang?->format('H:i') ?? '-' }}</td>
+                            <td class="py-2 pr-4 whitespace-nowrap">{{ $todayAbsensi?->jam_masuk?->format('H:i') ?? '-' }}</td>
+                            <td class="py-2 pr-4 whitespace-nowrap">{{ $todayAbsensi?->jam_pulang?->format('H:i') ?? '-' }}</td>
                             <td class="py-2 pr-4">
                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{ $badgeClass }}">
                                     {{ $status ? ($statusOptions[$status] ?? $status) : '-' }}
