@@ -7,16 +7,52 @@
         <span class="text-gray-500 dark:text-gray-400">{{ __('Absensi - Semua Pegawai') }}</span>
     </div>
 
-    <div class="mb-6 flex justify-between items-start gap-4">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ __('Absensi Hari Ini') }}</h1>
-            <p class="text-gray-600 dark:text-gray-400 mt-1">
-                {{ \Carbon\Carbon::parse($tanggal)->format('d M Y') }}
-            </p>
-        </div>
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ __('Absensi Semua Pegawai') }}</h1>
+        <p class="text-gray-600 dark:text-gray-400 mt-1">
+            {{ \Carbon\Carbon::parse($tanggal)->format('d M Y') }}
+        </p>
     </div>
 
-    <div class="min-w-0 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+    <div
+        class="min-w-0 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
+        x-data="{ editMode: {{ $editMode ? 'true' : 'false' }} }"
+    >
+        <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <form method="GET" action="{{ route('absensi.today.all') }}" class="flex flex-col sm:flex-row sm:flex-wrap sm:items-end gap-3">
+                <input type="hidden" name="edit" :value="editMode ? '1' : '0'">
+                <div>
+                    <label for="tanggal" class="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">{{ __('Tanggal') }}</label>
+                    <input
+                        type="date"
+                        id="tanggal"
+                        name="tanggal"
+                        value="{{ $tanggal }}"
+                        class="block w-full sm:w-auto px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
+                    >
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700">
+                        {{ __('Cari') }}
+                    </button>
+                    <a href="{{ route('absensi.today.all') }}" class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-md text-sm hover:bg-gray-200 dark:hover:bg-gray-600">
+                        {{ __('Reset') }}
+                    </a>
+                </div>
+            </form>
+
+            <div>
+                <button
+                    type="button"
+                    @click="editMode = !editMode"
+                    :class="editMode ? 'bg-amber-600 hover:bg-amber-700' : 'bg-gray-800 dark:bg-gray-600 hover:bg-gray-900 dark:hover:bg-gray-500'"
+                    class="px-4 py-2 text-white rounded-md text-sm"
+                >
+                    <span x-text="editMode ? '{{ __('Tutup Mode Edit') }}' : '{{ __('Mode Edit') }}'"></span>
+                </button>
+            </div>
+        </div>
+
         <div class="p-4 border-b border-gray-200 dark:border-gray-700">
             <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">{{ __('Daftar Pegawai') }}</h2>
         </div>
@@ -30,11 +66,11 @@
                         <th class="py-2 pr-4 text-left">Jam Masuk</th>
                         <th class="py-2 pr-4 text-left">Jam Pulang</th>
                         <th class="py-2 pr-4 text-left">Status</th>
-                        <th class="py-2 pr-4 text-left">Aksi</th>
+                        <th class="py-2 pr-4 text-left" x-show="editMode" x-cloak>Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                    @foreach($employees as $employee)
+                    @forelse($employees as $employee)
                         @php
                             $todayAbsensi = $todayAbsensis->get($employee->id);
                             $pendingCheckout = $pendingByEmployee[$employee->id] ?? null;
@@ -46,7 +82,7 @@
 
                             $dateKey = $tanggal;
 
-                            $showMasuk = $canMasuk && (!$todayAbsensi || $todayAbsensi->jam_masuk === null) && ! $pendingCheckout;
+                            $showMasuk = $canMasuk && (! $todayAbsensi || $todayAbsensi->jam_masuk === null) && ! $pendingCheckout;
                             $showPulang = $canPulang && (bool) $pendingCheckout;
                         @endphp
                         <tr>
@@ -59,7 +95,7 @@
                                     {{ $status ? ($statusOptions[$status] ?? $status) : '-' }}
                                 </span>
                             </td>
-                            <td class="py-2 pr-4 min-w-[320px]">
+                            <td class="py-2 pr-4 min-w-[320px]" x-show="editMode" x-cloak>
                                 <div class="flex flex-col gap-2">
                                     <div class="bg-gray-50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700 rounded-md p-3 flex flex-col gap-2">
                                         <div class="text-xs font-semibold text-gray-700 dark:text-gray-200">{{ __('Masuk') }}</div>
@@ -68,6 +104,7 @@
                                                 @csrf
                                                 <input type="hidden" name="employee_id" value="{{ $employee->id }}">
                                                 <input type="hidden" name="tanggal" value="{{ $dateKey }}">
+                                                <input type="hidden" name="return_to" value="absensi.today.all">
                                                 <input type="file" name="foto_masuk" accept="image/*" class="text-xs mb-2 block">
                                                 <input type="text" name="keterangan" placeholder="Keterangan (opsional)" class="text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 mb-2 block">
                                                 <button type="submit" class="px-3 py-1.5 bg-blue-600 text-white rounded-md text-xs hover:bg-blue-700 w-full">
@@ -86,6 +123,7 @@
                                                 @csrf
                                                 <input type="hidden" name="employee_id" value="{{ $employee->id }}">
                                                 <input type="hidden" name="tanggal" value="{{ $pendingCheckout->tanggal->format('Y-m-d') }}">
+                                                <input type="hidden" name="return_to" value="absensi.today.all">
                                                 <input type="file" name="foto_pulang" accept="image/*" class="text-xs mb-2 block">
                                                 <input type="text" name="keterangan" placeholder="Keterangan (opsional)" class="text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 mb-2 block">
                                                 <button type="submit" class="px-3 py-1.5 bg-blue-600 text-white rounded-md text-xs hover:bg-blue-700 w-full">
@@ -99,10 +137,13 @@
                                 </div>
                             </td>
                         </tr>
-                    @endforeach
+                    @empty
+                        <tr>
+                            <td colspan="5" class="py-6 text-center text-gray-500 dark:text-gray-400">{{ __('Belum ada data pegawai.') }}</td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
     </div>
 </x-layouts.app>
-

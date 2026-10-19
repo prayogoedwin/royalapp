@@ -6,10 +6,10 @@ use App\Models\Absensi;
 use App\Models\Employee;
 use App\Support\UploadPath;
 use Carbon\Carbon;
+use Dompdf\Dompdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Dompdf\Dompdf;
 
 class AbsensiController extends Controller
 {
@@ -78,7 +78,7 @@ class AbsensiController extends Controller
         $canViewAny = $request->user()?->hasPermission('edit-absensi-status') ?? false;
         $canViewOwn = $request->user()?->employee && $request->user()->employee->id === $employee->id;
 
-        if (!($canViewAny || $canViewOwn)) {
+        if (! ($canViewAny || $canViewOwn)) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -165,11 +165,11 @@ class AbsensiController extends Controller
         $dompdf->setPaper('a4', 'portrait');
         $dompdf->render();
 
-        $fileName = 'presensi-' . $employee->full_name . '-' . $month . '.pdf';
+        $fileName = 'presensi-'.$employee->full_name.'-'.$month.'.pdf';
 
         return response($dompdf->output(), 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . $fileName . '"',
+            'Content-Disposition' => 'inline; filename="'.$fileName.'"',
         ]);
     }
 
@@ -228,20 +228,26 @@ class AbsensiController extends Controller
         $dompdf->setPaper('a4', 'portrait');
         $dompdf->render();
 
-        $fileName = 'presensi-' . $employee->full_name . '-' . $month . '.pdf';
+        $fileName = 'presensi-'.$employee->full_name.'-'.$month.'.pdf';
 
         return response($dompdf->output(), 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . $fileName . '"',
+            'Content-Disposition' => 'inline; filename="'.$fileName.'"',
         ]);
     }
 
     public function showAllEmployeesToday(Request $request): View
     {
-        // Admin screen to mark attendance for all employees today.
+        // Admin screen to mark attendance for all employees (filterable by date).
         // Permission gating is done via route middleware.
 
-        $tanggal = Carbon::today()->toDateString();
+        $validated = $request->validate([
+            'tanggal' => ['nullable', 'date'],
+        ]);
+
+        $tanggal = isset($validated['tanggal'])
+            ? Carbon::parse($validated['tanggal'])->toDateString()
+            : Carbon::today()->toDateString();
 
         $employees = Employee::query()
             ->with(['pool'])
@@ -251,8 +257,8 @@ class AbsensiController extends Controller
         $employeeIds = $employees->pluck('id');
 
         // Pending checkout untuk lintas hari: jam_masuk ada, jam_pulang kosong.
-        // Ambil window 3 hari ke belakang supaya shift yang mulai kemarin tapi selesai hari ini tetap ketangkap.
-        $rangeStart = Carbon::today()->subDays(3)->toDateString();
+        // Ambil window 3 hari ke belakang dari tanggal filter.
+        $rangeStart = Carbon::parse($tanggal)->subDays(3)->toDateString();
 
         $pendingAbsensis = Absensi::query()
             ->whereIn('employee_id', $employeeIds)
@@ -265,7 +271,7 @@ class AbsensiController extends Controller
 
         $pendingByEmployee = [];
         foreach ($pendingAbsensis as $absensi) {
-            if (!isset($pendingByEmployee[$absensi->employee_id])) {
+            if (! isset($pendingByEmployee[$absensi->employee_id])) {
                 $pendingByEmployee[$absensi->employee_id] = $absensi;
             }
         }
@@ -293,6 +299,7 @@ class AbsensiController extends Controller
             'statusColors' => $statusColors,
             'canMasuk' => $canMasuk,
             'canPulang' => $canPulang,
+            'editMode' => $request->boolean('edit'),
         ]);
     }
 
@@ -385,6 +392,15 @@ class AbsensiController extends Controller
             $path = $request->file('foto_masuk')->store(UploadPath::dir('absensi'), 'public');
             $absensi->foto_masuk = $path;
             $absensi->save();
+        }
+
+        if ($request->input('return_to') === 'absensi.today.all') {
+            return redirect()
+                ->route('absensi.today.all', [
+                    'tanggal' => $validated['tanggal'],
+                    'edit' => 1,
+                ])
+                ->with('status', 'Absen masuk berhasil.');
         }
 
         return redirect()
@@ -496,6 +512,15 @@ class AbsensiController extends Controller
             $absensi->save();
         }
 
+        if ($request->input('return_to') === 'absensi.today.all') {
+            return redirect()
+                ->route('absensi.today.all', [
+                    'tanggal' => $validated['tanggal'],
+                    'edit' => 1,
+                ])
+                ->with('status', 'Absen pulang berhasil.');
+        }
+
         return redirect()
             ->route('employees.presensi', $employee)
             ->with('status', 'Absen pulang berhasil.');
@@ -578,4 +603,3 @@ class AbsensiController extends Controller
             ->with('status', 'Status absensi berhasil diperbarui.');
     }
 }
-
