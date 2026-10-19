@@ -19,8 +19,8 @@
         @endif
     </div>
 
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-        <div class="p-4 overflow-x-auto overscroll-x-contain" style="-webkit-overflow-scrolling: touch;">
+    <div class="min-w-0 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="p-4 min-w-0 overflow-x-auto overscroll-x-contain" style="-webkit-overflow-scrolling: touch;">
             <table id="tasks-table" class="min-w-full w-max divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-900">
                     <tr>
