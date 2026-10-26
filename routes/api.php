@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AbsensiApiController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\DeviceTokenController;
 use App\Http\Controllers\Api\MasterApiController;
 use App\Http\Controllers\Api\OrderApiController;
 use App\Http\Controllers\Api\TaskApiController;
@@ -12,6 +13,8 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/device-token', [DeviceTokenController::class, 'store']);
+    Route::delete('/device-token', [DeviceTokenController::class, 'destroy']);
     Route::get('/profile', [UserController::class, 'me']);
     Route::put('/profile', [UserController::class, 'updateProfile']);
     Route::put('/profile/password', [UserController::class, 'updatePassword']);

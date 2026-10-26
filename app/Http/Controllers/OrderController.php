@@ -14,6 +14,7 @@ use App\Models\OrderReport;
 use App\Models\OrderStatus;
 use App\Models\OrderTowing;
 use App\Models\Unit;
+use App\Services\Firebase\CrewPushNotifier;
 use App\Support\OrderCategoryOptions;
 use App\Support\OrderOptions;
 use App\Support\UploadPath;
@@ -286,6 +287,10 @@ class OrderController extends Controller
 
             DB::commit();
 
+            app(CrewPushNotifier::class)->notifyOrderCreated(
+                $order->fresh(['orderStatus', 'orderCrews.employee'])
+            );
+
             return to_route('orders.index')->with('status', 'Order created successfully with number: '.$orderNumber);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -383,6 +388,11 @@ class OrderController extends Controller
                     ]
                 );
                 DB::commit();
+
+                app(CrewPushNotifier::class)->notifyOrderUpdated(
+                    $order->fresh(['orderStatus', 'orderCrews.employee']),
+                    'Status order diubah'
+                );
 
                 return redirect()->route('orders.edit', $order)->with('status', 'Order report berhasil diupdate.');
             } catch (\Exception $e) {
@@ -502,6 +512,10 @@ class OrderController extends Controller
                     }
                 }
                 DB::commit();
+
+                app(CrewPushNotifier::class)->notifyOrderCrewChanged(
+                    $order->fresh(['orderStatus', 'orderCrews.employee'])
+                );
 
                 return redirect()->route('orders.edit', $order)->with('status', 'Crew berhasil diupdate.');
             } catch (\Exception $e) {
@@ -628,6 +642,10 @@ class OrderController extends Controller
             }
 
             DB::commit();
+
+            app(CrewPushNotifier::class)->notifyOrderUpdated(
+                $order->fresh(['orderStatus', 'orderCrews.employee'])
+            );
 
             return redirect()->route('orders.edit', $order)->with('status', 'Order berhasil diupdate.');
         } catch (\Exception $e) {

@@ -10,6 +10,8 @@ use OpenApi\Attributes as OA;
     properties: [
         new OA\Property(property: 'email', type: 'string', format: 'email', example: 'superadmin@royalapp.com'),
         new OA\Property(property: 'password', type: 'string', example: 'password'),
+        new OA\Property(property: 'fcm_token', type: 'string', nullable: true, example: 'fcm-device-token'),
+        new OA\Property(property: 'platform', type: 'string', nullable: true, example: 'android'),
     ]
 )]
 #[OA\Schema(
@@ -99,8 +101,46 @@ class ApiDocumentation
     )]
     public function login(): void {}
 
-    #[OA\Post(path: '/api/logout', tags: ['Auth'], summary: 'Logout', security: [['sanctum' => []]], responses: [new OA\Response(response: 200, description: 'OK')])]
+    #[OA\Post(
+        path: '/api/logout',
+        tags: ['Auth'],
+        summary: 'Logout (optional fcm_token removes this device)',
+        security: [['sanctum' => []]],
+        requestBody: new OA\RequestBody(content: new OA\JsonContent(
+            properties: [new OA\Property(property: 'fcm_token', type: 'string', nullable: true)]
+        )),
+        responses: [new OA\Response(response: 200, description: 'OK')]
+    )]
     public function logout(): void {}
+
+    #[OA\Post(
+        path: '/api/device-token',
+        tags: ['Auth'],
+        summary: 'Register FCM device token',
+        security: [['sanctum' => []]],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(
+            required: ['fcm_token'],
+            properties: [
+                new OA\Property(property: 'fcm_token', type: 'string'),
+                new OA\Property(property: 'platform', type: 'string', nullable: true, example: 'android'),
+            ]
+        )),
+        responses: [new OA\Response(response: 200, description: 'OK')]
+    )]
+    public function storeDeviceToken(): void {}
+
+    #[OA\Delete(
+        path: '/api/device-token',
+        tags: ['Auth'],
+        summary: 'Remove FCM device token',
+        security: [['sanctum' => []]],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(
+            required: ['fcm_token'],
+            properties: [new OA\Property(property: 'fcm_token', type: 'string')]
+        )),
+        responses: [new OA\Response(response: 200, description: 'OK')]
+    )]
+    public function destroyDeviceToken(): void {}
 
     #[OA\Get(
         path: '/api/profile',

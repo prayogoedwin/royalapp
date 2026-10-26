@@ -8,6 +8,7 @@ use App\Models\Task;
 use App\Models\TaskAttachment;
 use App\Models\TaskComment;
 use App\Models\TaskCrew;
+use App\Services\Firebase\CrewPushNotifier;
 use App\Support\UploadPath;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -118,6 +119,10 @@ class TaskController extends Controller
             }
 
             DB::commit();
+
+            app(CrewPushNotifier::class)->notifyTaskCreated(
+                $task->fresh(['orderStatus', 'taskCrews.employee'])
+            );
 
             return redirect()->route('tasks.show', $task)->with('status', 'Task created successfully.');
         } catch (\Throwable $e) {
@@ -236,6 +241,10 @@ class TaskController extends Controller
             }
 
             DB::commit();
+
+            app(CrewPushNotifier::class)->notifyTaskUpdated(
+                $task->fresh(['orderStatus', 'taskCrews.employee'])
+            );
 
             return redirect()->route('tasks.show', $task)->with('status', 'Task updated successfully.');
         } catch (\Throwable $e) {
