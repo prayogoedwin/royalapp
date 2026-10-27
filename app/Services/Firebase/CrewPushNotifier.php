@@ -29,12 +29,8 @@ class CrewPushNotifier
         $this->dispatch(
             $this->orderUserIds($order),
             'Order baru',
-            'Kamu ditugaskan ke order '.$order->order_number.($order->orderStatus?->name ? ' ('.$order->orderStatus->name.')' : ''),
-            [
-                'type' => 'order_assigned',
-                'order_id' => (string) $order->id,
-                'order_number' => (string) $order->order_number,
-            ]
+            'Kamu ditugaskan ke order '.$this->orderLabel($order).($order->orderStatus?->name ? ' ('.$order->orderStatus->name.')' : ''),
+            $this->orderPayload($order, 'order_assigned')
         );
     }
 
@@ -45,12 +41,8 @@ class CrewPushNotifier
         $this->dispatch(
             $this->orderUserIds($order),
             'Update order',
-            $reason.': '.$order->order_number.($order->orderStatus?->name ? ' ('.$order->orderStatus->name.')' : ''),
-            [
-                'type' => 'order_updated',
-                'order_id' => (string) $order->id,
-                'order_number' => (string) $order->order_number,
-            ]
+            $reason.': '.$this->orderLabel($order).($order->orderStatus?->name ? ' ('.$order->orderStatus->name.')' : ''),
+            $this->orderPayload($order, 'order_updated')
         );
     }
 
@@ -61,12 +53,8 @@ class CrewPushNotifier
         $this->dispatch(
             $this->orderUserIds($order),
             'Tim order',
-            'Kamu ditugaskan / diperbarui pada order '.$order->order_number,
-            [
-                'type' => 'order_crew_changed',
-                'order_id' => (string) $order->id,
-                'order_number' => (string) $order->order_number,
-            ]
+            'Kamu ditugaskan / diperbarui pada order '.$this->orderLabel($order),
+            $this->orderPayload($order, 'order_crew_changed')
         );
     }
 
@@ -102,6 +90,28 @@ class CrewPushNotifier
                 'task_id' => (string) $task->id,
             ]
         );
+    }
+
+    private function orderLabel(Order $order): string
+    {
+        $number = trim((string) $order->order_number);
+
+        return $number !== ''
+            ? '#'.$order->id.' ('.$number.')'
+            : '#'.$order->id;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function orderPayload(Order $order, string $type): array
+    {
+        return [
+            'type' => $type,
+            'id' => (string) $order->id,
+            'order_id' => (string) $order->id,
+            'order_number' => (string) $order->order_number,
+        ];
     }
 
     /**

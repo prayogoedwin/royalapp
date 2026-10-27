@@ -43,11 +43,15 @@ class CrewPushNotifierTest extends TestCase
 
         app(CrewPushNotifier::class)->notifyOrderCreated($order);
 
-        Bus::assertDispatched(SendCrewPushNotification::class, function (SendCrewPushNotification $job) {
+        Bus::assertDispatched(SendCrewPushNotification::class, function (SendCrewPushNotification $job) use ($order) {
             sort($job->tokens);
 
             return $job->tokens === ['tok-1', 'tok-2']
-                && $job->data['type'] === 'order_assigned';
+                && $job->data['type'] === 'order_assigned'
+                && $job->data['order_id'] === (string) $order->id
+                && $job->data['id'] === (string) $order->id
+                && str_contains($job->body, '#'.$order->id)
+                && str_contains($job->body, (string) $order->order_number);
         });
     }
 
