@@ -16,6 +16,11 @@
             <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ __('Edit Order') }} {{ $order->order_number }}</h1>
             <p class="text-gray-600 dark:text-gray-400 mt-1">{{ __('Update order data') }}</p>
         </div>
+        @if(auth()->user()->hasPermission('show-orders'))
+            <x-button type="primary" tag="a" href="{{ route('orders.surat-jalan', $order) }}" target="_blank">
+                Surat Jalan
+            </x-button>
+        @endif
     </div>
 
     @if(session('status'))

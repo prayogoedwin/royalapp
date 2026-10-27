@@ -26,6 +26,9 @@
                     || auth()->user()->hasPermission('create-order-vehicle-issues')
                     || auth()->user()->hasPermission('edit-order-vehicle-issues');
             @endphp
+            <x-button type="primary" tag="a" href="{{ route('orders.surat-jalan', $order) }}" target="_blank">
+                Surat Jalan
+            </x-button>
             @if($canAccessEdit)
                 <a href="{{ route('orders.edit', $order) }}">
                     <x-button type="secondary">

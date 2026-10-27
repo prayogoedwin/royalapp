@@ -17,9 +17,12 @@ use App\Models\Unit;
 use App\Services\Firebase\CrewPushNotifier;
 use App\Support\OrderCategoryOptions;
 use App\Support\OrderOptions;
+use App\Support\SuratJalanData;
 use App\Support\UploadPath;
+use Dompdf\Dompdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -114,6 +117,7 @@ class OrderController extends Controller
 
                     if (auth()->user()->hasPermission('show-orders')) {
                         $actions .= '<a href="'.route('orders.show', $order).'" class="text-green-600 dark:text-green-400 hover:underline mr-3">View</a>';
+                        $actions .= '<a href="'.route('orders.surat-jalan', $order).'" class="text-indigo-600 dark:text-indigo-400 hover:underline mr-3" target="_blank">Surat Jalan</a>';
                     }
 
                     if (auth()->user()->hasPermission('edit-orders')) {
@@ -318,6 +322,25 @@ class OrderController extends Controller
         ]);
 
         return view('orders.show', compact('order'));
+    }
+
+    public function suratJalan(Order $order): Response
+    {
+        $html = view('orders.pdf.surat_jalan', SuratJalanData::fromOrder($order))->render();
+
+        $dompdf = new Dompdf([
+            'isRemoteEnabled' => false,
+        ]);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('a4', 'portrait');
+        $dompdf->render();
+
+        $fileName = 'surat-jalan-'.str_replace(['/', '\\'], '-', $order->order_number).'.pdf';
+
+        return response($dompdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$fileName.'"',
+        ]);
     }
 
     public function edit(Order $order): View

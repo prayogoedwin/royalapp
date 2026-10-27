@@ -1,0 +1,169 @@
+<?php
+
+namespace App\Support;
+
+use App\Models\Order;
+use App\Models\OrderCrew;
+use App\Models\Unit;
+use Carbon\Carbon;
+
+class SuratJalanData
+{
+    /**
+     * @return list<string>
+     */
+    public static function perlengkapan(): array
+    {
+        return [
+            'Dongkrak',
+            'Segitiga Pengaman',
+            'Kunci Roda',
+            'Ban Serep',
+            'APAR',
+            'P3K',
+            'Tool Kit',
+            'Lainnya',
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function fromOrder(Order $order): array
+    {
+        $order->loadMissing([
+            'division',
+            'orderTowing',
+            'orderAmbulance',
+            'orderCrews.employee.position',
+        ]);
+
+        $isTowing = static::isTowing($order);
+        $unit = Unit::query()->where('code', $order->unit_code)->first();
+        $tanggal = $order->pickup_datetime?->copy() ?? Carbon::now();
+
+        return [
+            'order' => $order,
+            'is_towing' => $isTowing,
+            'brand_top' => 'ROYAL',
+            'brand_bottom' => $isTowing ? 'TOWING' : 'AMBULANCE',
+            'company_name' => (string) config('royal.company_name'),
+            'company_phone' => (string) config('royal.company_phone'),
+            'company_email' => (string) config('royal.company_email'),
+            'nomor' => (string) $order->order_number,
+            'tanggal' => $tanggal->locale('id')->translatedFormat('d F Y'),
+            'jenis_kendaraan' => static::jenisKendaraan($order, $unit, $isTowing),
+            'nopol' => $unit?->nopol ?: (string) $order->unit_code,
+            'driver' => static::driverName($order),
+            'asisten' => static::asistenName($order),
+            'pengirim_nama' => static::dash($order->customer_name),
+            'pengirim_telepon' => static::dash($order->customer_phone),
+            'pengirim_alamat' => static::dash($order->pickup_address),
+            'penerima_nama' => '-',
+            'penerima_telepon' => static::dash($order->orderTowing?->receiver_phone),
+            'penerima_alamat' => static::dash($order->destination_address),
+            'keterangan' => static::keterangan($order),
+            'perlengkapan' => static::perlengkapan(),
+        ];
+    }
+
+    public static function isTowing(Order $order): bool
+    {
+        if ($order->orderTowing !== null) {
+            return true;
+        }
+
+        $nama = strtolower((string) $order->division?->nama);
+
+        return str_contains($nama, 'towing') || str_contains($nama, 'derek');
+    }
+
+    private static function jenisKendaraan(Order $order, ?Unit $unit, bool $isTowing): string
+    {
+        $carType = trim((string) $order->orderTowing?->car_type);
+        if ($carType !== '') {
+            return $carType;
+        }
+
+        $description = trim((string) $unit?->description);
+        if ($description !== '') {
+            return $description;
+        }
+
+        return $isTowing ? 'Towing / Derek' : 'Ambulance';
+    }
+
+    private static function driverName(Order $order): string
+    {
+        foreach ($order->orderCrews as $crew) {
+            if (static::matchesRole($crew, ['driver', 'sopir'])) {
+                return static::dash($crew->employee?->full_name);
+            }
+        }
+
+        return '-';
+    }
+
+    private static function asistenName(Order $order): string
+    {
+        foreach ($order->orderCrews as $crew) {
+            if (static::matchesRole($crew, ['asisten', 'assistant', 'nurse', 'perawat', 'helper'])) {
+                return static::dash($crew->employee?->full_name);
+            }
+        }
+
+        foreach ($order->orderCrews as $crew) {
+            if (! static::matchesRole($crew, ['driver', 'sopir'])) {
+                return static::dash($crew->employee?->full_name);
+            }
+        }
+
+        return '-';
+    }
+
+    /**
+     * @param  list<string>  $needles
+     */
+    private static function matchesRole(OrderCrew $crew, array $needles): bool
+    {
+        $haystack = strtolower(trim(implode(' ', [
+            (string) $crew->role,
+            (string) $crew->employee?->position?->nama,
+            (string) $crew->employee?->position?->key,
+        ])));
+
+        foreach ($needles as $needle) {
+            if ($haystack !== '' && str_contains($haystack, $needle)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static function keterangan(Order $order): string
+    {
+        $parts = [];
+
+        if (filled($order->notes)) {
+            $parts[] = (string) $order->notes;
+        }
+
+        if (filled($order->orderTowing?->car_condition)) {
+            $parts[] = 'Kondisi kendaraan: '.$order->orderTowing->car_condition;
+        }
+
+        if (filled($order->orderAmbulance?->patient_condition)) {
+            $parts[] = 'Kondisi pasien: '.$order->orderAmbulance->patient_condition;
+        }
+
+        return implode("\n", $parts);
+    }
+
+    private static function dash(?string $value): string
+    {
+        $value = trim((string) $value);
+
+        return $value !== '' ? $value : '-';
+    }
+}

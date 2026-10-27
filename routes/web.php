@@ -162,6 +162,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index')->middleware('permission:view-orders');
     Route::get('orders/create', [OrderController::class, 'create'])->name('orders.create')->middleware('permission:create-orders');
     Route::post('orders', [OrderController::class, 'store'])->name('orders.store')->middleware('permission:create-orders');
+    Route::get('orders/{order}/surat-jalan', [OrderController::class, 'suratJalan'])->name('orders.surat-jalan')->middleware('permission:show-orders');
     Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show')->middleware('permission:show-orders');
     Route::get('orders/{order}/edit', [OrderController::class, 'edit'])->name('orders.edit')
         ->middleware('permission:edit-orders|edit-order-report|create-order-expenses|create-order-etoll|create-order-photos|create-order-vehicle-issues|edit-order-vehicle-issues');
