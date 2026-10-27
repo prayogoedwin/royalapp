@@ -98,9 +98,13 @@ class OrderSuratJalanTest extends TestCase
         $this->assertSame('0812999888', $data['penerima_telepon']);
         $this->assertSame('Bengkel Cikarang', $data['penerima_alamat']);
         $this->assertStringContainsString('Mogok', $data['keterangan']);
-        $this->assertContains('Dongkrak', $data['perlengkapan']);
+        $this->assertContains('Kunci Kontak', $data['perlengkapan']);
+        $this->assertContains('STNK / STCK Profit', $data['perlengkapan']);
+        $this->assertContains('Dongkrak / Stang', $data['perlengkapan']);
         $this->assertContains('Segitiga Pengaman', $data['perlengkapan']);
-        $this->assertContains('Tool Kit', $data['perlengkapan']);
+        $this->assertContains('Reserve Ban / Ban Serep', $data['perlengkapan']);
+        $this->assertCount(12, $data['perlengkapan_kiri']);
+        $this->assertCount(11, $data['perlengkapan_kanan']);
     }
 
     public function test_ambulance_surat_jalan_uses_towing_logo_and_unit_nopol(): void
@@ -129,14 +133,15 @@ class OrderSuratJalanTest extends TestCase
         $this->assertStringContainsString('data:image/png;base64,', $html);
         $this->assertStringContainsString('ROYAL TOWING', $html);
         $this->assertStringContainsString('AMBULANCE', $html);
-        $this->assertStringContainsString('Dongkrak', $html);
+        $this->assertStringContainsString('Kunci Kontak', $html);
+        $this->assertStringContainsString('STNK / STCK Profit', $html);
+        $this->assertStringContainsString('Kaca Spion Tengah (Dalam)', $html);
+        $this->assertStringContainsString('Karpet Dalam Depan', $html);
+        $this->assertStringContainsString('Dongkrak / Stang', $html);
+        $this->assertStringContainsString('Penutup Tangki BBM', $html);
         $this->assertStringContainsString('Segitiga Pengaman', $html);
-        $this->assertStringContainsString('Kunci Roda', $html);
-        $this->assertStringContainsString('Ban Serep', $html);
-        $this->assertStringContainsString('APAR', $html);
-        $this->assertStringContainsString('P3K', $html);
-        $this->assertStringContainsString('Tool Kit', $html);
-        $this->assertStringContainsString('Lainnya', $html);
+        $this->assertStringContainsString('ADA', $html);
+        $this->assertStringContainsString('TIDAK', $html);
         $this->assertStringContainsString('RA.0009', $html);
         $this->assertStringContainsString('B 9 RA', $html);
     }

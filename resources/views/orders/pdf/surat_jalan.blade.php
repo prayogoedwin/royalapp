@@ -74,29 +74,33 @@
         .kv .sep { width: 10px; }
         .split td { width: 50%; vertical-align: top; }
         .split .left { border-right: 1px solid #1e3a8a; }
-        .equip { width: 100%; }
-        .equip td { padding: 6px 10px; vertical-align: middle; width: 50%; }
-        .check {
-            display: inline-block;
-            width: 11px;
-            height: 11px;
-            border: 1.2px solid #222;
-            margin-right: 8px;
-            vertical-align: -1px;
+        .equip-wrap td { width: 50%; vertical-align: top; padding: 0; }
+        .equip-wrap .gap { width: 8px; }
+        .equip {
+            width: 100%;
+            font-size: 8.5px;
         }
-        .lainnya-line {
-            display: inline-block;
-            border-bottom: 1px solid #555;
-            width: 120px;
-            margin-left: 6px;
+        .equip th, .equip td {
+            border: 1px solid #c5d4e8;
+            padding: 3px 5px;
             vertical-align: middle;
         }
+        .equip th {
+            background: #3b82f6;
+            color: #fff;
+            font-weight: bold;
+            text-align: center;
+        }
+        .equip th.item { text-align: left; }
+        .equip td.item { width: auto; }
+        .equip .mark { width: 36px; text-align: center; }
+        .equip tr.alt td { background: #f3f6fa; }
         .notes {
-            min-height: 52px;
-            padding: 8px 10px;
+            min-height: 36px;
+            padding: 6px 10px;
             white-space: pre-wrap;
         }
-        .sign { margin-top: 18px; }
+        .sign { margin-top: 12px; }
         .sign td {
             width: 33%;
             text-align: center;
@@ -104,7 +108,7 @@
             padding: 0 8px;
         }
         .sign-role { font-weight: bold; }
-        .sign-space { height: 58px; }
+        .sign-space { height: 46px; }
         .sign-line {
             border-top: 1px solid #111;
             margin: 0 18px;
@@ -224,33 +228,51 @@
     </table>
 
     <div class="section">PERLENGKAPAN KENDARAAN</div>
-    <div class="box">
-        @php
-            $half = (int) ceil(count($perlengkapan) / 2);
-            $equipLeft = array_slice($perlengkapan, 0, $half);
-            $equipRight = array_slice($perlengkapan, $half);
-        @endphp
-        <table class="equip">
-            @for($i = 0; $i < $half; $i++)
-                <tr>
-                    <td>
-                        @if(isset($equipLeft[$i]))
-                            <span class="check"></span>{{ $equipLeft[$i] }}
-                            @if($equipLeft[$i] === 'Lainnya')
-                                <span class="lainnya-line"></span>
-                            @endif
-                        @endif
-                    </td>
-                    <td>
-                        @if(isset($equipRight[$i]))
-                            <span class="check"></span>{{ $equipRight[$i] }}
-                            @if($equipRight[$i] === 'Lainnya')
-                                <span class="lainnya-line"></span>
-                            @endif
-                        @endif
-                    </td>
-                </tr>
-            @endfor
+    <div class="box" style="padding: 6px;">
+        <table class="equip-wrap">
+            <tr>
+                <td>
+                    <table class="equip">
+                        <thead>
+                            <tr>
+                                <th class="item">PERLENGKAPAN</th>
+                                <th class="mark">ADA</th>
+                                <th class="mark">TIDAK</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($perlengkapan_kiri as $i => $item)
+                                <tr class="{{ $i % 2 === 1 ? 'alt' : '' }}">
+                                    <td class="item">{{ $item }}</td>
+                                    <td class="mark"></td>
+                                    <td class="mark"></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </td>
+                <td class="gap"></td>
+                <td>
+                    <table class="equip">
+                        <thead>
+                            <tr>
+                                <th class="item">PERLENGKAPAN</th>
+                                <th class="mark">ADA</th>
+                                <th class="mark">TIDAK</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($perlengkapan_kanan as $i => $item)
+                                <tr class="{{ $i % 2 === 1 ? 'alt' : '' }}">
+                                    <td class="item">{{ $item }}</td>
+                                    <td class="mark"></td>
+                                    <td class="mark"></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
         </table>
     </div>
 

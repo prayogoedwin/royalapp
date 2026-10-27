@@ -10,20 +10,49 @@ use Carbon\Carbon;
 class SuratJalanData
 {
     /**
+     * @return array{kiri: list<string>, kanan: list<string>}
+     */
+    public static function perlengkapanKolom(): array
+    {
+        return [
+            'kiri' => [
+                'Kunci Kontak',
+                'STNK / STCK Profit',
+                'Buku Manual / Service',
+                'Cadangan Cat',
+                'Radio Tape / CD',
+                'Asbak',
+                'Lighter / Pemantik Api',
+                'AC',
+                'Penahan Sinar Matahari',
+                'Sarung Jok',
+                'Sarung Stir',
+                'Kaca Spion Tengah (Dalam)',
+            ],
+            'kanan' => [
+                'Karpet Dalam Depan',
+                'Karpet Dalam Belakang',
+                'Sandaran Kepala',
+                'Reserve Ban / Ban Serep',
+                'Wheel Dop / Dop Roda',
+                'Dongkrak / Stang',
+                'Tool Set',
+                'Speaker Tambahan',
+                'Penutup Tangki BBM',
+                'P3K',
+                'Segitiga Pengaman',
+            ],
+        ];
+    }
+
+    /**
      * @return list<string>
      */
     public static function perlengkapan(): array
     {
-        return [
-            'Dongkrak',
-            'Segitiga Pengaman',
-            'Kunci Roda',
-            'Ban Serep',
-            'APAR',
-            'P3K',
-            'Tool Kit',
-            'Lainnya',
-        ];
+        $kolom = static::perlengkapanKolom();
+
+        return array_merge($kolom['kiri'], $kolom['kanan']);
     }
 
     /**
@@ -65,6 +94,8 @@ class SuratJalanData
             'penerima_alamat' => static::dash($order->destination_address),
             'keterangan' => static::keterangan($order),
             'perlengkapan' => static::perlengkapan(),
+            'perlengkapan_kiri' => static::perlengkapanKolom()['kiri'],
+            'perlengkapan_kanan' => static::perlengkapanKolom()['kanan'],
         ];
     }
 
