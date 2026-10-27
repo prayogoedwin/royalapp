@@ -14,6 +14,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/device-token', [DeviceTokenController::class, 'store']);
+    Route::post('/device-token/refresh', [DeviceTokenController::class, 'refresh']);
     Route::delete('/device-token', [DeviceTokenController::class, 'destroy']);
     Route::get('/profile', [UserController::class, 'me']);
     Route::put('/profile', [UserController::class, 'updateProfile']);

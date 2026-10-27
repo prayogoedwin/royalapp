@@ -129,6 +129,23 @@ class ApiDocumentation
     )]
     public function storeDeviceToken(): void {}
 
+    #[OA\Post(
+        path: '/api/device-token/refresh',
+        tags: ['Auth'],
+        summary: 'Refresh FCM token (replace old token with new one)',
+        security: [['sanctum' => []]],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(
+            required: ['fcm_token'],
+            properties: [
+                new OA\Property(property: 'fcm_token', type: 'string', description: 'Token FCM baru'),
+                new OA\Property(property: 'old_fcm_token', type: 'string', nullable: true, description: 'Token FCM lama yang diganti'),
+                new OA\Property(property: 'platform', type: 'string', nullable: true, example: 'android'),
+            ]
+        )),
+        responses: [new OA\Response(response: 200, description: 'OK')]
+    )]
+    public function refreshDeviceToken(): void {}
+
     #[OA\Delete(
         path: '/api/device-token',
         tags: ['Auth'],

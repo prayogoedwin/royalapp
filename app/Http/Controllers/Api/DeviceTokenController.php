@@ -50,6 +50,50 @@ class DeviceTokenController extends Controller
     }
 
     /**
+     * @OA\Post(
+     *     path="/api/device-token/refresh",
+     *     tags={"Auth"},
+     *     summary="Replace an old FCM token with a new one",
+     *     security={{"sanctum":{}}},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *
+     *         @OA\JsonContent(
+     *             required={"fcm_token"},
+     *
+     *             @OA\Property(property="fcm_token", type="string", description="New FCM token"),
+     *             @OA\Property(property="old_fcm_token", type="string", nullable=true, description="Previous FCM token to replace"),
+     *             @OA\Property(property="platform", type="string", example="android")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(response=200, description="Success")
+     * )
+     */
+    public function refresh(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'fcm_token' => ['required', 'string', 'max:512'],
+            'old_fcm_token' => ['nullable', 'string', 'max:512'],
+            'platform' => ['nullable', 'string', 'max:32'],
+        ]);
+
+        $this->tokens->refresh(
+            $request->user(),
+            $validated['fcm_token'],
+            $validated['old_fcm_token'] ?? null,
+            $validated['platform'] ?? null
+        );
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Device token diperbarui.',
+            'data' => [],
+        ]);
+    }
+
+    /**
      * @OA\Delete(
      *     path="/api/device-token",
      *     tags={"Auth"},

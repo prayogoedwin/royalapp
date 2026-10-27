@@ -125,4 +125,48 @@ class DeviceTokenApiTest extends TestCase
             'fcm_token' => 'token-logout',
         ]);
     }
+
+    public function test_refresh_replaces_old_fcm_token(): void
+    {
+        $user = User::factory()->create();
+        UserDevice::create([
+            'user_id' => $user->id,
+            'fcm_token' => 'token-lama',
+            'platform' => 'android',
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/device-token/refresh', [
+            'fcm_token' => 'token-baru',
+            'old_fcm_token' => 'token-lama',
+            'platform' => 'android',
+        ])
+            ->assertOk()
+            ->assertJsonPath('status', true);
+
+        $this->assertDatabaseHas('user_devices', [
+            'user_id' => $user->id,
+            'fcm_token' => 'token-baru',
+        ]);
+        $this->assertDatabaseMissing('user_devices', [
+            'fcm_token' => 'token-lama',
+        ]);
+        $this->assertDatabaseCount('user_devices', 1);
+    }
+
+    public function test_refresh_without_old_token_just_saves_new_one(): void
+    {
+        $user = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/device-token/refresh', [
+            'fcm_token' => 'token-baru',
+        ])->assertOk();
+
+        $this->assertDatabaseHas('user_devices', [
+            'user_id' => $user->id,
+            'fcm_token' => 'token-baru',
+        ]);
+    }
 }
