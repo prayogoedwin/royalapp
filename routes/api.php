@@ -34,6 +34,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/master/roles', [MasterApiController::class, 'roles']);
     Route::get('/master/positions', [MasterApiController::class, 'positions']);
     Route::get('/orders', [OrderApiController::class, 'myOrders']);
+    Route::get('/orders/{order}/surat-jalan', [OrderApiController::class, 'suratJalan']);
     Route::get('/orders/{order}', [OrderApiController::class, 'show']);
 
     Route::get('/orders/{order}/photos', [OrderApiController::class, 'photos']);

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AcceptQuerySanctumToken;
 use App\Http\Middleware\ParseMultipartPut;
 use App\Http\Middleware\PermissionMiddleware;
 use App\Http\Middleware\RoleMiddleware;
@@ -22,10 +23,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->api(prepend: [
             ParseMultipartPut::class,
+            AcceptQuerySanctumToken::class,
         ]);
         $middleware->alias([
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,
+            'query.sanctum' => AcceptQuerySanctumToken::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

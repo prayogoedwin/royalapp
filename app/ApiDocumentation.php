@@ -420,6 +420,23 @@ class ApiDocumentation
     )]
     public function orderDetail(): void {}
 
+    #[OA\Get(
+        path: '/api/orders/{order}/surat-jalan',
+        tags: ['Orders'],
+        summary: 'Surat Jalan HTML web view (Bearer token or ?token=)',
+        security: [['sanctum' => []]],
+        parameters: [
+            new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1)),
+            new OA\Parameter(name: 'token', in: 'query', required: false, description: 'Sanctum token for WebView if Authorization header is not sent', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'HTML'),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 404, description: 'Order not found'),
+        ]
+    )]
+    public function orderSuratJalan(): void {}
+
     #[OA\Get(path: '/api/orders/{order}/photos', tags: ['Order Photos'], summary: 'List photos', security: [['sanctum' => []]], parameters: [new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
     #[OA\Post(
         path: '/api/orders/{order}/photos',

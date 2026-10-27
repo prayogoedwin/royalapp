@@ -11,9 +11,11 @@ use App\Models\OrderReport;
 use App\Models\OrderStatus;
 use App\Models\OrderVehicleIssue;
 use App\Support\OrderCategoryOptions;
+use App\Support\SuratJalanData;
 use App\Support\UploadPath;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use OpenApi\Annotations as OA;
 
@@ -152,6 +154,31 @@ class OrderApiController extends Controller
         ]);
 
         return $this->okResponse($order);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/orders/{order}/surat-jalan",
+     *     tags={"Orders"},
+     *     summary="Surat Jalan HTML web view",
+     *     security={{"sanctum":{}}},
+     *
+     *     @OA\Parameter(name="order", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="token", in="query", required=false, description="Sanctum token for WebView (optional if Authorization Bearer is sent)", @OA\Schema(type="string")),
+     *
+     *     @OA\Response(response=200, description="HTML")
+     * )
+     */
+    public function suratJalan(Request $request, int $orderId): Response|JsonResponse
+    {
+        $order = $this->findUserOrder($request, $orderId);
+        if (! $order) {
+            return $this->errorResponse('Order not found.', 404);
+        }
+
+        return response()
+            ->view('orders.pdf.surat_jalan', SuratJalanData::fromOrder($order))
+            ->header('Content-Type', 'text/html; charset=UTF-8');
     }
 
     /** @OA\Get(path="/api/orders/{order}/photos", tags={"Order Photos"}, summary="List order photos", security={{"sanctum":{}}}, @OA\Parameter(name="order", in="path", required=true, @OA\Schema(type="integer")), @OA\Response(response=200, description="Success")) */

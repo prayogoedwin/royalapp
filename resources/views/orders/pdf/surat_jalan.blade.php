@@ -2,6 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     @php
         $brand_blue = $brand_blue ?? '#4CA7DC';
         $cars = $cars ?? [];
@@ -109,6 +110,9 @@
         .notice ul { margin: 0; padding-left: 14px; }
         .notice li { margin-bottom: 3px; font-size: 7.5px; line-height: 1.35; color: #333; }
         .pay-body { font-size: 8px; line-height: 1.4; white-space: pre-wrap; }
+        @media screen {
+            body { max-width: 800px; margin: 0 auto; padding: 16px; background: #fff; }
+        }
     </style>
 </head>
 <body>
