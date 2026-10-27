@@ -5,10 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Division;
 use App\Models\Employee;
 use App\Models\EmployeeType;
-use App\Models\Position;
 use App\Models\Pool;
+use App\Models\Position;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Firebase\FcmClient;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +25,7 @@ class EmployeeController extends Controller
         if ($request->ajax()) {
             $employees = Employee::with(['user', 'position', 'division', 'employeeType'])
                 ->select('employees.*');
-            
+
             return DataTables::of($employees)
                 ->addColumn('user_name', function ($employee) {
                     return $employee->user ? $employee->user->name : '-';
@@ -45,7 +46,8 @@ class EmployeeController extends Controller
                         'resigned' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
                     ];
                     $color = $colors[$employee->status] ?? 'bg-gray-100 text-gray-800';
-                    return '<span class="px-2 py-1 rounded-full text-xs font-medium ' . $color . '">' . ucfirst($employee->status) . '</span>';
+
+                    return '<span class="px-2 py-1 rounded-full text-xs font-medium '.$color.'">'.ucfirst($employee->status).'</span>';
                 })
                 ->addColumn('actions', function ($employee) {
                     $actions = '';
@@ -53,25 +55,25 @@ class EmployeeController extends Controller
                     $myEmployeeId = auth()->user()?->employee?->id;
                     $canViewPresensi = auth()->user()->hasPermission('view-presensi');
                     $canViewPresensiAll = auth()->user()->hasPermission('view-presensi-all');
-                    
+
                     if (auth()->user()->hasPermission('show-employees')) {
-                        $actions .= '<a href="' . route('employees.show', $employee) . '" class="text-green-600 dark:text-green-400 hover:underline mr-3">View</a>';
+                        $actions .= '<a href="'.route('employees.show', $employee).'" class="text-green-600 dark:text-green-400 hover:underline mr-3">View</a>';
                     }
-                    
+
                     if (auth()->user()->hasPermission('edit-employees')) {
-                        $actions .= '<a href="' . route('employees.edit', $employee) . '" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Edit</a>';
+                        $actions .= '<a href="'.route('employees.edit', $employee).'" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Edit</a>';
                     }
 
                     if (auth()->user()->hasPermission('edit-employees') && ! $employee->user) {
-                        $actions .= '<form action="' . route('employees.create-account', $employee) . '" method="POST" class="inline" onsubmit="return confirm(\'Buat akun login untuk employee ini? Password default sama dengan NIK.\')">
-                            ' . csrf_field() . '
+                        $actions .= '<form action="'.route('employees.create-account', $employee).'" method="POST" class="inline" onsubmit="return confirm(\'Buat akun login untuk employee ini? Password default sama dengan NIK.\')">
+                            '.csrf_field().'
                             <button type="submit" class="text-amber-600 dark:text-amber-400 hover:underline mr-3">Buat Akun</button>
                         </form>';
                     }
-                    
+
                     if (auth()->user()->hasPermission('delete-employees') && (int) $employee->user_id !== (int) auth()->id()) {
-                        $actions .= '<form action="' . route('employees.destroy', $employee) . '" method="POST" class="inline" onsubmit="return confirm(\'Hapus employee ini? Akun user terkait juga akan dihapus.\')">
-                            ' . csrf_field() . method_field('DELETE') . '
+                        $actions .= '<form action="'.route('employees.destroy', $employee).'" method="POST" class="inline" onsubmit="return confirm(\'Hapus employee ini? Akun user terkait juga akan dihapus.\')">
+                            '.csrf_field().method_field('DELETE').'
                             <button type="submit" class="text-red-600 dark:text-red-400 hover:underline">Delete</button>
                         </form>';
                     }
@@ -79,12 +81,12 @@ class EmployeeController extends Controller
                     // Presensi button: allow self, or admin with edit-absensi-status permission
                     if ($myEmployeeId && (int) $employee->id === (int) $myEmployeeId) {
                         if ($canViewPresensi) {
-                            $actions .= '<a href="' . route('presensi.my') . '" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Presensi</a>';
+                            $actions .= '<a href="'.route('presensi.my').'" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Presensi</a>';
                         }
                     } elseif ($canViewPresensiAll) {
-                        $actions .= '<a href="' . route('employees.presensi', $employee) . '" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Presensi</a>';
+                        $actions .= '<a href="'.route('employees.presensi', $employee).'" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Presensi</a>';
                     }
-                    
+
                     return $actions ?: '-';
                 })
                 ->editColumn('created_at', function ($employee) {
@@ -117,7 +119,7 @@ class EmployeeController extends Controller
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'roles' => ['nullable', 'array'],
             'roles.*' => ['exists:roles,id'],
-            
+
             // Employee data
             'position_id' => ['required', 'exists:positions,id'],
             'division_id' => ['required', 'exists:divisions,id'],
@@ -143,7 +145,7 @@ class EmployeeController extends Controller
             ]);
 
             // Assign roles if provided
-            if (!empty($validated['roles'])) {
+            if (! empty($validated['roles'])) {
                 $user->roles()->sync($validated['roles']);
             }
 
@@ -169,15 +171,50 @@ class EmployeeController extends Controller
             return to_route('employees.index')->with('status', 'Employee created successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withInput()->withErrors(['error' => 'Failed to create employee: ' . $e->getMessage()]);
+
+            return back()->withInput()->withErrors(['error' => 'Failed to create employee: '.$e->getMessage()]);
         }
     }
 
     public function show(Employee $employee): View
     {
-        $employee->load(['user.roles', 'position', 'division', 'employeeType']);
+        $employee->load(['user.roles', 'user.devices', 'position', 'division', 'employeeType', 'pool']);
 
         return view('employees.show', compact('employee'));
+    }
+
+    public function testNotification(Employee $employee, FcmClient $fcm): RedirectResponse
+    {
+        $employee->loadMissing(['user.devices']);
+
+        if (! $employee->user) {
+            return back()->withErrors(['error' => 'Employee ini belum punya akun login.']);
+        }
+
+        $tokens = $employee->user->devices->pluck('fcm_token')->filter()->values()->all();
+        if ($tokens === []) {
+            return back()->withErrors(['error' => 'User ini belum punya FCM token. Buka aplikasi mobile dan login dulu.']);
+        }
+
+        if (! $fcm->isEnabled()) {
+            return back()->withErrors(['error' => 'Firebase belum aktif di server ini.']);
+        }
+
+        $sent = $fcm->sendToTokens(
+            $tokens,
+            'Tes notifikasi',
+            'Ini tes push untuk '.$employee->full_name.'.',
+            [
+                'type' => 'test',
+                'employee_id' => (string) $employee->id,
+            ]
+        );
+
+        if ($sent < 1) {
+            return back()->withErrors(['error' => 'Gagal mengirim tes notifikasi. Cek log atau token perangkat.']);
+        }
+
+        return back()->with('status', 'Tes notifikasi terkirim ke '.$sent.' perangkat.');
     }
 
     public function createAccount(Employee $employee): RedirectResponse
@@ -252,16 +289,16 @@ class EmployeeController extends Controller
         $validated = $request->validate([
             // User data
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . ($employee->user_id ?? 'NULL')],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.($employee->user_id ?? 'NULL')],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
             'roles' => ['nullable', 'array'],
             'roles.*' => ['exists:roles,id'],
-            
+
             // Employee data
             'position_id' => ['required', 'exists:positions,id'],
             'division_id' => ['required', 'exists:divisions,id'],
             'employee_type_id' => ['required', 'exists:employee_types,id'],
-            'nik' => ['required', 'string', 'unique:employees,nik,' . $employee->id, 'max:255'],
+            'nik' => ['required', 'string', 'unique:employees,nik,'.$employee->id, 'max:255'],
             'full_name' => ['required', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:255'],
             'address' => ['nullable', 'string'],
@@ -280,13 +317,13 @@ class EmployeeController extends Controller
                     'name' => $validated['name'],
                     'email' => $validated['email'],
                 ];
-                
-                if (!empty($validated['password'])) {
+
+                if (! empty($validated['password'])) {
                     $userData['password'] = Hash::make($validated['password']);
                 }
-                
+
                 $employee->user->update($userData);
-                
+
                 // Sync roles
                 $employee->user->roles()->sync($validated['roles'] ?? []);
             } else {
@@ -296,11 +333,11 @@ class EmployeeController extends Controller
                     'email' => $validated['email'],
                     'password' => Hash::make($validated['password'] ?? 'password'),
                 ]);
-                
-                if (!empty($validated['roles'])) {
+
+                if (! empty($validated['roles'])) {
                     $user->roles()->sync($validated['roles']);
                 }
-                
+
                 $employee->user_id = $user->id;
             }
 
@@ -325,7 +362,8 @@ class EmployeeController extends Controller
             return to_route('employees.index')->with('status', 'Employee updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withInput()->withErrors(['error' => 'Failed to update employee: ' . $e->getMessage()]);
+
+            return back()->withInput()->withErrors(['error' => 'Failed to update employee: '.$e->getMessage()]);
         }
     }
 
@@ -350,7 +388,8 @@ class EmployeeController extends Controller
             return to_route('employees.index')->with('status', 'Employee dan user terkait berhasil dihapus.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to delete employee: ' . $e->getMessage()]);
+
+            return back()->withErrors(['error' => 'Failed to delete employee: '.$e->getMessage()]);
         }
     }
 }

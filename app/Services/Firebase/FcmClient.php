@@ -23,17 +23,22 @@ class FcmClient
      * @param  list<string>  $tokens
      * @param  array<string, string>  $data
      */
-    public function sendToTokens(array $tokens, string $title, string $body, array $data = []): void
+    public function sendToTokens(array $tokens, string $title, string $body, array $data = []): int
     {
         $tokens = array_values(array_unique(array_filter($tokens)));
 
         if ($tokens === [] || ! $this->isEnabled()) {
-            return;
+            return 0;
         }
 
+        $sent = 0;
         foreach ($tokens as $token) {
-            $this->send($token, $title, $body, $data);
+            if ($this->send($token, $title, $body, $data)) {
+                $sent++;
+            }
         }
+
+        return $sent;
     }
 
     /**

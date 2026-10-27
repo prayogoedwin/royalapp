@@ -104,6 +104,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('employees/create', [EmployeeController::class, 'create'])->name('employees.create')->middleware('permission:create-employees');
     Route::post('employees', [EmployeeController::class, 'store'])->name('employees.store')->middleware('permission:create-employees');
     Route::get('employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show')->middleware('permission:show-employees');
+    Route::post('employees/{employee}/test-notification', [EmployeeController::class, 'testNotification'])->name('employees.test-notification')->middleware('permission:show-employees');
     Route::get('employees/{employee}/edit', [EmployeeController::class, 'edit'])->name('employees.edit')->middleware('permission:edit-employees');
     Route::put('employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update')->middleware('permission:edit-employees');
     Route::post('employees/{employee}/create-account', [EmployeeController::class, 'createAccount'])->name('employees.create-account')->middleware('permission:edit-employees');

@@ -167,7 +167,7 @@
                                 {{ __('Pool') }}
                             </label>
                             <div class="text-gray-900 dark:text-gray-100">
-                                {{ $employee->pool->pool_name ?? '-' }}
+                                {{ $employee->pool?->pool_name ?? '-' }}
                             </div>
                         </div>
 
@@ -293,6 +293,60 @@
                             {{ $employee->updated_at->format('M d, Y H:i') }}
                         </div>
                     </div>
+                </div>
+            </div>
+
+            @php
+                $fcmDevices = $employee->user?->devices ?? collect();
+                $fcmCount = $fcmDevices->count();
+            @endphp
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">{{ __('Notifikasi FCM') }}</h2>
+                </div>
+                <div class="p-6 space-y-4">
+                    @error('error')
+                        <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Status token
+                        </label>
+                        @if(! $employee->user)
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+                                Belum punya akun
+                            </span>
+                        @elseif($fcmCount > 0)
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                Sudah punya FCM token ({{ $fcmCount }} perangkat)
+                            </span>
+                        @else
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                                Belum punya FCM token
+                            </span>
+                        @endif
+                    </div>
+
+                    @if($fcmCount > 0)
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                            Terakhir aktif: {{ optional($fcmDevices->sortByDesc('last_used_at')->first()?->last_used_at)->format('d M Y H:i') ?? '-' }}
+                        </p>
+                    @endif
+
+                    @error('error')
+                        <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+
+                    <form action="{{ route('employees.test-notification', $employee) }}" method="POST">
+                        @csrf
+                        <button
+                            type="submit"
+                            @disabled(! $employee->user || $fcmCount < 1)
+                            class="w-full px-4 py-2 rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Tes notifikasi
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
