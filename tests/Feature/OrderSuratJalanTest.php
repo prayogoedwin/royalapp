@@ -105,6 +105,10 @@ class OrderSuratJalanTest extends TestCase
         $this->assertContains('Reserve Ban / Ban Serep', $data['perlengkapan']);
         $this->assertCount(12, $data['perlengkapan_kiri']);
         $this->assertCount(11, $data['perlengkapan_kanan']);
+        $this->assertSame('#4CA7DC', $data['brand_blue']);
+        $this->assertNotEmpty($data['cars']['rear_front']);
+        $this->assertNotEmpty($data['cars']['side_right']);
+        $this->assertNotEmpty($data['cars']['front']);
     }
 
     public function test_ambulance_surat_jalan_uses_towing_logo_and_unit_nopol(): void
@@ -142,6 +146,10 @@ class OrderSuratJalanTest extends TestCase
         $this->assertStringContainsString('Segitiga Pengaman', $html);
         $this->assertStringContainsString('ADA', $html);
         $this->assertStringContainsString('TIDAK', $html);
+        $this->assertStringContainsString('#4CA7DC', $html);
+        $this->assertStringContainsString('KONDISI KENDARAAN', $html);
+        $this->assertStringContainsString('Samping Kanan', $html);
+        $this->assertStringContainsString('Samping Kiri', $html);
         $this->assertStringContainsString('RA.0009', $html);
         $this->assertStringContainsString('B 9 RA', $html);
     }

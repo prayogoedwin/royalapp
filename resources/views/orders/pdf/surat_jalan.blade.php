@@ -2,132 +2,128 @@
 <html>
 <head>
     <meta charset="utf-8">
+    @php
+        $brand_blue = $brand_blue ?? '#4CA7DC';
+        $cars = $cars ?? [];
+    @endphp
     <title>Surat Jalan {{ $nomor }}</title>
     <style>
-        @page { margin: 18mm 16mm 16mm 16mm; }
+        @page { margin: 10mm 11mm 10mm 11mm; }
         body {
             font-family: DejaVu Sans, sans-serif;
-            font-size: 11px;
-            color: #111;
+            font-size: 10px;
+            color: #222;
             margin: 0;
         }
         table { width: 100%; border-collapse: collapse; }
         .header td { vertical-align: middle; }
-        .logo-img {
-            width: 148px;
-            height: auto;
-            display: block;
-        }
-        .logo-box {
-            width: 118px;
-            text-align: left;
-            line-height: 0.95;
-            font-family: Times-Roman, Times, serif;
-        }
-        .logo-top {
-            font-size: 22px;
-            font-weight: bold;
-            letter-spacing: 1px;
-            color: #111;
-        }
-        .logo-bottom {
-            font-size: 16px;
-            font-weight: bold;
-            letter-spacing: 0.5px;
-            color: #111;
-        }
+        .logo-img { width: 132px; height: auto; display: block; }
+        .logo-box { font-family: Times-Roman, Times, serif; line-height: 0.95; }
+        .logo-top { font-size: 20px; font-weight: bold; }
+        .logo-bottom { font-size: 15px; font-weight: bold; }
         .company { text-align: right; }
         .company-name {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: bold;
-            color: #1e3a8a;
-            letter-spacing: 0.3px;
+            color: {{ $brand_blue }};
         }
-        .company-line { color: #333; font-size: 10px; margin-top: 2px; }
+        .company-line { color: #555; font-size: 9px; margin-top: 1px; }
         .rule {
             border: 0;
-            border-top: 2px solid #1e3a8a;
-            margin: 10px 0 8px;
+            border-top: 1.5px solid {{ $brand_blue }};
+            margin: 8px 0 6px;
         }
         .title {
             text-align: center;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
-            letter-spacing: 3px;
-            margin: 4px 0 10px;
+            letter-spacing: 2px;
+            color: {{ $brand_blue }};
+            margin: 2px 0 8px;
         }
         .meta td { padding: 1px 0; }
-        .meta .label { width: 58px; }
-        .section {
+        .meta .label { width: 48px; }
+        .heading {
             font-size: 11px;
             font-weight: bold;
-            letter-spacing: 0.6px;
-            background: #1e3a8a;
-            color: #fff;
-            padding: 5px 8px;
-            margin: 10px 0 0;
+            color: {{ $brand_blue }};
+            letter-spacing: 0.4px;
+            margin: 8px 0 4px;
         }
-        .box { border: 1px solid #1e3a8a; border-top: 0; }
-        .kv { width: 100%; }
-        .kv td { padding: 6px 8px; vertical-align: top; }
-        .kv .lbl { width: 28%; color: #333; }
-        .kv .sep { width: 10px; }
-        .split td { width: 50%; vertical-align: top; }
-        .split .left { border-right: 1px solid #1e3a8a; }
-        .equip-wrap td { width: 50%; vertical-align: top; padding: 0; }
-        .equip-wrap .gap { width: 8px; }
-        .equip {
-            width: 100%;
-            font-size: 8.5px;
-        }
+        .heading-row td { vertical-align: bottom; padding: 0; }
+        .heading-row .cars { text-align: right; width: 200px; }
+        .heading-row .cars img { height: 38px; width: auto; }
+        .fields td { padding: 3px 4px 3px 0; vertical-align: top; }
+        .fields .lbl { width: 26%; color: #555; }
+        .fields .sep { width: 8px; color: #555; }
+        .split > tbody > tr > td { width: 50%; vertical-align: top; }
+        .split .pad-left { padding-right: 10px; }
+        .split .pad-right { padding-left: 10px; }
+        .equip-wrap > tbody > tr > td { width: 50%; vertical-align: top; padding: 0; }
+        .equip-wrap .gap { width: 10px; }
+        .equip { width: 100%; font-size: 8px; table-layout: fixed; }
         .equip th, .equip td {
-            border: 1px solid #c5d4e8;
-            padding: 3px 5px;
+            border: 1px solid #d9d9d9;
+            padding: 2.5px 5px;
             vertical-align: middle;
         }
         .equip th {
-            background: #3b82f6;
+            background: {{ $brand_blue }};
             color: #fff;
             font-weight: bold;
             text-align: center;
         }
-        .equip th.item { text-align: left; }
-        .equip td.item { width: auto; }
-        .equip .mark { width: 36px; text-align: center; }
-        .equip tr.alt td { background: #f3f6fa; }
-        .notes {
-            min-height: 36px;
-            padding: 6px 10px;
-            white-space: pre-wrap;
+        .equip th.item { text-align: left; width: 68%; }
+        .equip td.item { width: 68%; }
+        .equip .mark { width: 16%; text-align: center; }
+        .equip tr.alt td { background: #f6f6f6; }
+        .equip tr.alt td.mark { background: #f6f6f6; }
+        .cars-grid td {
+            width: 50%;
+            text-align: center;
+            vertical-align: middle;
+            padding: 2px 10px 4px;
         }
-        .sign { margin-top: 12px; }
+        .cars-grid img { height: 62px; width: auto; max-width: 95%; }
+        .car-label {
+            font-size: 7px;
+            color: #777;
+            margin-top: 1px;
+        }
+        .notes {
+            min-height: 22px;
+            padding: 4px 2px;
+            white-space: pre-wrap;
+            border-bottom: 1px solid #ddd;
+        }
+        .sign { margin-top: 10px; }
         .sign td {
             width: 33%;
             text-align: center;
             vertical-align: top;
             padding: 0 8px;
         }
-        .sign-role { font-weight: bold; }
-        .sign-space { height: 46px; }
+        .sign-role { font-weight: bold; color: {{ $brand_blue }}; }
+        .sign-space { height: 32px; }
         .sign-line {
-            border-top: 1px solid #111;
-            margin: 0 18px;
-            padding-top: 4px;
-            font-size: 9px;
-            color: #444;
-        }
-        .footer {
-            margin-top: 16px;
-            text-align: center;
+            border-top: 1px solid #333;
+            margin: 0 16px;
+            padding-top: 3px;
             font-size: 8px;
             color: #666;
+        }
+        .footer {
+            margin-top: 10px;
+            text-align: center;
+            font-size: 7.5px;
+            color: #888;
         }
     </style>
 </head>
 <body>
     <table class="header">
         <tr>
-            <td style="width: 160px;">
+            <td style="width: 150px;">
                 @if(!empty($logo_src))
                     <img src="{{ $logo_src }}" class="logo-img" alt="ROYAL TOWING">
                 @else
@@ -156,128 +152,161 @@
         </tr>
     </table>
 
-    <div class="section">DATA KENDARAAN</div>
-    <div class="box">
-        <table class="kv">
-            <tr>
-                <td class="lbl">Jenis Kendaraan</td>
-                <td class="sep">:</td>
-                <td>{{ $jenis_kendaraan }}</td>
-                <td class="lbl">No. Polisi</td>
-                <td class="sep">:</td>
-                <td>{{ $nopol }}</td>
-            </tr>
-            <tr>
-                <td class="lbl">Driver</td>
-                <td class="sep">:</td>
-                <td>{{ $driver }}</td>
-                <td class="lbl">Asisten</td>
-                <td class="sep">:</td>
-                <td>{{ $asisten }}</td>
-            </tr>
-        </table>
-    </div>
-
-    <table class="split" style="margin-top: 10px;">
+    <div class="heading">DATA KENDARAAN</div>
+    <table class="fields">
         <tr>
-            <td class="left">
-                <div class="section" style="margin-top: 0;">PENGIRIM</div>
-                <div class="box">
-                    <table class="kv">
-                        <tr>
-                            <td class="lbl">Nama</td>
-                            <td class="sep">:</td>
-                            <td>{{ $pengirim_nama }}</td>
-                        </tr>
-                        <tr>
-                            <td class="lbl">Telepon</td>
-                            <td class="sep">:</td>
-                            <td>{{ $pengirim_telepon }}</td>
-                        </tr>
-                        <tr>
-                            <td class="lbl">Alamat</td>
-                            <td class="sep">:</td>
-                            <td>{{ $pengirim_alamat }}</td>
-                        </tr>
-                    </table>
-                </div>
+            <td class="lbl">Jenis Kendaraan</td>
+            <td class="sep">:</td>
+            <td>{{ $jenis_kendaraan }}</td>
+            <td class="lbl">No. Polisi</td>
+            <td class="sep">:</td>
+            <td>{{ $nopol }}</td>
+        </tr>
+        <tr>
+            <td class="lbl">Driver</td>
+            <td class="sep">:</td>
+            <td>{{ $driver }}</td>
+            <td class="lbl">Asisten</td>
+            <td class="sep">:</td>
+            <td>{{ $asisten }}</td>
+        </tr>
+    </table>
+
+    <table class="split">
+        <tr>
+            <td class="pad-left">
+                <div class="heading">PENGIRIM</div>
+                <table class="fields">
+                    <tr>
+                        <td class="lbl">Nama</td>
+                        <td class="sep">:</td>
+                        <td>{{ $pengirim_nama }}</td>
+                    </tr>
+                    <tr>
+                        <td class="lbl">Telepon</td>
+                        <td class="sep">:</td>
+                        <td>{{ $pengirim_telepon }}</td>
+                    </tr>
+                    <tr>
+                        <td class="lbl">Alamat</td>
+                        <td class="sep">:</td>
+                        <td>{{ $pengirim_alamat }}</td>
+                    </tr>
+                </table>
             </td>
-            <td>
-                <div class="section" style="margin-top: 0;">PENERIMA</div>
-                <div class="box">
-                    <table class="kv">
-                        <tr>
-                            <td class="lbl">Nama</td>
-                            <td class="sep">:</td>
-                            <td>{{ $penerima_nama }}</td>
-                        </tr>
-                        <tr>
-                            <td class="lbl">Telepon</td>
-                            <td class="sep">:</td>
-                            <td>{{ $penerima_telepon }}</td>
-                        </tr>
-                        <tr>
-                            <td class="lbl">Alamat</td>
-                            <td class="sep">:</td>
-                            <td>{{ $penerima_alamat }}</td>
-                        </tr>
-                    </table>
-                </div>
+            <td class="pad-right">
+                <div class="heading">PENERIMA</div>
+                <table class="fields">
+                    <tr>
+                        <td class="lbl">Nama</td>
+                        <td class="sep">:</td>
+                        <td>{{ $penerima_nama }}</td>
+                    </tr>
+                    <tr>
+                        <td class="lbl">Telepon</td>
+                        <td class="sep">:</td>
+                        <td>{{ $penerima_telepon }}</td>
+                    </tr>
+                    <tr>
+                        <td class="lbl">Alamat</td>
+                        <td class="sep">:</td>
+                        <td>{{ $penerima_alamat }}</td>
+                    </tr>
+                </table>
             </td>
         </tr>
     </table>
 
-    <div class="section">PERLENGKAPAN KENDARAAN</div>
-    <div class="box" style="padding: 6px;">
-        <table class="equip-wrap">
-            <tr>
-                <td>
-                    <table class="equip">
-                        <thead>
-                            <tr>
-                                <th class="item">PERLENGKAPAN</th>
-                                <th class="mark">ADA</th>
-                                <th class="mark">TIDAK</th>
+    <table class="heading-row">
+        <tr>
+            <td><div class="heading" style="margin: 10px 0 6px;">PERLENGKAPAN KENDARAAN</div></td>
+            <td class="cars">
+                @if(!empty($cars['rear_front']))
+                    <img src="{{ $cars['rear_front'] }}" alt="Denah mobil belakang dan depan">
+                @endif
+            </td>
+        </tr>
+    </table>
+    <table class="equip-wrap">
+        <tr>
+            <td>
+                <table class="equip">
+                    <thead>
+                        <tr>
+                            <th class="item">PERLENGKAPAN</th>
+                            <th class="mark">ADA</th>
+                            <th class="mark">TIDAK</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($perlengkapan_kiri as $i => $item)
+                            <tr class="{{ $i % 2 === 1 ? 'alt' : '' }}">
+                                <td class="item">{{ $item }}</td>
+                                <td class="mark"></td>
+                                <td class="mark"></td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($perlengkapan_kiri as $i => $item)
-                                <tr class="{{ $i % 2 === 1 ? 'alt' : '' }}">
-                                    <td class="item">{{ $item }}</td>
-                                    <td class="mark"></td>
-                                    <td class="mark"></td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </td>
-                <td class="gap"></td>
-                <td>
-                    <table class="equip">
-                        <thead>
-                            <tr>
-                                <th class="item">PERLENGKAPAN</th>
-                                <th class="mark">ADA</th>
-                                <th class="mark">TIDAK</th>
+                        @endforeach
+                    </tbody>
+                </table>
+            </td>
+            <td class="gap"></td>
+            <td>
+                <table class="equip">
+                    <thead>
+                        <tr>
+                            <th class="item">PERLENGKAPAN</th>
+                            <th class="mark">ADA</th>
+                            <th class="mark">TIDAK</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($perlengkapan_kanan as $i => $item)
+                            <tr class="{{ $i % 2 === 1 ? 'alt' : '' }}">
+                                <td class="item">{{ $item }}</td>
+                                <td class="mark"></td>
+                                <td class="mark"></td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($perlengkapan_kanan as $i => $item)
-                                <tr class="{{ $i % 2 === 1 ? 'alt' : '' }}">
-                                    <td class="item">{{ $item }}</td>
-                                    <td class="mark"></td>
-                                    <td class="mark"></td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </td>
-            </tr>
-        </table>
-    </div>
+                        @endforeach
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    </table>
 
-    <div class="section">KETERANGAN</div>
-    <div class="box notes">{{ $keterangan !== '' ? $keterangan : ' ' }}</div>
+    <div class="heading">KONDISI KENDARAAN</div>
+    <table class="cars-grid">
+        <tr>
+            <td>
+                @if(!empty($cars['side_right']))
+                    <img src="{{ $cars['side_right'] }}" alt="Samping kanan">
+                @endif
+                <div class="car-label">Samping Kanan</div>
+            </td>
+            <td>
+                @if(!empty($cars['side_left']))
+                    <img src="{{ $cars['side_left'] }}" alt="Samping kiri">
+                @endif
+                <div class="car-label">Samping Kiri</div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                @if(!empty($cars['rear']))
+                    <img src="{{ $cars['rear'] }}" alt="Belakang">
+                @endif
+                <div class="car-label">Belakang</div>
+            </td>
+            <td>
+                @if(!empty($cars['front']))
+                    <img src="{{ $cars['front'] }}" alt="Depan">
+                @endif
+                <div class="car-label">Depan</div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="heading">KETERANGAN</div>
+    <div class="notes">{{ $keterangan !== '' ? $keterangan : ' ' }}</div>
 
     <table class="sign">
         <tr>

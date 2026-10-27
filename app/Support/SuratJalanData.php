@@ -96,12 +96,33 @@ class SuratJalanData
             'perlengkapan' => static::perlengkapan(),
             'perlengkapan_kiri' => static::perlengkapanKolom()['kiri'],
             'perlengkapan_kanan' => static::perlengkapanKolom()['kanan'],
+            'cars' => static::carSrcs(),
+            'brand_blue' => (string) config('royal.brand_blue', '#4CA7DC'),
         ];
     }
 
     public static function logoSrc(): ?string
     {
-        $path = public_path('images/logo-royal-towing.png');
+        return static::imageDataUri('images/logo-royal-towing.png');
+    }
+
+    /**
+     * @return array<string, string|null>
+     */
+    public static function carSrcs(): array
+    {
+        return [
+            'side_right' => static::imageDataUri('images/surat-jalan/car-side-right.png'),
+            'side_left' => static::imageDataUri('images/surat-jalan/car-side-left.png'),
+            'rear' => static::imageDataUri('images/surat-jalan/car-rear.png'),
+            'front' => static::imageDataUri('images/surat-jalan/car-front.png'),
+            'rear_front' => static::imageDataUri('images/surat-jalan/car-rear-front.png'),
+        ];
+    }
+
+    public static function imageDataUri(string $relativePublicPath): ?string
+    {
+        $path = public_path($relativePublicPath);
 
         if (! is_file($path)) {
             return null;
