@@ -82,8 +82,12 @@ class SuratJalanData
             'company_email' => (string) config('royal.company_email'),
             'nomor' => (string) $order->order_number,
             'tanggal' => $tanggal->locale('id')->translatedFormat('d F Y'),
+            'kode_unit' => static::dash($order->unit_code),
             'jenis_kendaraan' => static::jenisKendaraan($order, $unit, $isTowing),
-            'nopol' => $unit?->nopol ?: (string) $order->unit_code,
+            'merk_tipe' => static::jenisKendaraan($order, $unit, $isTowing),
+            'warna' => '-',
+            'no_rangka' => '-',
+            'nopol' => $unit?->nopol ?: static::dash($order->unit_code),
             'driver' => static::driverName($order),
             'asisten' => static::asistenName($order),
             'pengirim_nama' => static::dash($order->customer_name),
@@ -93,6 +97,8 @@ class SuratJalanData
             'penerima_telepon' => static::dash($order->orderTowing?->receiver_phone),
             'penerima_alamat' => static::dash($order->destination_address),
             'keterangan' => static::keterangan($order),
+            'catatan' => static::keterangan($order),
+            'pembayaran' => static::pembayaran($order),
             'perlengkapan' => static::perlengkapan(),
             'perlengkapan_kiri' => static::perlengkapanKolom()['kiri'],
             'perlengkapan_kanan' => static::perlengkapanKolom()['kanan'],
@@ -214,14 +220,31 @@ class SuratJalanData
         }
 
         if (filled($order->orderTowing?->car_condition)) {
-            $parts[] = 'Kondisi kendaraan: '.$order->orderTowing->car_condition;
+            $parts[] = $order->orderTowing->car_condition;
         }
 
         if (filled($order->orderAmbulance?->patient_condition)) {
-            $parts[] = 'Kondisi pasien: '.$order->orderAmbulance->patient_condition;
+            $parts[] = $order->orderAmbulance->patient_condition;
         }
 
-        return implode("\n", $parts);
+        return implode(' | ', $parts);
+    }
+
+    private static function pembayaran(Order $order): string
+    {
+        $parts = array_filter([
+            $order->payment_method,
+            $order->payment_status,
+            $order->price ? 'Rp '.number_format((int) $order->price, 0, ',', '.') : null,
+        ]);
+
+        $lines = [];
+        if ($parts !== []) {
+            $lines[] = implode(' / ', $parts);
+        }
+        $lines[] = 'Lembar 3 rangkap, untuk pengirim, kantor, penerima.';
+
+        return implode("\n", $lines);
     }
 
     private static function dash(?string $value): string
