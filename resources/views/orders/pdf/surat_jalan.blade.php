@@ -13,24 +13,28 @@
         }
         table { width: 100%; border-collapse: collapse; }
         .header td { vertical-align: middle; }
+        .logo-img {
+            width: 148px;
+            height: auto;
+            display: block;
+        }
         .logo-box {
             width: 118px;
-            border: 2.5px solid #1e3a8a;
-            text-align: center;
-            padding: 8px 4px 6px;
-            line-height: 1.15;
+            text-align: left;
+            line-height: 0.95;
+            font-family: Times-Roman, Times, serif;
         }
         .logo-top {
-            font-size: 18px;
+            font-size: 22px;
             font-weight: bold;
-            letter-spacing: 3px;
-            color: #c41e3a;
+            letter-spacing: 1px;
+            color: #111;
         }
         .logo-bottom {
-            font-size: 13px;
+            font-size: 16px;
             font-weight: bold;
-            letter-spacing: 2px;
-            color: #1e3a8a;
+            letter-spacing: 0.5px;
+            color: #111;
         }
         .company { text-align: right; }
         .company-name {
@@ -119,11 +123,15 @@
 <body>
     <table class="header">
         <tr>
-            <td style="width: 130px;">
-                <div class="logo-box">
-                    <div class="logo-top">{{ $brand_top }}</div>
-                    <div class="logo-bottom">{{ $brand_bottom }}</div>
-                </div>
+            <td style="width: 160px;">
+                @if(!empty($logo_src))
+                    <img src="{{ $logo_src }}" class="logo-img" alt="ROYAL TOWING">
+                @else
+                    <div class="logo-box">
+                        <div class="logo-top">{{ $brand_top }}</div>
+                        <div class="logo-bottom">{{ $brand_bottom }}</div>
+                    </div>
+                @endif
             </td>
             <td class="company">
                 <div class="company-name">{{ $company_name }}</div>

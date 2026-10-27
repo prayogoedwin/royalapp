@@ -85,6 +85,8 @@ class OrderSuratJalanTest extends TestCase
 
         $this->assertTrue($data['is_towing']);
         $this->assertSame('TOWING', $data['brand_bottom']);
+        $this->assertNotEmpty($data['logo_src']);
+        $this->assertStringStartsWith('data:image/png;base64,', $data['logo_src']);
         $this->assertSame('RT.0003', $data['nomor']);
         $this->assertSame('Avanza 2018', $data['jenis_kendaraan']);
         $this->assertSame('B 1234 XYZ', $data['nopol']);
@@ -101,7 +103,7 @@ class OrderSuratJalanTest extends TestCase
         $this->assertContains('Tool Kit', $data['perlengkapan']);
     }
 
-    public function test_ambulance_surat_jalan_uses_text_logo_and_unit_nopol(): void
+    public function test_ambulance_surat_jalan_uses_towing_logo_and_unit_nopol(): void
     {
         $order = $this->makeOrder('RA.0009', 'RA02', 'Ambulance');
         Unit::create([
@@ -116,13 +118,16 @@ class OrderSuratJalanTest extends TestCase
         $this->assertFalse($data['is_towing']);
         $this->assertSame('AMBULANCE', $data['brand_bottom']);
         $this->assertSame('ROYAL', $data['brand_top']);
+        $this->assertNotEmpty($data['logo_src']);
+        $this->assertStringStartsWith('data:image/png;base64,', $data['logo_src']);
         $this->assertSame('Ambulance High Roof', $data['jenis_kendaraan']);
         $this->assertSame('B 9 RA', $data['nopol']);
         $this->assertSame('-', $data['penerima_telepon']);
 
         $html = view('orders.pdf.surat_jalan', $data)->render();
         $this->assertStringContainsString('SURAT JALAN', $html);
-        $this->assertStringContainsString('ROYAL', $html);
+        $this->assertStringContainsString('data:image/png;base64,', $html);
+        $this->assertStringContainsString('ROYAL TOWING', $html);
         $this->assertStringContainsString('AMBULANCE', $html);
         $this->assertStringContainsString('Dongkrak', $html);
         $this->assertStringContainsString('Segitiga Pengaman', $html);

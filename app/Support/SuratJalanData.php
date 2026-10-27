@@ -47,6 +47,7 @@ class SuratJalanData
             'is_towing' => $isTowing,
             'brand_top' => 'ROYAL',
             'brand_bottom' => $isTowing ? 'TOWING' : 'AMBULANCE',
+            'logo_src' => static::logoSrc(),
             'company_name' => (string) config('royal.company_name'),
             'company_phone' => (string) config('royal.company_phone'),
             'company_email' => (string) config('royal.company_email'),
@@ -65,6 +66,17 @@ class SuratJalanData
             'keterangan' => static::keterangan($order),
             'perlengkapan' => static::perlengkapan(),
         ];
+    }
+
+    public static function logoSrc(): ?string
+    {
+        $path = public_path('images/logo-royal-towing.png');
+
+        if (! is_file($path)) {
+            return null;
+        }
+
+        return 'data:image/png;base64,'.base64_encode((string) file_get_contents($path));
     }
 
     public static function isTowing(Order $order): bool
