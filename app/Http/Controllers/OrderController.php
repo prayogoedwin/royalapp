@@ -209,6 +209,7 @@ class OrderController extends Controller
             'photos.*' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
             'photo_titles' => ['nullable', 'array'],
             'photo_descriptions' => ['nullable', 'array'],
+            'payment_proof' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:4096'],
         ]);
 
         DB::beginTransaction();
@@ -294,6 +295,8 @@ class OrderController extends Controller
                     ]);
                 }
             }
+
+            $this->storePaymentProof($request, $order);
 
             DB::commit();
 
@@ -612,6 +615,7 @@ class OrderController extends Controller
             'car_condition' => ['nullable', 'string'],
             'receiver_phone' => ['nullable', 'string'],
             'payment_requirement' => ['nullable', 'string'],
+            'payment_proof' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:4096'],
         ]);
 
         DB::beginTransaction();
@@ -631,11 +635,13 @@ class OrderController extends Controller
                 ...$this->locationPayload($validated),
                 'pickup_datetime' => $validated['pickup_datetime'],
                 'price' => $validated['price'],
-                'payment_method' => $validated['payment_method'],
+                'payment_method' => $validated['payment_method'] ?? null,
                 'payment_status' => $validated['payment_status'],
-                'notes' => $validated['notes'],
+                'notes' => $validated['notes'] ?? null,
                 'updated_by' => auth()->id(),
             ]);
+
+            $this->storePaymentProof($request, $order);
 
             $report = $order->orderReport;
             if ($report !== null && $report->deliver_datetime === null) {
@@ -690,6 +696,10 @@ class OrderController extends Controller
     {
         DB::beginTransaction();
         try {
+            if ($order->payment_proof) {
+                Storage::disk('public')->delete($order->payment_proof);
+            }
+
             // Delete photos from storage
             foreach ($order->orderPhotos as $photo) {
                 Storage::disk('public')->delete($photo->path);
@@ -840,5 +850,14 @@ class OrderController extends Controller
             "{$prefix}_longitude" => $lng,
             "{$prefix}_maps_url" => $url,
         ];
+    }
+
+    private function storePaymentProof(Request $request, Order $order): void
+    {
+        if (! $request->hasFile('payment_proof')) {
+            return;
+        }
+
+        $order->storePaymentProofFile($request->file('payment_proof'));
     }
 }

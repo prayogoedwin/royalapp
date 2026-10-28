@@ -73,6 +73,9 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'destination_longitude', type: 'number', nullable: true, example: 107.6191),
         new OA\Property(property: 'destination_maps_url', type: 'string', nullable: true, example: 'https://www.google.com/maps/search/?api=1&query=-6.9175,107.6191'),
         new OA\Property(property: 'pickup_datetime', type: 'string', format: 'date-time'),
+        new OA\Property(property: 'payment_proof', type: 'string', nullable: true, example: 'uploads/2026/10/order-payment-proof/bukti.jpg'),
+        new OA\Property(property: 'foto_bukti_pembayaran', type: 'string', nullable: true, example: 'uploads/2026/10/order-payment-proof/bukti.jpg'),
+        new OA\Property(property: 'foto_bukti_pembayaran_url', type: 'string', nullable: true, example: 'https://example.test/storage/uploads/2026/10/order-payment-proof/bukti.jpg'),
         new OA\Property(
             property: 'order_ambulance',
             type: 'object',
@@ -427,6 +430,28 @@ class ApiDocumentation
         ]
     )]
     public function orderDetail(): void {}
+
+    #[OA\Post(
+        path: '/api/orders/bukti-pembayaran',
+        tags: ['Orders'],
+        summary: 'Upload 1 foto bukti pembayaran',
+        security: [['sanctum' => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\MediaType(
+                mediaType: 'multipart/form-data',
+                schema: new OA\Schema(
+                    required: ['id_order', 'foto_bukti_pembayaran'],
+                    properties: [
+                        new OA\Property(property: 'id_order', type: 'integer', example: 1),
+                        new OA\Property(property: 'foto_bukti_pembayaran', type: 'string', format: 'binary'),
+                    ]
+                )
+            )
+        ),
+        responses: [new OA\Response(response: 200, description: 'OK')]
+    )]
+    public function storePaymentProof(): void {}
 
     #[OA\Get(
         path: '/api/orders/{order}/surat-jalan',

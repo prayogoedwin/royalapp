@@ -107,6 +107,11 @@
                     </select>
                     @error('payment_status')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
+
+                @include('orders.partials.payment-proof', [
+                    'showInput' => true,
+                    'showPreview' => false,
+                ])
             </div>
 
             <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">

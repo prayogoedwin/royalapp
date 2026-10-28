@@ -160,6 +160,51 @@ class OrderApiController extends Controller
     }
 
     /**
+     * @OA\Post(
+     *     path="/api/orders/bukti-pembayaran",
+     *     tags={"Orders"},
+     *     summary="Upload 1 foto bukti pembayaran",
+     *     security={{"sanctum":{}}},
+     *
+     *     @OA\RequestBody(required=true, @OA\MediaType(mediaType="multipart/form-data", @OA\Schema(
+     *         required={"id_order","foto_bukti_pembayaran"},
+     *
+     *         @OA\Property(property="id_order", type="integer", example=1),
+     *         @OA\Property(property="foto_bukti_pembayaran", type="string", format="binary")
+     *     ))),
+     *
+     *     @OA\Response(response=200, description="Success")
+     * )
+     */
+    public function storePaymentProof(Request $request): JsonResponse
+    {
+        $employeeId = $this->userEmployeeId($request);
+        if (! $employeeId) {
+            return $this->errorResponse('Employee not linked to user.', 404);
+        }
+
+        $validated = $request->validate([
+            'id_order' => ['required', 'integer'],
+            'foto_bukti_pembayaran' => ['required', 'image', 'mimes:jpeg,png,jpg,webp', 'max:4096'],
+        ]);
+
+        $order = $this->findUserOrder($request, (int) $validated['id_order']);
+        if (! $order) {
+            return $this->errorResponse('Order not found.', 404);
+        }
+
+        $order->storePaymentProofFile($request->file('foto_bukti_pembayaran'));
+        $order->refresh();
+
+        return $this->okResponse([
+            'id_order' => $order->id,
+            'payment_proof' => $order->payment_proof,
+            'foto_bukti_pembayaran' => $order->foto_bukti_pembayaran,
+            'foto_bukti_pembayaran_url' => $order->foto_bukti_pembayaran_url,
+        ], 'Bukti pembayaran berhasil diunggah.');
+    }
+
+    /**
      * @OA\Get(
      *     path="/api/orders/{order}/surat-jalan",
      *     tags={"Orders"},

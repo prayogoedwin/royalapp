@@ -103,6 +103,13 @@
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Status Pembayaran</dt>
                             <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->payment_status ?? '-' }}</dd>
                         </div>
+                        <div class="md:col-span-2">
+                            @include('orders.partials.payment-proof', [
+                                'order' => $order,
+                                'showInput' => false,
+                                'showPreview' => true,
+                            ])
+                        </div>
                         <div>
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</dt>
                             <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->orderStatus->name }}</dd>

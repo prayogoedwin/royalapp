@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Support\GoogleMapsLink;
+use App\Support\UploadPath;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 class Order extends Model
 {
@@ -34,6 +37,7 @@ class Order extends Model
         'price',
         'payment_method',
         'payment_status',
+        'payment_proof',
         'notes',
         'created_by',
         'updated_by',
@@ -47,6 +51,11 @@ class Order extends Model
         'pickup_longitude' => 'float',
         'destination_latitude' => 'float',
         'destination_longitude' => 'float',
+    ];
+
+    protected $appends = [
+        'foto_bukti_pembayaran',
+        'foto_bukti_pembayaran_url',
     ];
 
     public function division(): BelongsTo
@@ -147,6 +156,31 @@ class Order extends Model
     public function getDestinationMapsUrlAttribute(?string $value): ?string
     {
         return $this->resolvedMapsUrl($value, $this->destination_latitude, $this->destination_longitude);
+    }
+
+    public function getFotoBuktiPembayaranAttribute(): ?string
+    {
+        return $this->payment_proof;
+    }
+
+    public function getFotoBuktiPembayaranUrlAttribute(): ?string
+    {
+        if (! filled($this->payment_proof)) {
+            return null;
+        }
+
+        return asset('storage/'.$this->payment_proof);
+    }
+
+    public function storePaymentProofFile(UploadedFile $file): void
+    {
+        if ($this->payment_proof) {
+            Storage::disk('public')->delete($this->payment_proof);
+        }
+
+        $this->update([
+            'payment_proof' => $file->store(UploadPath::dir('order-payment-proof'), 'public'),
+        ]);
     }
 
     private function resolvedMapsUrl(?string $stored, mixed $latitude, mixed $longitude): ?string

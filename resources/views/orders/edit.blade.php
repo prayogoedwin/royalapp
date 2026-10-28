@@ -32,7 +32,7 @@
 
     {{-- Form 1: Basic Information --}}
     @if(auth()->user()->hasPermission('edit-orders'))
-    <form action="{{ route('orders.update', $order) }}" method="POST" class="space-y-6 mb-8">
+    <form action="{{ route('orders.update', $order) }}" method="POST" enctype="multipart/form-data" class="space-y-6 mb-8">
         @csrf
         @method('PUT')
         <input type="hidden" name="update_section" value="basic">
@@ -116,6 +116,12 @@
                     </select>
                     @error('payment_status')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
+
+                @include('orders.partials.payment-proof', [
+                    'order' => $order,
+                    'showInput' => true,
+                    'showPreview' => true,
+                ])
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
