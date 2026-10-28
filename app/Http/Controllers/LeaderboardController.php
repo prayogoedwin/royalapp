@@ -168,10 +168,11 @@ class LeaderboardController extends Controller
         $ordersDone = collect();
         $kmDone = collect();
         $tasksDone = collect();
+        $ongoingDrivers = $this->ongoingDriversRanking();
 
         if ($doneStatusId) {
-            $ordersDone = $this->ordersDoneRanking($bounds, (int) $doneStatusId, 5);
-            $kmDone = $this->kmDoneRanking($bounds, (int) $doneStatusId, 5);
+            $ordersDone = $this->ordersDoneRanking($bounds, (int) $doneStatusId);
+            $kmDone = $this->kmDoneRanking($bounds, (int) $doneStatusId);
             $tasksDone = $this->tasksDoneRanking($bounds, (int) $doneStatusId, 5);
         }
 
@@ -180,6 +181,7 @@ class LeaderboardController extends Controller
         $taskAttachments = $this->taskAttachmentsRanking($bounds, 5);
 
         return view('leaderboard.index', array_merge($period, compact(
+            'ongoingDrivers',
             'ordersDone',
             'kmDone',
             'tasksDone',
@@ -258,21 +260,66 @@ class LeaderboardController extends Controller
         return $query->get();
     }
 
+    protected function ongoingDriversRanking(): Collection
+    {
+        $ongoingStatusId = OrderStatus::where('name', 'Ongoing')->value('id');
+        if (! $ongoingStatusId) {
+            return collect();
+        }
+
+        $driver = $this->driverOrdersQuery((int) $ongoingStatusId)
+            ->select(
+                'users.id',
+                'users.name',
+                'users.email',
+                DB::raw('COUNT(DISTINCT orders.id) as total')
+            )
+            ->groupBy('users.id', 'users.name', 'users.email')
+            ->orderByDesc('total')
+            ->orderBy('users.name')
+            ->get();
+
+        $orderNumbers = DB::table('order_crews')
+            ->join('orders', 'orders.id', '=', 'order_crews.order_id')
+            ->join('employees', 'employees.id', '=', 'order_crews.employee_id')
+            ->where('orders.order_status_id', $ongoingStatusId)
+            ->whereNull('orders.deleted_at')
+            ->whereNull('order_crews.deleted_at')
+            ->whereRaw('LOWER(order_crews.role) in (?, ?)', ['driver', 'sopir'])
+            ->orderBy('orders.id')
+            ->get(['employees.user_id', 'orders.order_number'])
+            ->groupBy('user_id')
+            ->map(fn ($rows) => $rows->pluck('order_number')->unique()->values()->implode(', '));
+
+        return $driver->map(function ($row) use ($orderNumbers) {
+            $row->order_numbers = $orderNumbers->get($row->id)
+                ?? $orderNumbers->get((string) $row->id)
+                ?? '';
+
+            return $row;
+        });
+    }
+
     /**
      * @param  array{0: Carbon, 1: Carbon}|null  $bounds
      */
     protected function driverDoneOrdersQuery(?array $bounds, int $doneStatusId): Builder
     {
+        return $this->driverOrdersQuery($doneStatusId)
+            ->when($bounds, fn ($q) => $this->applyPeriodBounds($q, 'COALESCE(orders.pickup_datetime, orders.created_at)', $bounds));
+    }
+
+    protected function driverOrdersQuery(int $statusId): Builder
+    {
         return DB::table('order_crews')
             ->join('orders', 'orders.id', '=', 'order_crews.order_id')
             ->join('employees', 'employees.id', '=', 'order_crews.employee_id')
             ->join('users', 'users.id', '=', 'employees.user_id')
-            ->where('orders.order_status_id', $doneStatusId)
+            ->where('orders.order_status_id', $statusId)
             ->whereNull('orders.deleted_at')
             ->whereNull('order_crews.deleted_at')
             ->whereNotNull('employees.user_id')
-            ->whereRaw('LOWER(order_crews.role) in (?, ?)', ['driver', 'sopir'])
-            ->when($bounds, fn ($q) => $this->applyPeriodBounds($q, 'COALESCE(orders.pickup_datetime, orders.created_at)', $bounds));
+            ->whereRaw('LOWER(order_crews.role) in (?, ?)', ['driver', 'sopir']);
     }
 
     /**

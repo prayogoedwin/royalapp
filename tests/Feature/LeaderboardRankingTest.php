@@ -36,7 +36,7 @@ class LeaderboardRankingTest extends TestCase
         $this->actingAs($user)->get(route('leaderboard.ranking', 'km-done'))->assertForbidden();
     }
 
-    public function test_order_done_preview_is_top_five_and_full_list_shows_all_drivers(): void
+    public function test_order_done_and_km_lists_all_drivers_on_index(): void
     {
         $viewer = $this->userWithPermissions(['view-leaderboard']);
         $done = $this->makeStatus('Done');
@@ -56,24 +56,16 @@ class LeaderboardRankingTest extends TestCase
             $this->makeDoneOrder($done, $nurse, 'nurse');
         }
 
-        $index = $this->actingAs($viewer)->get(route('leaderboard.index', ['all_time' => 1]));
-        $index->assertOk()
+        $this->actingAs($viewer)
+            ->get(route('leaderboard.index', ['all_time' => 1]))
+            ->assertOk()
             ->assertSee('Order Done terbanyak')
-            ->assertSee('Lihat semua driver')
+            ->assertSee('Total KM (order Done)')
             ->assertSee($driverNames[6])
             ->assertSee($driverNames[2])
-            ->assertDontSee($driverNames[1])
-            ->assertDontSee('Nurse Top')
-            ->assertSee(route('leaderboard.ranking', ['metric' => 'orders-done', 'all_time' => 1]), false);
-
-        $ranking = $this->actingAs($viewer)
-            ->get(route('leaderboard.ranking', ['metric' => 'orders-done', 'all_time' => 1]));
-
-        $ranking->assertOk()
-            ->assertSee('Order Done terbanyak')
-            ->assertSee($driverNames[6])
             ->assertSee($driverNames[1])
-            ->assertDontSee('Nurse Top');
+            ->assertDontSee('Nurse Top')
+            ->assertDontSee('Lihat semua driver');
     }
 
     public function test_km_ranking_lists_all_drivers(): void
@@ -90,12 +82,44 @@ class LeaderboardRankingTest extends TestCase
         $this->makeDoneOrder($done, $nurse, 'nurse', 0, 900);
 
         $this->actingAs($viewer)
-            ->get(route('leaderboard.ranking', ['metric' => 'km-done', 'all_time' => 1]))
+            ->get(route('leaderboard.index', ['all_time' => 1]))
             ->assertOk()
             ->assertSee('Total KM (order Done)')
             ->assertSee('Driver Jauh')
             ->assertSee('Driver Dekat')
-            ->assertDontSee('Nurse KM');
+            ->assertDontSee('Nurse KM')
+            ->assertDontSee('Lihat semua driver');
+    }
+
+    public function test_ongoing_drivers_appear_on_index_regardless_of_period(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-28 12:00:00'));
+
+        $viewer = $this->userWithPermissions(['view-leaderboard']);
+        $ongoing = $this->makeStatus('Ongoing');
+        $done = $this->makeStatus('Done');
+
+        $busy = $this->makeEmployee('Driver Ongoing', 'Driver');
+        $finished = $this->makeEmployee('Driver Selesai', 'Driver');
+        $nurse = $this->makeEmployee('Nurse Ongoing', 'Nurse');
+
+        $order = $this->makeDoneOrder($ongoing, $busy, 'driver');
+        $order->forceFill([
+            'created_at' => now()->subDay(),
+            'pickup_datetime' => now()->subDay(),
+        ])->save();
+
+        $this->makeDoneOrder($done, $finished, 'driver');
+        $this->makeDoneOrder($ongoing, $nurse, 'nurse');
+
+        $this->actingAs($viewer)
+            ->get(route('leaderboard.index'))
+            ->assertOk()
+            ->assertSee('Driver ongoing saat ini')
+            ->assertSee('Driver Ongoing')
+            ->assertSee($order->order_number)
+            ->assertSee('Driver Selesai')
+            ->assertDontSee('Nurse Ongoing');
     }
 
     public function test_default_period_is_today_and_form_has_start_end_dates(): void
