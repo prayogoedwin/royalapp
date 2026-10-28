@@ -91,9 +91,12 @@ class OrderController extends Controller
 
     public function index(Request $request)
     {
+        $customerPhone = trim((string) $request->query('customer_phone', ''));
+
         if ($request->ajax()) {
             $orders = Order::with(['division', 'orderStatus'])
                 ->select('orders.*')
+                ->when($customerPhone !== '', fn ($query) => $query->where('customer_phone', $customerPhone))
                 ->orderByDesc('created_at')
                 ->orderByDesc('id');
 
@@ -150,10 +153,12 @@ class OrderController extends Controller
                 ->make(true);
         }
 
-        return view('orders.index');
+        return view('orders.index', [
+            'customerPhone' => $customerPhone,
+        ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
         $divisions = Division::orderBy('nama')->get();
         $orderStatuses = OrderStatus::orderBy('name')->get();
@@ -169,7 +174,20 @@ class OrderController extends Controller
         $paymentStatuses = OrderOptions::paymentStatuses();
         $employeeAvailability = $this->buildEmployeeAvailability($employees);
 
-        return view('orders.create', compact('divisions', 'orderStatuses', 'employees', 'units', 'employeeAvailability', 'paymentMethods', 'paymentStatuses'));
+        $prefillName = $request->query('customer_name');
+        $prefillPhone = $request->query('customer_phone');
+
+        return view('orders.create', compact(
+            'divisions',
+            'orderStatuses',
+            'employees',
+            'units',
+            'employeeAvailability',
+            'paymentMethods',
+            'paymentStatuses',
+            'prefillName',
+            'prefillPhone',
+        ));
     }
 
     public function store(Request $request): RedirectResponse

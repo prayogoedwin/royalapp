@@ -13,6 +13,12 @@
         <div>
             <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ __('Orders') }}</h1>
             <p class="text-gray-600 dark:text-gray-400 mt-1">{{ __('Manage orders') }}</p>
+            @if(!empty($customerPhone))
+                <p class="mt-2 text-sm text-blue-700 dark:text-blue-300">
+                    {{ __('Filter nomor WA:') }} <span class="font-semibold">{{ $customerPhone }}</span>
+                    <a href="{{ route('orders.index') }}" class="ml-2 underline">{{ __('Hapus filter') }}</a>
+                </p>
+            @endif
         </div>
         <div class="flex gap-2">
             @if(auth()->user()->hasPermission('create-orders'))
@@ -55,7 +61,7 @@
                 serverSide: true,
                 scrollX: true,
                 autoWidth: false,
-                ajax: '{{ route('orders.index') }}',
+                ajax: '{{ route('orders.index', array_filter(['customer_phone' => $customerPhone ?? null])) }}',
                 columns: [
                     { data: 'order_number', name: 'order_number' },
                     { data: 'customer_name', name: 'customer_name' },

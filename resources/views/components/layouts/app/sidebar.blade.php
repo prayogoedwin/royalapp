@@ -40,6 +40,8 @@
                             @if(auth()->user()->hasPermission('view-orders'))
                             <x-layouts.sidebar-link href="{{ route('orders.index') }}" icon='fas-file-invoice'
                                 :active="request()->routeIs('orders*')">Orders</x-layouts.sidebar-link>
+                            <x-layouts.sidebar-link href="{{ route('customers.index') }}" icon='fas-address-book'
+                                :active="request()->routeIs('customers*')">Customers</x-layouts.sidebar-link>
                             @endif
 
                             @if(auth()->user()->hasPermission('view-tasks'))

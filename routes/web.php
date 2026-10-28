@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AbsensiController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DivisionController;
 use App\Http\Controllers\EmployeeController;
@@ -162,6 +163,9 @@ Route::middleware(['auth'])->group(function () {
         ->name('upload-folders.destroy')
         ->middleware('permission:delete-upload-folders')
         ->where(['year' => '[0-9]{4}', 'month' => '[0-9]{2}']);
+
+    Route::get('customers', [CustomerController::class, 'index'])->name('customers.index')->middleware('permission:view-orders');
+    Route::get('customers/detail', [CustomerController::class, 'show'])->name('customers.show')->middleware('permission:view-orders');
 
     // Orders Management
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index')->middleware('permission:view-orders');

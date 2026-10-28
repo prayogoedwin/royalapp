@@ -12,8 +12,14 @@
     </div>
 
     <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ __('Create Order') }}</h1>
-        <p class="text-gray-600 dark:text-gray-400 mt-1">{{ __('Create a new order') }}</p>
+        <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ !empty($prefillPhone) ? __('Repeat Order') : __('Create Order') }}</h1>
+        <p class="text-gray-600 dark:text-gray-400 mt-1">
+            @if(!empty($prefillPhone))
+                {{ __('Customer Name dan Customer Phone sudah terisi dari customer yang dipilih.') }}
+            @else
+                {{ __('Create a new order') }}
+            @endif
+        </p>
     </div>
 
     @if($errors->any())
@@ -68,11 +74,11 @@
                 </div>
 
                 <div>
-                    <x-forms.input label="Customer Name" name="customer_name" type="text" value="{{ old('customer_name') }}" required />
+                    <x-forms.input label="Customer Name" name="customer_name" type="text" value="{{ old('customer_name', $prefillName ?? '') }}" required />
                 </div>
 
                 <div>
-                    <x-forms.input label="Customer Phone" name="customer_phone" type="text" value="{{ old('customer_phone') }}" required />
+                    <x-forms.input label="Customer Phone" name="customer_phone" type="text" value="{{ old('customer_phone', $prefillPhone ?? '') }}" required />
                 </div>
 
                 <div>
