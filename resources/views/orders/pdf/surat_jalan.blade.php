@@ -161,11 +161,12 @@
             @endif
             <button type="button" class="sj-btn-print" id="sj-print">Cetak</button>
             @if($wa_url)
-                <a class="sj-btn-wa" id="sj-wa" href="{{ $wa_url }}" data-native="{{ $wa_native_url }}" rel="noopener noreferrer">Kirim WA</a>
+                <a class="sj-btn-wa" id="sj-wa" href="{{ $wa_url }}" data-native="{{ $wa_native_url }}" data-copy="{{ $public_url }}">Kirim WA</a>
             @elseif($editable)
-                <a class="sj-btn-wa" id="sj-wa" href="#" data-native="" rel="noopener noreferrer" hidden>Kirim WA</a>
+                <a class="sj-btn-wa" id="sj-wa" href="#" data-native="" data-copy="" hidden>Kirim WA</a>
             @endif
             @if($public_url)
+                <button type="button" class="sj-btn-download" id="sj-copy" data-copy="{{ $public_url }}">Salin link</button>
                 <a class="sj-btn-download" href="{{ $public_url }}?download=1">Unduh HTML</a>
             @endif
         </div>
@@ -504,6 +505,7 @@
                             var wa = document.getElementById('sj-wa');
                             wa.href = result.body.data.wa_url;
                             wa.setAttribute('data-native', result.body.data.wa_native_url || '');
+                            wa.setAttribute('data-copy', result.body.data.public_url || '');
                             wa.hidden = false;
                         }
                         if (result.body.data && result.body.data.public_url) {
@@ -524,35 +526,96 @@
         </script>
     @endif
     <script>
+        function copyText(text) {
+            if (!text) {
+                return false;
+            }
+            var area = document.createElement('textarea');
+            area.value = text;
+            area.setAttribute('readonly', '');
+            area.style.position = 'fixed';
+            area.style.left = '-9999px';
+            document.body.appendChild(area);
+            area.select();
+            var ok = false;
+            try { ok = document.execCommand('copy'); } catch (e) {}
+            document.body.removeChild(area);
+            if (!ok && navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text);
+                ok = true;
+            }
+            return ok;
+        }
+
+        function isAppWebView() {
+            var ua = navigator.userAgent || '';
+            return /\bwv\b|; wv\)|WebView/i.test(ua)
+                || typeof window.ReactNativeWebView !== 'undefined'
+                || typeof window.flutter_inappwebview !== 'undefined';
+        }
+
+        function openExternal(url) {
+            if (!url) {
+                return false;
+            }
+            if (window.ReactNativeWebView) {
+                window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'open_url', url: url }));
+                return true;
+            }
+            if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
+                window.flutter_inappwebview.callHandler('openUrl', url);
+                return true;
+            }
+            if (window.Android && typeof window.Android.openUrl === 'function') {
+                window.Android.openUrl(url);
+                return true;
+            }
+            if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.openUrl) {
+                window.webkit.messageHandlers.openUrl.postMessage(url);
+                return true;
+            }
+            return false;
+        }
+
         function bindWhatsAppButton() {
             var wa = document.getElementById('sj-wa');
-            if (!wa || wa.getAttribute('data-bound') === '1') {
-                return;
-            }
-            wa.setAttribute('data-bound', '1');
-            wa.addEventListener('click', function (event) {
-                var href = wa.getAttribute('href') || '';
-                if (!href || href === '#') {
+            if (wa && wa.getAttribute('data-bound') !== '1') {
+                wa.setAttribute('data-bound', '1');
+                wa.addEventListener('click', function (event) {
+                    var href = wa.getAttribute('href') || '';
+                    if (!href || href === '#') {
+                        event.preventDefault();
+                        return;
+                    }
+                    var native = wa.getAttribute('data-native') || '';
+                    var share = wa.getAttribute('data-copy') || '';
+                    if (openExternal(native || href)) {
+                        event.preventDefault();
+                        return;
+                    }
+                    if (isAppWebView()) {
+                        copyText(share);
+                        return;
+                    }
                     event.preventDefault();
-                    return;
-                }
-                event.preventDefault();
-                var native = wa.getAttribute('data-native') || '';
-                var android = /Android/i.test(navigator.userAgent || '');
-                if (android && native) {
-                    var fallback = encodeURIComponent(href);
-                    var path = native.replace(/^whatsapp:\/\//, '');
-                    window.location.href = 'intent://' + path + '#Intent;scheme=whatsapp;package=com.whatsapp;S.browser_fallback_url=' + fallback + ';end';
-                    setTimeout(function () { window.location.href = href; }, 800);
-                    return;
-                }
-                if (native) {
-                    window.location.href = native;
-                    setTimeout(function () { window.location.href = href; }, 800);
-                    return;
-                }
-                window.location.href = href;
-            });
+                    window.open(href, '_blank');
+                });
+            }
+
+            var copyBtn = document.getElementById('sj-copy');
+            if (copyBtn && copyBtn.getAttribute('data-bound') !== '1') {
+                copyBtn.setAttribute('data-bound', '1');
+                copyBtn.addEventListener('click', function () {
+                    var status = document.getElementById('sj-status');
+                    if (copyText(copyBtn.getAttribute('data-copy') || '')) {
+                        if (status) {
+                            status.hidden = false;
+                            status.classList.remove('error');
+                            status.textContent = 'Link disalin. Tempel di WhatsApp.';
+                        }
+                    }
+                });
+            }
         }
         bindWhatsAppButton();
     </script>

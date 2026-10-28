@@ -92,8 +92,9 @@ class OrderSuratJalanTest extends TestCase
             ->assertSee('value="ada"', false)
             ->assertSee('checked', false)
             ->assertSee('Kirim WA', false)
-            ->assertSee('https://wa.me/', false)
-            ->assertSee('whatsapp://send?phone=', false);
+            ->assertSee('https://api.whatsapp.com/send?phone=', false)
+            ->assertSee('whatsapp://send?phone=', false)
+            ->assertSee('Salin link', false);
 
         $this->get(route('surat-jalan.public', $order->surat_jalan_public_token))
             ->assertOk()

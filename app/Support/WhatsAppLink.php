@@ -35,9 +35,9 @@ class WhatsAppLink
             return null;
         }
 
-        $url = 'https://wa.me/'.$digits;
+        $url = 'https://api.whatsapp.com/send?phone='.$digits;
         if ($text !== null && trim($text) !== '') {
-            $url .= '?text='.rawurlencode($text);
+            $url .= '&text='.rawurlencode($text);
         }
 
         return $url;

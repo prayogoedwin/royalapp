@@ -32,7 +32,7 @@ class WhatsAppLinkTest extends TestCase
     public function test_app_url_opens_whatsapp_app_or_web(): void
     {
         $this->assertSame(
-            'https://wa.me/6281323567354?text=Halo',
+            'https://api.whatsapp.com/send?phone=6281323567354&text=Halo',
             WhatsAppLink::appUrl('0813-2356-7354', 'Halo')
         );
         $this->assertSame(

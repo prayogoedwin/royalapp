@@ -63,7 +63,7 @@ class OrderSuratJalanApiTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('status', true)
             ->assertJsonPath('message', 'Surat jalan tersimpan.');
-        $this->assertStringStartsWith('https://wa.me/', (string) $response->json('data.wa_url'));
+        $this->assertStringStartsWith('https://api.whatsapp.com/send?phone=', (string) $response->json('data.wa_url'));
         $this->assertStringStartsWith('whatsapp://send?phone=', (string) $response->json('data.wa_native_url'));
 
         $order->refresh();
