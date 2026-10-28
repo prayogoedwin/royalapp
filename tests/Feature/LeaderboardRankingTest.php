@@ -13,6 +13,7 @@ use App\Models\Permission;
 use App\Models\Position;
 use App\Models\Role;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -95,6 +96,84 @@ class LeaderboardRankingTest extends TestCase
             ->assertSee('Driver Jauh')
             ->assertSee('Driver Dekat')
             ->assertDontSee('Nurse KM');
+    }
+
+    public function test_default_period_is_today_and_form_has_start_end_dates(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-28 12:00:00'));
+
+        $viewer = $this->userWithPermissions(['view-leaderboard']);
+        $done = $this->makeStatus('Done');
+
+        $todayDriver = $this->makeEmployee('Driver Hari Ini', 'Driver');
+        $yesterdayDriver = $this->makeEmployee('Driver Kemarin', 'Driver');
+        $this->makeDoneOrder($done, $todayDriver, 'driver');
+        $old = $this->makeDoneOrder($done, $yesterdayDriver, 'driver');
+        $old->forceFill(['created_at' => now()->subDay()])->save();
+
+        $this->actingAs($viewer)
+            ->get(route('leaderboard.index'))
+            ->assertOk()
+            ->assertSee('Tanggal mulai', false)
+            ->assertSee('Tanggal selesai', false)
+            ->assertSee('name="start_date"', false)
+            ->assertSee('name="end_date"', false)
+            ->assertSee('value="2026-10-28"', false)
+            ->assertSee('Hari ini (28 Oktober 2026)', false)
+            ->assertSee('Driver Hari Ini')
+            ->assertDontSee('Driver Kemarin');
+    }
+
+    public function test_can_filter_leaderboard_by_month_and_year(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-28 12:00:00'));
+
+        $viewer = $this->userWithPermissions(['view-leaderboard']);
+        $done = $this->makeStatus('Done');
+
+        $october = $this->makeEmployee('Driver Oktober', 'Driver');
+        $january = $this->makeEmployee('Driver Januari', 'Driver');
+        $this->makeDoneOrder($done, $october, 'driver');
+        $janOrder = $this->makeDoneOrder($done, $january, 'driver');
+        $janOrder->forceFill(['created_at' => Carbon::parse('2026-01-15 10:00:00')])->save();
+
+        $this->actingAs($viewer)
+            ->get(route('leaderboard.index', ['year' => 2026, 'month' => 1]))
+            ->assertOk()
+            ->assertSee('Januari 2026', false)
+            ->assertSee('Driver Januari')
+            ->assertDontSee('Driver Oktober');
+
+        $this->actingAs($viewer)
+            ->get(route('leaderboard.index', ['year' => 2026]))
+            ->assertOk()
+            ->assertSee('Tahun 2026', false)
+            ->assertSee('Driver Oktober')
+            ->assertSee('Driver Januari');
+    }
+
+    public function test_can_filter_leaderboard_by_start_and_end_date(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-28 12:00:00'));
+
+        $viewer = $this->userWithPermissions(['view-leaderboard']);
+        $done = $this->makeStatus('Done');
+
+        $inRange = $this->makeEmployee('Driver Rentang', 'Driver');
+        $outside = $this->makeEmployee('Driver Luar', 'Driver');
+        $this->makeDoneOrder($done, $inRange, 'driver');
+        $old = $this->makeDoneOrder($done, $outside, 'driver');
+        $old->forceFill(['created_at' => Carbon::parse('2026-10-01 09:00:00')])->save();
+
+        $this->actingAs($viewer)
+            ->get(route('leaderboard.index', [
+                'start_date' => '2026-10-20',
+                'end_date' => '2026-10-28',
+            ]))
+            ->assertOk()
+            ->assertSee('20 Oktober 2026 – 28 Oktober 2026', false)
+            ->assertSee('Driver Rentang')
+            ->assertDontSee('Driver Luar');
     }
 
     /**

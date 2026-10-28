@@ -9,7 +9,49 @@
     method="GET"
     action="{{ $action }}"
     class="mb-8 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-4"
-    x-data="{ allTime: {{ $allTime ? 'true' : 'false' }} }"
+    x-data="{
+        allTime: {{ $allTime ? 'true' : 'false' }},
+        startDate: {{ \Illuminate\Support\Js::from($startDate) }},
+        endDate: {{ \Illuminate\Support\Js::from($endDate) }},
+        year: {{ (int) $year }},
+        month: {{ \Illuminate\Support\Js::from((string) ($month ?? '')) }},
+        pad(n) { return String(n).padStart(2, '0') },
+        ymd(date) {
+            return date.getFullYear() + '-' + this.pad(date.getMonth() + 1) + '-' + this.pad(date.getDate())
+        },
+        applyToday() {
+            const today = this.ymd(new Date())
+            this.startDate = today
+            this.endDate = today
+            this.year = new Date().getFullYear()
+            this.month = ''
+        },
+        applyYear() {
+            this.startDate = this.year + '-01-01'
+            this.endDate = this.year + '-12-31'
+            this.month = ''
+        },
+        applyMonth() {
+            if (!this.month) {
+                this.applyYear()
+                return
+            }
+            const month = Number(this.month)
+            const last = new Date(this.year, month, 0)
+            this.startDate = this.year + '-' + this.pad(month) + '-01'
+            this.endDate = this.ymd(last)
+        },
+        applyThisMonth() {
+            const now = new Date()
+            this.year = now.getFullYear()
+            this.month = String(now.getMonth() + 1)
+            this.applyMonth()
+        },
+        applyThisYear() {
+            this.year = new Date().getFullYear()
+            this.applyYear()
+        }
+    }"
 >
     <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-4">
         <label class="inline-flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
@@ -28,36 +70,78 @@
         </button>
     </div>
 
-    <div class="flex flex-col sm:flex-row flex-wrap items-end gap-3" x-show="!allTime" x-cloak>
-        <div>
-            <label for="lb_year" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ __('Tahun') }}</label>
-            <select
-                id="lb_year"
-                name="year"
-                class="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm min-w-[7rem]"
-            >
-                @for($y = $yearOptionsTo; $y >= $yearOptionsFrom; $y--)
-                    <option value="{{ $y }}" @selected((int) $year === $y)>{{ $y }}</option>
-                @endfor
-            </select>
+    <div class="space-y-4" x-show="!allTime" x-cloak>
+        <div class="flex flex-col sm:flex-row flex-wrap items-end gap-3">
+            <div>
+                <label for="lb_start_date" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ __('Tanggal mulai') }}</label>
+                <input
+                    id="lb_start_date"
+                    type="date"
+                    name="start_date"
+                    value="{{ $startDate }}"
+                    x-model="startDate"
+                    class="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
+                >
+            </div>
+            <div>
+                <label for="lb_end_date" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ __('Tanggal selesai') }}</label>
+                <input
+                    id="lb_end_date"
+                    type="date"
+                    name="end_date"
+                    value="{{ $endDate }}"
+                    x-model="endDate"
+                    class="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
+                >
+            </div>
+            <div class="flex flex-wrap gap-2 pb-0.5">
+                <button type="button" class="px-3 py-2 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700" @click="applyToday()">
+                    {{ __('Hari ini') }}
+                </button>
+                <button type="button" class="px-3 py-2 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700" @click="applyThisMonth()">
+                    {{ __('Bulan ini') }}
+                </button>
+                <button type="button" class="px-3 py-2 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700" @click="applyThisYear()">
+                    {{ __('Tahun ini') }}
+                </button>
+            </div>
         </div>
-        <div>
-            <label for="lb_month" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ __('Bulan') }}</label>
-            <select
-                id="lb_month"
-                name="month"
-                class="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm min-w-[11rem]"
-            >
-                <option value="">{{ __('Semua bulan (tahun penuh)') }}</option>
-                @foreach($bulanLabels as $num => $label)
-                    <option value="{{ $num }}" @selected((string) $month === (string) $num)>{{ $label }}</option>
-                @endforeach
-            </select>
+
+        <div class="flex flex-col sm:flex-row flex-wrap items-end gap-3">
+            <div>
+                <label for="lb_year" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ __('Tahun') }}</label>
+                <select
+                    id="lb_year"
+                    name="year"
+                    x-model.number="year"
+                    @change="applyMonth()"
+                    class="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm min-w-[7rem]"
+                >
+                    @for($y = $yearOptionsTo; $y >= $yearOptionsFrom; $y--)
+                        <option value="{{ $y }}" @selected((int) $year === $y)>{{ $y }}</option>
+                    @endfor
+                </select>
+            </div>
+            <div>
+                <label for="lb_month" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ __('Bulan') }}</label>
+                <select
+                    id="lb_month"
+                    name="month"
+                    x-model="month"
+                    @change="applyMonth()"
+                    class="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm min-w-[11rem]"
+                >
+                    <option value="">{{ __('Semua bulan (tahun penuh)') }}</option>
+                    @foreach($bulanLabels as $num => $label)
+                        <option value="{{ $num }}" @selected((string) $month === (string) $num)>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
         </div>
     </div>
 
     <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-        {{ __('Default: tahun berjalan (semua bulan). Centang “Sepanjang waktu” untuk data kumulatif tanpa batas tanggal.') }}
+        {{ __('Default: hari ini sampai hari ini. Isi tanggal mulai–selesai, atau pilih bulan/tahun, lalu Terapkan.') }}
         <br>
         <span class="opacity-90">{{ __('Order & task: filter menurut tanggal dibuat (created_at); absensi: tanggal; komentar & lampiran task: waktu buat.') }}</span>
     </p>

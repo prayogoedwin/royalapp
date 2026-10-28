@@ -22,24 +22,75 @@ class LeaderboardController extends Controller
             return null;
         }
 
-        $year = (int) $request->input('year', now()->year);
-        $year = max(2000, min(2100, $year));
-
-        $monthRaw = $request->input('month');
-        if ($monthRaw !== null && $monthRaw !== '' && $monthRaw !== '0') {
-            $m = (int) $monthRaw;
-            if ($m >= 1 && $m <= 12) {
-                $start = Carbon::create($year, $m, 1)->startOfDay();
-                $end = (clone $start)->endOfMonth()->endOfDay();
-
-                return [$start, $end];
+        $start = $this->parseDate($request->input('start_date'));
+        $end = $this->parseDate($request->input('end_date'), endOfDay: true);
+        if ($start !== null && $end !== null) {
+            if ($start->greaterThan($end)) {
+                [$start, $end] = [$end->copy()->startOfDay(), $start->copy()->endOfDay()];
             }
+
+            return [$start, $end];
         }
 
-        $start = Carbon::create($year, 1, 1)->startOfDay();
-        $end = Carbon::create($year, 12, 31)->endOfDay();
+        $year = (int) $request->input('year', 0);
+        if ($year >= 2000 && $year <= 2100) {
+            $monthRaw = $request->input('month');
+            if ($monthRaw !== null && $monthRaw !== '' && $monthRaw !== '0') {
+                $month = (int) $monthRaw;
+                if ($month >= 1 && $month <= 12) {
+                    $monthStart = Carbon::create($year, $month, 1)->startOfDay();
 
-        return [$start, $end];
+                    return [$monthStart, (clone $monthStart)->endOfMonth()->endOfDay()];
+                }
+            }
+
+            return [
+                Carbon::create($year, 1, 1)->startOfDay(),
+                Carbon::create($year, 12, 31)->endOfDay(),
+            ];
+        }
+
+        $today = now();
+
+        return [$today->copy()->startOfDay(), $today->copy()->endOfDay()];
+    }
+
+    protected function parseDate(mixed $value, bool $endOfDay = false): ?Carbon
+    {
+        if (! is_string($value) || ! filled($value)) {
+            return null;
+        }
+
+        try {
+            $date = Carbon::createFromFormat('Y-m-d', $value);
+        } catch (\Throwable) {
+            return null;
+        }
+
+        if ($date === false) {
+            return null;
+        }
+
+        return $endOfDay ? $date->endOfDay() : $date->startOfDay();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function monthNames(): array
+    {
+        return [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
+        ];
+    }
+
+    protected function formatDay(Carbon $date): string
+    {
+        $months = $this->monthNames();
+
+        return $date->day.' '.($months[$date->month] ?? $date->format('F')).' '.$date->year;
     }
 
     protected function periodLabel(?array $bounds): string
@@ -49,18 +100,29 @@ class LeaderboardController extends Controller
         }
 
         [$start, $end] = $bounds;
+        $months = $this->monthNames();
 
-        $bulan = [
-            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
-            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
-            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
-        ];
+        if ($start->isSameDay($end)) {
+            if ($start->isToday()) {
+                return __('Hari ini (:date)', ['date' => $this->formatDay($start)]);
+            }
 
-        if ($start->month === $end->month && $start->year === $end->year) {
-            return ($bulan[$start->month] ?? $start->format('F')).' '.$start->year;
+            return $this->formatDay($start);
         }
 
-        return __('Tahun :year (semua bulan)', ['year' => (string) $start->year]);
+        if ($start->isSameMonth($end) && $start->day === 1 && $end->isSameDay($start->copy()->endOfMonth())) {
+            return ($months[$start->month] ?? $start->format('F')).' '.$start->year;
+        }
+
+        if (
+            $start->month === 1 && $start->day === 1
+            && $end->month === 12 && $end->day === 31
+            && $start->year === $end->year
+        ) {
+            return __('Tahun :year', ['year' => (string) $start->year]);
+        }
+
+        return $this->formatDay($start).' – '.$this->formatDay($end);
     }
 
     /**
@@ -70,21 +132,29 @@ class LeaderboardController extends Controller
     {
         $bounds = $this->resolvePeriodBounds($request);
         $allTime = $request->boolean('all_time');
-        $year = (int) $request->input('year', now()->year);
+        $today = now()->toDateString();
+        $startDate = $bounds ? $bounds[0]->toDateString() : $today;
+        $endDate = $bounds ? $bounds[1]->toDateString() : $today;
+        $year = (int) $request->input('year', $bounds ? $bounds[0]->year : now()->year);
         $year = max(2000, min(2100, $year));
+        $month = $request->input('month');
 
         return [
             'bounds' => $bounds,
             'periodLabel' => $this->periodLabel($bounds),
             'allTime' => $allTime,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
             'year' => $year,
-            'month' => $request->input('month'),
+            'month' => $month,
             'yearOptionsFrom' => 2020,
             'yearOptionsTo' => (int) now()->year + 1,
             'periodQuery' => array_filter([
                 'all_time' => $allTime ? 1 : null,
+                'start_date' => $allTime ? null : $startDate,
+                'end_date' => $allTime ? null : $endDate,
                 'year' => $allTime ? null : $year,
-                'month' => $allTime ? null : $request->input('month'),
+                'month' => $allTime ? null : $month,
             ], fn ($value) => $value !== null && $value !== ''),
         ];
     }
