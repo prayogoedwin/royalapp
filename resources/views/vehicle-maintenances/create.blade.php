@@ -9,15 +9,15 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
-        <a href="{{ route('vehicle-maintenances.index') }}" class="text-blue-600 dark:text-blue-400 hover:underline">Vehicle Maintenance</a>
+        <a href="{{ route('vehicle-maintenances.index') }}" class="text-blue-600 dark:text-blue-400 hover:underline">Perawatan Kendaraan</a>
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
-        <span class="text-gray-500 dark:text-gray-400">Create</span>
+        <span class="text-gray-500 dark:text-gray-400">Buat</span>
     </div>
 
     <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Create Vehicle Maintenance</h1>
+        <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Buat Perawatan Kendaraan</h1>
     </div>
 
     <form method="POST" action="{{ route('vehicle-maintenances.store') }}" class="space-y-6">
@@ -26,7 +26,7 @@
             <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Informasi Umum</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm mb-1">Tipe Maintenance</label>
+                    <label class="block text-sm mb-1">Tipe Perawatan</label>
                     <select name="maintenance_type" required class="w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-700">
                         @foreach(\App\Models\VehicleMaintenance::TYPE_OPTIONS as $value => $label)
                             <option value="{{ $value }}" @selected(old('maintenance_type') === $value)>{{ $label }}</option>
@@ -34,7 +34,7 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm mb-1">Referensi Order (optional)</label>
+                    <label class="block text-sm mb-1">Referensi Pesanan (opsional)</label>
                     <select name="order_id" class="w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-700">
                         <option value="">-</option>
                         @foreach($orders as $order)
@@ -93,7 +93,7 @@
                         placeholder="Cari nama / NIK / HP / email..."
                         class="w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-700"
                     >
-                    <div x-show="identification.loading" class="mt-1 text-xs text-gray-500">Searching...</div>
+                    <div x-show="identification.loading" class="mt-1 text-xs text-gray-500">Mencari...</div>
                     <div x-show="identification.results.length > 0" class="absolute z-20 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg max-h-56 overflow-auto">
                         <template x-for="item in identification.results" :key="item.id">
                             <button type="button" @click="add('identification', item)" class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700" x-text="item.name"></button>
@@ -129,7 +129,7 @@
                         placeholder="Cari nama / NIK / HP / email..."
                         class="w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-700"
                     >
-                    <div x-show="repair.loading" class="mt-1 text-xs text-gray-500">Searching...</div>
+                    <div x-show="repair.loading" class="mt-1 text-xs text-gray-500">Mencari...</div>
                     <div x-show="repair.results.length > 0" class="absolute z-20 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg max-h-56 overflow-auto">
                         <template x-for="item in repair.results" :key="item.id">
                             <button type="button" @click="add('repair', item)" class="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700" x-text="item.name"></button>
@@ -159,7 +159,7 @@
 
         <div class="flex gap-2">
             <x-button type="primary">Save</x-button>
-            <a href="{{ route('vehicle-maintenances.index') }}"><x-button type="secondary">Back</x-button></a>
+            <a href="{{ route('vehicle-maintenances.index') }}"><x-button type="secondary">Kembali</x-button></a>
         </div>
     </form>
 

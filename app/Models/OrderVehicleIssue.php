@@ -70,10 +70,10 @@ class OrderVehicleIssue extends Model
     public static function getPriorityLabel($priority): string
     {
         return match($priority) {
-            'low' => 'Low',
-            'medium' => 'Medium',
-            'high' => 'High',
-            'urgent' => 'Urgent',
+            'low' => 'Rendah',
+            'medium' => 'Sedang',
+            'high' => 'Tinggi',
+            'urgent' => 'Mendesak',
             default => $priority,
         };
     }

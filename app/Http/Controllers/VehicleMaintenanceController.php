@@ -31,15 +31,15 @@ class VehicleMaintenanceController extends Controller
                 ->addColumn('actions', function (VehicleMaintenance $m) {
                     $actions = '';
                     if (auth()->user()->hasPermission('show-vehicle-maintenances')) {
-                        $actions .= '<a href="' . route('vehicle-maintenances.show', $m) . '" class="text-green-600 dark:text-green-400 hover:underline mr-3">View</a>';
+                        $actions .= '<a href="' . route('vehicle-maintenances.show', $m) . '" class="text-green-600 dark:text-green-400 hover:underline mr-3">Lihat</a>';
                     }
                     if (auth()->user()->hasPermission('edit-vehicle-maintenances')) {
-                        $actions .= '<a href="' . route('vehicle-maintenances.edit', $m) . '" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Edit</a>';
+                        $actions .= '<a href="' . route('vehicle-maintenances.edit', $m) . '" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Ubah</a>';
                     }
                     if (auth()->user()->hasPermission('delete-vehicle-maintenances')) {
-                        $actions .= '<form action="' . route('vehicle-maintenances.destroy', $m) . '" method="POST" class="inline" onsubmit="return confirm(\'Delete vehicle maintenance?\')">'
+                        $actions .= '<form action="' . route('vehicle-maintenances.destroy', $m) . '" method="POST" class="inline" onsubmit="return confirm(\'Hapus perawatan kendaraan?\')">'
                             . csrf_field() . method_field('DELETE')
-                            . '<button type="submit" class="text-red-600 dark:text-red-400 hover:underline">Delete</button></form>';
+                            . '<button type="submit" class="text-red-600 dark:text-red-400 hover:underline">Hapus</button></form>';
                     }
                     return $actions ?: '-';
                 })

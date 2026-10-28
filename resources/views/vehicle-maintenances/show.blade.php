@@ -4,7 +4,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
-        <a href="{{ route('vehicle-maintenances.index') }}" class="text-blue-600 dark:text-blue-400 hover:underline">Vehicle Maintenance</a>
+        <a href="{{ route('vehicle-maintenances.index') }}" class="text-blue-600 dark:text-blue-400 hover:underline">Perawatan Kendaraan</a>
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
@@ -13,13 +13,13 @@
 
     <div class="mb-6 flex justify-between items-center">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Vehicle Maintenance #{{ $vehicleMaintenance->id }}</h1>
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Perawatan Kendaraan #{{ $vehicleMaintenance->id }}</h1>
         </div>
         <div class="flex gap-2">
             @if(auth()->user()->hasPermission('edit-vehicle-maintenances'))
-                <a href="{{ route('vehicle-maintenances.edit', $vehicleMaintenance) }}"><x-button type="primary">Edit</x-button></a>
+                <a href="{{ route('vehicle-maintenances.edit', $vehicleMaintenance) }}"><x-button type="primary">Ubah</x-button></a>
             @endif
-            <a href="{{ route('vehicle-maintenances.index') }}"><x-button type="secondary">Back</x-button></a>
+            <a href="{{ route('vehicle-maintenances.index') }}"><x-button type="secondary">Kembali</x-button></a>
         </div>
     </div>
 
@@ -29,7 +29,7 @@
                 <h2 class="font-semibold mb-3 text-gray-800 dark:text-gray-100">Identifikasi Kerusakan</h2>
                 <dl class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                     <div><dt class="text-gray-500">Tipe</dt><dd class="text-gray-900 dark:text-gray-100">{{ $vehicleMaintenance->maintenance_type }}</dd></div>
-                    <div><dt class="text-gray-500">Order Ref</dt><dd class="text-gray-900 dark:text-gray-100">{{ $vehicleMaintenance->order?->order_number ?? '-' }}</dd></div>
+                    <div><dt class="text-gray-500">Ref. Pesanan</dt><dd class="text-gray-900 dark:text-gray-100">{{ $vehicleMaintenance->order?->order_number ?? '-' }}</dd></div>
                     <div><dt class="text-gray-500">Unit</dt><dd class="text-gray-900 dark:text-gray-100">{{ $vehicleMaintenance->unit?->code ?? '-' }}</dd></div>
                     <div><dt class="text-gray-500">Status</dt><dd class="text-gray-900 dark:text-gray-100">{{ $vehicleMaintenance->orderStatus?->name ?? '-' }}</dd></div>
                     <div><dt class="text-gray-500">ODO Identifikasi</dt><dd class="text-gray-900 dark:text-gray-100">{{ $vehicleMaintenance->odo_identification ?? '-' }}</dd></div>

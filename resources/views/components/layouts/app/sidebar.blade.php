@@ -51,7 +51,7 @@
 
                             @if(auth()->user()->hasPermission('view-vehicle-maintenances'))
                             <x-layouts.sidebar-link href="{{ route('vehicle-maintenances.index') }}" icon='fas-screwdriver-wrench'
-                                :active="request()->routeIs('vehicle-maintenances*')">Vehicle Maintenance</x-layouts.sidebar-link>
+                                :active="request()->routeIs('vehicle-maintenances*')">Perawatan Kendaraan</x-layouts.sidebar-link>
                             @endif
 
                             @if(auth()->user()->hasPermission('view-orders'))

@@ -4,16 +4,16 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
-        <span class="text-gray-500 dark:text-gray-400">Vehicle Maintenance</span>
+        <span class="text-gray-500 dark:text-gray-400">Perawatan Kendaraan</span>
     </div>
 
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Vehicle Maintenance</h1>
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Perawatan Kendaraan</h1>
             <p class="text-gray-600 dark:text-gray-400 mt-1">Pencatatan maintenance kendaraan.</p>
         </div>
         @if(auth()->user()->hasPermission('create-vehicle-maintenances'))
-            <a href="{{ route('vehicle-maintenances.create') }}"><x-button type="primary">Create Maintenance</x-button></a>
+            <a href="{{ route('vehicle-maintenances.create') }}"><x-button type="primary">Buat Perawatan</x-button></a>
         @endif
     </div>
 
@@ -24,11 +24,11 @@
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">ID</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tipe</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Order Ref</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ref. Pesanan</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Unit</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Biaya</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
             </table>
@@ -57,7 +57,7 @@
                     { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-right whitespace-nowrap' }
                 ],
                 order: [[0, 'desc']],
-                language: { searchPlaceholder: 'Search maintenance...' },
+                language: { searchPlaceholder: 'Cari perawatan...' },
             });
         });
     </script>
