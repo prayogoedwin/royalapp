@@ -358,6 +358,7 @@ class OrderController extends Controller
         return view('orders.pdf.surat_jalan', $suratJalan->viewPayload($order, [
             'editable' => true,
             'is_public' => false,
+            'is_webview' => false,
             'save_url' => route('orders.surat-jalan.save', $order),
             'csrf' => csrf_token(),
             'save_token' => null,
@@ -400,6 +401,7 @@ class OrderController extends Controller
                 'public_url' => $suratJalan->publicUrl($order),
                 'wa_url' => $suratJalan->waUrl($order),
                 'wa_native_url' => $suratJalan->waNativeUrl($order),
+                'wa_intent_url' => $suratJalan->waIntentUrl($order),
             ],
         ]);
     }
@@ -410,6 +412,7 @@ class OrderController extends Controller
         $view = view('orders.pdf.surat_jalan', $suratJalan->viewPayload($order, [
             'editable' => false,
             'is_public' => true,
+            'is_webview' => false,
             'save_url' => null,
             'csrf' => null,
             'save_token' => null,

@@ -63,15 +63,26 @@ class OrderSuratJalanApiTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('status', true)
             ->assertJsonPath('message', 'Surat jalan tersimpan.');
-        $this->assertStringStartsWith('https://api.whatsapp.com/send?phone=', (string) $response->json('data.wa_url'));
+        $waUrl = (string) $response->json('data.wa_url');
+        $publicUrl = (string) $response->json('data.public_url');
+        $this->assertStringStartsWith('https://api.whatsapp.com/send?phone=', $waUrl);
         $this->assertStringStartsWith('whatsapp://send?phone=', (string) $response->json('data.wa_native_url'));
+        $this->assertStringStartsWith('intent://send?phone=', (string) $response->json('data.wa_intent_url'));
+        $this->assertStringContainsString('628123456789', $waUrl);
+        $this->assertNotSame('', $publicUrl);
+        $this->assertStringContainsString(rawurlencode($publicUrl), $waUrl);
 
         $order->refresh();
         $this->assertSame('ada', collect($order->surat_jalan_checklist['items'])->firstWhere('name', 'Kunci Kontak')['status']);
         $this->assertNotEmpty($order->surat_jalan_public_token);
         $this->get(route('surat-jalan.public', $order->surat_jalan_public_token))
             ->assertOk()
-            ->assertSee($order->order_number, false);
+            ->assertSee($order->order_number, false)
+            ->assertDontSee('Simpan', false)
+            ->assertDontSee('Kirim WA', false)
+            ->assertDontSee('Cetak', false)
+            ->assertDontSee('Salin link', false)
+            ->assertDontSee('Unduh HTML', false);
     }
 
     public function test_webview_can_open_surat_jalan_with_query_token(): void
@@ -82,7 +93,11 @@ class OrderSuratJalanApiTest extends TestCase
         $this->get('/api/orders/'.$order->id.'/surat-jalan?token='.$token)
             ->assertOk()
             ->assertSee('SURAT JALAN', false)
-            ->assertSee($order->customer_name, false);
+            ->assertSee($order->customer_name, false)
+            ->assertSee('Simpan', false)
+            ->assertDontSee('Cetak', false)
+            ->assertDontSee('Salin link', false)
+            ->assertDontSee('Unduh HTML', false);
     }
 
     public function test_non_crew_cannot_open_other_order_surat_jalan(): void

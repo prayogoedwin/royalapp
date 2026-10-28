@@ -15,8 +15,11 @@
         $public_url = $public_url ?? null;
         $wa_url = $wa_url ?? null;
         $wa_native_url = $wa_native_url ?? null;
+        $wa_intent_url = $wa_intent_url ?? null;
+        $is_webview = $is_webview ?? false;
         $checklist_map = $checklist_map ?? [];
         $ttd_urls = $ttd_urls ?? ['pengirim' => null, 'penerima' => null, 'driver' => null];
+        $show_toolbar = $editable || ($public_url && ! $is_public);
     @endphp
     <title>Surat Jalan {{ $nomor }}</title>
     <style>
@@ -154,18 +157,25 @@
     </style>
 </head>
 <body>
-    @if($editable || $public_url)
+    @if($show_toolbar)
         <div class="sj-toolbar">
             @if($editable && $save_url)
                 <button type="button" class="sj-btn-save" id="sj-save">Simpan</button>
             @endif
-            <button type="button" class="sj-btn-print" id="sj-print">Cetak</button>
-            @if($wa_url)
-                <button type="button" class="sj-btn-wa" id="sj-wa" data-wa="{{ $wa_url }}" data-native="{{ $wa_native_url }}" data-copy="{{ $public_url }}">Kirim WA</button>
-            @elseif($editable)
-                <button type="button" class="sj-btn-wa" id="sj-wa" data-wa="" data-native="" data-copy="" hidden>Kirim WA</button>
+            @if(! $is_webview)
+                <button type="button" class="sj-btn-print" id="sj-print">Cetak</button>
             @endif
-            @if($public_url)
+            @if($wa_url)
+                <button type="button" class="sj-btn-wa" id="sj-wa"
+                    data-wa="{{ $wa_url }}"
+                    data-native="{{ $wa_native_url }}"
+                    data-intent="{{ $wa_intent_url }}"
+                    data-copy="{{ $public_url }}">Kirim WA</button>
+            @elseif($editable)
+                <button type="button" class="sj-btn-wa" id="sj-wa"
+                    data-wa="" data-native="" data-intent="" data-copy="" hidden>Kirim WA</button>
+            @endif
+            @if($public_url && ! $is_webview)
                 <button type="button" class="sj-btn-download" id="sj-copy" data-copy="{{ $public_url }}">Salin link</button>
                 <a class="sj-btn-download" href="{{ $public_url }}?download=1">Unduh HTML</a>
             @endif
@@ -462,9 +472,12 @@
                     });
                 });
 
-                document.getElementById('sj-print').addEventListener('click', function () {
-                    window.print();
-                });
+                var printBtn = document.getElementById('sj-print');
+                if (printBtn) {
+                    printBtn.addEventListener('click', function () {
+                        window.print();
+                    });
+                }
 
                 document.getElementById('sj-save').addEventListener('click', function () {
                     var items = [];
@@ -505,6 +518,7 @@
                             var wa = document.getElementById('sj-wa');
                             wa.setAttribute('data-wa', result.body.data.wa_url);
                             wa.setAttribute('data-native', result.body.data.wa_native_url || '');
+                            wa.setAttribute('data-intent', result.body.data.wa_intent_url || '');
                             wa.setAttribute('data-copy', result.body.data.public_url || '');
                             wa.hidden = false;
                         }
@@ -549,7 +563,8 @@
 
         function isAppWebView() {
             var ua = navigator.userAgent || '';
-            return /\bwv\b|; wv\)|WebView/i.test(ua)
+            return @json($is_webview)
+                || /\bwv\b|; wv\)|WebView/i.test(ua)
                 || typeof window.ReactNativeWebView !== 'undefined'
                 || typeof window.flutter_inappwebview !== 'undefined'
                 || typeof window.Android !== 'undefined';
@@ -588,6 +603,19 @@
             return false;
         }
 
+        function openWhatsAppApp(nativeUrl, intentUrl) {
+            var target = intentUrl || nativeUrl;
+            if (!target) {
+                return false;
+            }
+            try {
+                window.location.href = target;
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
         function bindWhatsAppButton() {
             var wa = document.getElementById('sj-wa');
             if (wa && wa.getAttribute('data-bound') !== '1') {
@@ -597,25 +625,30 @@
                     event.stopPropagation();
                     var href = wa.getAttribute('data-wa') || '';
                     var native = wa.getAttribute('data-native') || '';
+                    var intent = wa.getAttribute('data-intent') || '';
                     var share = wa.getAttribute('data-copy') || '';
-                    if (!href && !native && !share) {
+                    if (!href && !native && !intent) {
+                        showStatus('Nomor HP owner belum valid untuk WhatsApp.', true);
                         return;
                     }
-                    var copied = copyText(share);
-                    if (openExternal(native || href)) {
-                        showStatus(copied ? 'Link disalin. Jika WhatsApp tidak terbuka, tempel di WA.' : 'Membuka WhatsApp...');
+                    if (openExternal(native || intent || href)) {
+                        showStatus('Membuka WhatsApp ke nomor owner...');
                         return;
                     }
-                    if (!isAppWebView()) {
-                        var popup = window.open(href, '_blank');
-                        if (popup) {
-                            showStatus('WhatsApp dibuka di tab baru.');
+                    if (isAppWebView()) {
+                        if (openWhatsAppApp(native, intent)) {
+                            showStatus('Membuka WhatsApp ke nomor owner...');
                             return;
                         }
+                        showStatus('Tidak bisa membuka WhatsApp dari aplikasi. Pastikan WhatsApp terpasang.', true);
+                        return;
                     }
-                    showStatus(copied
-                        ? 'Link disalin. Buka WhatsApp, lalu tempel tautan surat jalan.'
-                        : 'Buka WhatsApp, lalu kirim tautan surat jalan dari Salin link.');
+                    var popup = window.open(href, '_blank');
+                    if (popup) {
+                        showStatus('WhatsApp dibuka ke nomor owner.');
+                        return;
+                    }
+                    window.location.href = href;
                 });
             }
 

@@ -39,6 +39,10 @@ class WhatsAppLinkTest extends TestCase
             'whatsapp://send?phone=6281323567354&text=Halo',
             WhatsAppLink::nativeUrl('0813-2356-7354', 'Halo')
         );
+        $this->assertSame(
+            'intent://send?phone=6281323567354&text=Halo#Intent;scheme=whatsapp;end',
+            WhatsAppLink::intentUrl('0813-2356-7354', 'Halo')
+        );
     }
 
     public function test_accepts_plus_country_code(): void

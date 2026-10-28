@@ -94,14 +94,21 @@ class OrderSuratJalanTest extends TestCase
             ->assertSee('Kirim WA', false)
             ->assertSee('data-wa="https://api.whatsapp.com/send?phone=', false)
             ->assertSee('whatsapp://send?phone=', false)
+            ->assertSee('intent://send?phone=', false)
+            ->assertSee('Cetak', false)
             ->assertSee('Salin link', false)
+            ->assertSee('Unduh HTML', false)
             ->assertDontSee('href="https://api.whatsapp.com', false);
 
         $this->get(route('surat-jalan.public', $order->surat_jalan_public_token))
             ->assertOk()
             ->assertSee('SURAT JALAN', false)
             ->assertSee('Kunci Kontak', false)
-            ->assertDontSee('Simpan', false);
+            ->assertDontSee('Simpan', false)
+            ->assertDontSee('Kirim WA', false)
+            ->assertDontSee('Cetak', false)
+            ->assertDontSee('Salin link', false)
+            ->assertDontSee('Unduh HTML', false);
 
         $this->get(route('surat-jalan.public', $order->surat_jalan_public_token).'?download=1')
             ->assertOk()

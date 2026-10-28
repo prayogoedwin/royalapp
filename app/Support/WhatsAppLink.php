@@ -59,6 +59,17 @@ class WhatsAppLink
         return $url;
     }
 
+    public static function intentUrl(?string $phone, ?string $text = null): ?string
+    {
+        $native = self::nativeUrl($phone, $text);
+
+        if ($native === null) {
+            return null;
+        }
+
+        return 'intent://'.substr($native, strlen('whatsapp://')).'#Intent;scheme=whatsapp;end';
+    }
+
     public static function internationalDigits(?string $phone): ?string
     {
         $digits = self::localDisplay($phone);

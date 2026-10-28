@@ -231,6 +231,7 @@ class OrderApiController extends Controller
             ->view('orders.pdf.surat_jalan', $suratJalan->viewPayload($order, [
                 'editable' => true,
                 'is_public' => false,
+                'is_webview' => true,
                 'save_url' => url('/api/orders/'.$order->id.'/surat-jalan'),
                 'save_token' => $token,
                 'csrf' => null,
@@ -272,6 +273,7 @@ class OrderApiController extends Controller
             'public_url' => $suratJalan->publicUrl($order),
             'wa_url' => $suratJalan->waUrl($order),
             'wa_native_url' => $suratJalan->waNativeUrl($order),
+            'wa_intent_url' => $suratJalan->waIntentUrl($order),
         ], 'Surat jalan tersimpan.');
     }
 
