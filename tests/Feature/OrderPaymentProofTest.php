@@ -7,6 +7,7 @@ use App\Models\Employee;
 use App\Models\EmployeeType;
 use App\Models\Order;
 use App\Models\OrderCrew;
+use App\Models\OrderPhoto;
 use App\Models\OrderStatus;
 use App\Models\Permission;
 use App\Models\Position;
@@ -86,13 +87,48 @@ class OrderPaymentProofTest extends TestCase
             ->assertOk()
             ->assertSee('Bukti Pembayaran', false)
             ->assertSee(asset('storage/'.$path), false)
-            ->assertSee('name="payment_proof"', false);
+            ->assertSee('name="payment_proof"', false)
+            ->assertSee('Perbesar', false)
+            ->assertSee('Perkecil', false);
 
         $this->actingAs($user)
             ->get(route('orders.show', $order))
             ->assertOk()
             ->assertSee('Bukti Pembayaran', false)
-            ->assertSee(asset('storage/'.$path), false);
+            ->assertSee(asset('storage/'.$path), false)
+            ->assertSee('Perbesar', false)
+            ->assertSee('Perkecil', false);
+    }
+
+    public function test_order_photos_lightbox_has_zoom_controls(): void
+    {
+        Storage::fake('public');
+        $user = $this->userWithPermissions(['edit-orders', 'show-orders']);
+        [$division, $status] = $this->divisionAndStatus();
+
+        $path = UploadedFile::fake()->image('foto.jpg')->store('uploads/2026/10/orders', 'public');
+        $order = Order::create($this->orderPayload($division->id, $status->id, [
+            'order_number' => 'RA.0003',
+        ]));
+        OrderPhoto::create([
+            'order_id' => $order->id,
+            'title' => 'Royal APP',
+            'path' => $path,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('orders.show', $order))
+            ->assertOk()
+            ->assertSee('imageLightbox()', false)
+            ->assertSee('Perbesar', false)
+            ->assertSee('Perkecil', false);
+
+        $this->actingAs($user)
+            ->get(route('orders.edit', $order))
+            ->assertOk()
+            ->assertSee('imageLightbox()', false)
+            ->assertSee('Perbesar', false)
+            ->assertSee('Perkecil', false);
     }
 
     public function test_edit_can_replace_payment_proof(): void

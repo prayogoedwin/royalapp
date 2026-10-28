@@ -15,11 +15,11 @@
 
     @if($showPreview)
         @if($previewUrl)
-            <div class="mb-3" x-data="{ open: false }" @keydown.escape.window="open = false">
+            <div class="mb-3" x-data="imageLightbox()">
                 <button
                     type="button"
                     class="block cursor-zoom-in"
-                    @click="open = true"
+                    @click="show(@js($previewUrl), 'Bukti Pembayaran')"
                 >
                     <img
                         src="{{ $previewUrl }}"
@@ -27,22 +27,8 @@
                         class="rounded-md w-full max-w-xs object-cover max-h-48 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700"
                     >
                 </button>
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Klik gambar untuk memperbesar</p>
-
-                <template x-teleport="body">
-                    <div
-                        x-show="open"
-                        x-cloak
-                        class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
-                        @click.self="open = false"
-                    >
-                        <button type="button" class="absolute top-4 right-4 text-white text-sm" @click="open = false">Tutup</button>
-                        <figure class="max-h-[90vh] max-w-5xl">
-                            <img src="{{ $previewUrl }}" alt="Bukti pembayaran" class="max-h-[85vh] max-w-full object-contain">
-                            <figcaption class="mt-2 text-center text-sm text-white">Bukti Pembayaran</figcaption>
-                        </figure>
-                    </div>
-                </template>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Klik gambar untuk memperbesar, lalu zoom in/out</p>
+                @include('orders.partials.image-lightbox')
             </div>
         @else
             <p class="mb-3 text-sm text-gray-500 dark:text-gray-400">Belum ada bukti pembayaran.</p>
