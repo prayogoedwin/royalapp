@@ -27,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
 
         foreach ([User::class, Order::class, Task::class] as $model) {
             $model::created($flushDashboard);
+            $model::updated($flushDashboard);
             $model::deleted($flushDashboard);
             $model::restored($flushDashboard);
         }

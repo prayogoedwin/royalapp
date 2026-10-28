@@ -96,4 +96,41 @@
         </div>
     </div>
 
+    @php
+        $statusCardColors = [
+            'yellow' => ['wrap' => 'bg-yellow-100 dark:bg-yellow-900', 'icon' => 'text-yellow-600 dark:text-yellow-300'],
+            'gray' => ['wrap' => 'bg-gray-100 dark:bg-gray-700', 'icon' => 'text-gray-600 dark:text-gray-300'],
+            'blue' => ['wrap' => 'bg-blue-100 dark:bg-blue-900', 'icon' => 'text-blue-600 dark:text-blue-300'],
+            'green' => ['wrap' => 'bg-green-100 dark:bg-green-900', 'icon' => 'text-green-600 dark:text-green-300'],
+            'red' => ['wrap' => 'bg-red-100 dark:bg-red-900', 'icon' => 'text-red-600 dark:text-red-300'],
+        ];
+    @endphp
+
+    @if(!empty($order_statuses))
+        <div class="mb-2">
+            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">{{ __('Status Order') }}</h2>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ __('Jumlah order per status, termasuk yang dibatalkan.') }}</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-6">
+            @foreach($order_statuses as $status)
+                @php
+                    $tone = $statusCardColors[$status['color'] ?? 'gray'] ?? $statusCardColors['gray'];
+                @endphp
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ $status['name'] }}</p>
+                            <p class="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-1">{{ number_format($status['total']) }}</p>
+                        </div>
+                        <div class="{{ $tone['wrap'] }} p-3 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 {{ $tone['icon'] }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    @endif
+
 </x-layouts.app>

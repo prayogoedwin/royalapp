@@ -34,6 +34,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('leaderboard', [LeaderboardController::class, 'index'])
         ->name('leaderboard.index')
         ->middleware('permission:view-leaderboard');
+    Route::get('leaderboard/{metric}', [LeaderboardController::class, 'ranking'])
+        ->name('leaderboard.ranking')
+        ->whereIn('metric', ['orders-done', 'km-done'])
+        ->middleware('permission:view-leaderboard');
     Route::get('settings/profile', [Settings\ProfileController::class, 'edit'])->name('settings.profile.edit');
     Route::put('settings/profile', [Settings\ProfileController::class, 'update'])->name('settings.profile.update');
     Route::delete('settings/profile', [Settings\ProfileController::class, 'destroy'])->name('settings.profile.destroy');

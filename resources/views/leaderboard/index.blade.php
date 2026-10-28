@@ -17,142 +17,55 @@
         </p>
     </div>
 
-    @php
-        $bulanLabels = [
-            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni',
-            7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
-        ];
-    @endphp
-
-    <form
-        method="GET"
-        action="{{ route('leaderboard.index') }}"
-        class="mb-8 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-4"
-        x-data="{ allTime: {{ $allTime ? 'true' : 'false' }} }"
-    >
-        <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-4">
-            <label class="inline-flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
-                <input
-                    type="checkbox"
-                    name="all_time"
-                    value="1"
-                    class="rounded border-gray-300 dark:border-gray-600"
-                    x-model="allTime"
-                    @if($allTime) checked @endif
-                >
-                <span>{{ __('Sepanjang waktu (tanpa filter tanggal)') }}</span>
-            </label>
-            <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md w-fit">
-                {{ __('Terapkan') }}
-            </button>
-        </div>
-
-        <div class="flex flex-col sm:flex-row flex-wrap items-end gap-3" x-show="!allTime" x-cloak>
-            <div>
-                <label for="lb_year" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ __('Tahun') }}</label>
-                <select
-                    id="lb_year"
-                    name="year"
-                    class="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm min-w-[7rem]"
-                >
-                    @for($y = $yearOptionsTo; $y >= $yearOptionsFrom; $y--)
-                        <option value="{{ $y }}" @selected((int) $year === $y)>{{ $y }}</option>
-                    @endfor
-                </select>
-            </div>
-            <div>
-                <label for="lb_month" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ __('Bulan') }}</label>
-                <select
-                    id="lb_month"
-                    name="month"
-                    class="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm min-w-[11rem]"
-                >
-                    <option value="">{{ __('Semua bulan (tahun penuh)') }}</option>
-                    @foreach($bulanLabels as $num => $label)
-                        <option value="{{ $num }}" @selected((string) $month === (string) $num)>{{ $label }}</option>
-                    @endforeach
-                </select>
-            </div>
-        </div>
-
-        <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-            {{ __('Default: tahun berjalan (semua bulan). Centang “Sepanjang waktu” untuk data kumulatif tanpa batas tanggal.') }}
-            <br>
-            <span class="opacity-90">{{ __('Order & task: filter menurut tanggal dibuat (created_at); absensi: tanggal; komentar & lampiran task: waktu buat.') }}</span>
-        </p>
-    </form>
-
-    @php
-        $tableClass = 'min-w-full text-sm';
-        $thClass = 'py-2 px-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase border-b border-gray-200 dark:border-gray-700';
-        $tdClass = 'py-2 px-3 text-gray-800 dark:text-gray-100 border-b border-gray-100 dark:border-gray-700/50';
-    @endphp
+    @include('leaderboard.partials.period-form', ['action' => route('leaderboard.index')])
 
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {{-- Order Done --}}
         <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
-            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
-                <span class="text-amber-500">①</span> {{ __('Order Done terbanyak') }}
-            </h2>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">{{ __('Jumlah order berstatus Done sebagai kru.') }}</p>
-            <div class="overflow-x-auto">
-                <table class="{{ $tableClass }}">
-                    <thead>
-                        <tr>
-                            <th class="{{ $thClass }}">#</th>
-                            <th class="{{ $thClass }}">{{ __('User') }}</th>
-                            <th class="{{ $thClass }} text-right">{{ __('Jumlah') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($ordersDone as $i => $row)
-                            <tr>
-                                <td class="{{ $tdClass }}">{{ $i + 1 }}</td>
-                                <td class="{{ $tdClass }}">
-                                    <div class="font-medium">{{ $row->name }}</div>
-                                    <div class="text-xs text-gray-500">{{ $row->email }}</div>
-                                </td>
-                                <td class="{{ $tdClass }} text-right font-semibold">{{ number_format($row->total) }}</td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="3" class="{{ $tdClass }} text-gray-500">{{ __('Belum ada data.') }}</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
+            <div class="mb-3 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                        <a href="{{ route('leaderboard.ranking', array_merge($periodQuery, ['metric' => 'orders-done'])) }}" class="hover:text-blue-600 dark:hover:text-blue-400">
+                            <span class="text-amber-500">①</span> {{ __('Order Done terbanyak') }}
+                        </a>
+                    </h2>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ __('Jumlah order berstatus Done sebagai driver. Klik untuk melihat semua driver.') }}</p>
+                </div>
+                <a href="{{ route('leaderboard.ranking', array_merge($periodQuery, ['metric' => 'orders-done'])) }}"
+                    class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap">
+                    {{ __('Lihat semua driver') }}
+                </a>
             </div>
+            @include('leaderboard.partials.ranking-table', [
+                'rows' => $ordersDone,
+                'valueKey' => 'total',
+                'valueLabel' => __('Jumlah'),
+                'formatKm' => false,
+            ])
         </div>
 
         {{-- KM Done --}}
         <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
-            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
-                <span class="text-amber-500">②</span> {{ __('Total KM (order Done)') }}
-            </h2>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">{{ __('Jumlah KM selisih (order report) pada order Done sebagai kru.') }}</p>
-            <div class="overflow-x-auto">
-                <table class="{{ $tableClass }}">
-                    <thead>
-                        <tr>
-                            <th class="{{ $thClass }}">#</th>
-                            <th class="{{ $thClass }}">{{ __('User') }}</th>
-                            <th class="{{ $thClass }} text-right">{{ __('Total KM') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($kmDone as $i => $row)
-                            <tr>
-                                <td class="{{ $tdClass }}">{{ $i + 1 }}</td>
-                                <td class="{{ $tdClass }}">
-                                    <div class="font-medium">{{ $row->name }}</div>
-                                    <div class="text-xs text-gray-500">{{ $row->email }}</div>
-                                </td>
-                                <td class="{{ $tdClass }} text-right font-semibold">{{ number_format((float) $row->total_km, 0, ',', '.') }}</td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="3" class="{{ $tdClass }} text-gray-500">{{ __('Belum ada data.') }}</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
+            <div class="mb-3 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                        <a href="{{ route('leaderboard.ranking', array_merge($periodQuery, ['metric' => 'km-done'])) }}" class="hover:text-blue-600 dark:hover:text-blue-400">
+                            <span class="text-amber-500">②</span> {{ __('Total KM (order Done)') }}
+                        </a>
+                    </h2>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ __('Jumlah KM selisih (order report) pada order Done sebagai driver. Klik untuk melihat semua driver.') }}</p>
+                </div>
+                <a href="{{ route('leaderboard.ranking', array_merge($periodQuery, ['metric' => 'km-done'])) }}"
+                    class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap">
+                    {{ __('Lihat semua driver') }}
+                </a>
             </div>
+            @include('leaderboard.partials.ranking-table', [
+                'rows' => $kmDone,
+                'valueKey' => 'total_km',
+                'valueLabel' => __('Total KM'),
+                'formatKm' => true,
+            ])
         </div>
 
         {{-- Task Done --}}
@@ -161,31 +74,12 @@
                 <span class="text-amber-500">③</span> {{ __('Task Done terbanyak') }}
             </h2>
             <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">{{ __('Jumlah task berstatus Done sebagai kru.') }}</p>
-            <div class="overflow-x-auto">
-                <table class="{{ $tableClass }}">
-                    <thead>
-                        <tr>
-                            <th class="{{ $thClass }}">#</th>
-                            <th class="{{ $thClass }}">{{ __('User') }}</th>
-                            <th class="{{ $thClass }} text-right">{{ __('Jumlah') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($tasksDone as $i => $row)
-                            <tr>
-                                <td class="{{ $tdClass }}">{{ $i + 1 }}</td>
-                                <td class="{{ $tdClass }}">
-                                    <div class="font-medium">{{ $row->name }}</div>
-                                    <div class="text-xs text-gray-500">{{ $row->email }}</div>
-                                </td>
-                                <td class="{{ $tdClass }} text-right font-semibold">{{ number_format($row->total) }}</td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="3" class="{{ $tdClass }} text-gray-500">{{ __('Belum ada data.') }}</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+            @include('leaderboard.partials.ranking-table', [
+                'rows' => $tasksDone,
+                'valueKey' => 'total',
+                'valueLabel' => __('Jumlah'),
+                'formatKm' => false,
+            ])
         </div>
 
         {{-- Absensi Hadir --}}
@@ -194,31 +88,12 @@
                 <span class="text-amber-500">④</span> {{ __('Kehadiran (status Hadir)') }}
             </h2>
             <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">{{ __('Jumlah hari absensi dengan status Hadir.') }}</p>
-            <div class="overflow-x-auto">
-                <table class="{{ $tableClass }}">
-                    <thead>
-                        <tr>
-                            <th class="{{ $thClass }}">#</th>
-                            <th class="{{ $thClass }}">{{ __('User') }}</th>
-                            <th class="{{ $thClass }} text-right">{{ __('Hadir') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($absensiHadir as $i => $row)
-                            <tr>
-                                <td class="{{ $tdClass }}">{{ $i + 1 }}</td>
-                                <td class="{{ $tdClass }}">
-                                    <div class="font-medium">{{ $row->name }}</div>
-                                    <div class="text-xs text-gray-500">{{ $row->email }}</div>
-                                </td>
-                                <td class="{{ $tdClass }} text-right font-semibold">{{ number_format($row->total) }}</td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="3" class="{{ $tdClass }} text-gray-500">{{ __('Belum ada data.') }}</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+            @include('leaderboard.partials.ranking-table', [
+                'rows' => $absensiHadir,
+                'valueKey' => 'total',
+                'valueLabel' => __('Hadir'),
+                'formatKm' => false,
+            ])
         </div>
 
         {{-- Task comments --}}
@@ -227,31 +102,12 @@
                 <span class="text-amber-500">⑤</span> {{ __('Komentar task terbanyak') }}
             </h2>
             <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">{{ __('Jumlah komentar task yang dibuat user.') }}</p>
-            <div class="overflow-x-auto">
-                <table class="{{ $tableClass }}">
-                    <thead>
-                        <tr>
-                            <th class="{{ $thClass }}">#</th>
-                            <th class="{{ $thClass }}">{{ __('User') }}</th>
-                            <th class="{{ $thClass }} text-right">{{ __('Jumlah') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($taskComments as $i => $row)
-                            <tr>
-                                <td class="{{ $tdClass }}">{{ $i + 1 }}</td>
-                                <td class="{{ $tdClass }}">
-                                    <div class="font-medium">{{ $row->name }}</div>
-                                    <div class="text-xs text-gray-500">{{ $row->email }}</div>
-                                </td>
-                                <td class="{{ $tdClass }} text-right font-semibold">{{ number_format($row->total) }}</td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="3" class="{{ $tdClass }} text-gray-500">{{ __('Belum ada data.') }}</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+            @include('leaderboard.partials.ranking-table', [
+                'rows' => $taskComments,
+                'valueKey' => 'total',
+                'valueLabel' => __('Jumlah'),
+                'formatKm' => false,
+            ])
         </div>
 
         {{-- Task attachments --}}
@@ -260,31 +116,12 @@
                 <span class="text-amber-500">⑥</span> {{ __('Lampiran task terbanyak') }}
             </h2>
             <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">{{ __('Jumlah lampiran task yang diunggah user.') }}</p>
-            <div class="overflow-x-auto">
-                <table class="{{ $tableClass }}">
-                    <thead>
-                        <tr>
-                            <th class="{{ $thClass }}">#</th>
-                            <th class="{{ $thClass }}">{{ __('User') }}</th>
-                            <th class="{{ $thClass }} text-right">{{ __('Jumlah') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($taskAttachments as $i => $row)
-                            <tr>
-                                <td class="{{ $tdClass }}">{{ $i + 1 }}</td>
-                                <td class="{{ $tdClass }}">
-                                    <div class="font-medium">{{ $row->name }}</div>
-                                    <div class="text-xs text-gray-500">{{ $row->email }}</div>
-                                </td>
-                                <td class="{{ $tdClass }} text-right font-semibold">{{ number_format($row->total) }}</td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="3" class="{{ $tdClass }} text-gray-500">{{ __('Belum ada data.') }}</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+            @include('leaderboard.partials.ranking-table', [
+                'rows' => $taskAttachments,
+                'valueKey' => 'total',
+                'valueLabel' => __('Jumlah'),
+                'formatKm' => false,
+            ])
         </div>
     </div>
 </x-layouts.app>
