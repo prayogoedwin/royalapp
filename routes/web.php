@@ -9,6 +9,7 @@ use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\OrderVehicleIssueController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\PlaceSearchController;
 use App\Http\Controllers\PoolController;
 use App\Http\Controllers\PositionController;
 use App\Http\Controllers\RoleController;
@@ -165,6 +166,10 @@ Route::middleware(['auth'])->group(function () {
     // Orders Management
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index')->middleware('permission:view-orders');
     Route::get('orders/create', [OrderController::class, 'create'])->name('orders.create')->middleware('permission:create-orders');
+    Route::get('orders/places', [PlaceSearchController::class, 'search'])->name('orders.places.search')
+        ->middleware('permission:create-orders|edit-orders');
+    Route::get('orders/places/details', [PlaceSearchController::class, 'details'])->name('orders.places.details')
+        ->middleware('permission:create-orders|edit-orders');
     Route::post('orders', [OrderController::class, 'store'])->name('orders.store')->middleware('permission:create-orders');
     Route::get('orders/{order}/surat-jalan', [OrderController::class, 'suratJalan'])->name('orders.surat-jalan')->middleware('permission:show-orders');
     Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show')->middleware('permission:show-orders');

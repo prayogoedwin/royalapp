@@ -15,6 +15,7 @@ use App\Models\OrderStatus;
 use App\Models\OrderTowing;
 use App\Models\Unit;
 use App\Services\Firebase\CrewPushNotifier;
+use App\Support\GoogleMapsLink;
 use App\Support\OrderCategoryOptions;
 use App\Support\OrderOptions;
 use App\Support\SuratJalanData;
@@ -182,6 +183,7 @@ class OrderController extends Controller
             'appointment' => ['nullable', 'string', 'max:255'],
             'pickup_address' => ['required', 'string'],
             'destination_address' => ['required', 'string'],
+            ...$this->locationRules(),
             'pickup_datetime' => ['required', 'date'],
             'price' => ['required', 'integer', 'min:0'],
             'payment_method' => ['nullable', Rule::in(array_keys(OrderOptions::paymentMethods()))],
@@ -233,6 +235,7 @@ class OrderController extends Controller
                 'appointment' => $validated['appointment'] ?? null,
                 'pickup_address' => $validated['pickup_address'],
                 'destination_address' => $validated['destination_address'],
+                ...$this->locationPayload($validated),
                 'pickup_datetime' => $validated['pickup_datetime'],
                 'price' => $validated['price'],
                 'payment_method' => $validated['payment_method'] ?? null,
@@ -597,6 +600,7 @@ class OrderController extends Controller
             'appointment' => ['nullable', 'string', 'max:255'],
             'pickup_address' => ['required', 'string'],
             'destination_address' => ['required', 'string'],
+            ...$this->locationRules(),
             'pickup_datetime' => ['required', 'date'],
             'price' => ['required', 'integer', 'min:0'],
             'payment_method' => ['nullable', 'in:'.implode(',', array_keys(OrderOptions::paymentMethods()))],
@@ -624,6 +628,7 @@ class OrderController extends Controller
                 'appointment' => $validated['appointment'] ?? null,
                 'pickup_address' => $validated['pickup_address'],
                 'destination_address' => $validated['destination_address'],
+                ...$this->locationPayload($validated),
                 'pickup_datetime' => $validated['pickup_datetime'],
                 'price' => $validated['price'],
                 'payment_method' => $validated['payment_method'],
@@ -776,5 +781,64 @@ class OrderController extends Controller
         $trx->delete();
 
         return redirect()->route('orders.edit', $orderId)->with('status', 'Transaksi e-toll berhasil dihapus.');
+    }
+
+    /**
+     * @return array<string, list<string>>
+     */
+    private function locationRules(): array
+    {
+        return [
+            'pickup_latitude' => ['nullable', 'numeric', 'between:-90,90', 'required_with:pickup_longitude'],
+            'pickup_longitude' => ['nullable', 'numeric', 'between:-180,180', 'required_with:pickup_latitude'],
+            'pickup_maps_url' => ['nullable', 'string', 'max:2048'],
+            'destination_latitude' => ['nullable', 'numeric', 'between:-90,90', 'required_with:destination_longitude'],
+            'destination_longitude' => ['nullable', 'numeric', 'between:-180,180', 'required_with:destination_latitude'],
+            'destination_maps_url' => ['nullable', 'string', 'max:2048'],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     * @return array<string, mixed>
+     */
+    private function locationPayload(array $validated): array
+    {
+        return array_merge(
+            $this->resolvedLocation('pickup', $validated),
+            $this->resolvedLocation('destination', $validated),
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     * @return array<string, mixed>
+     */
+    private function resolvedLocation(string $prefix, array $validated): array
+    {
+        $lat = $validated["{$prefix}_latitude"] ?? null;
+        $lng = $validated["{$prefix}_longitude"] ?? null;
+        $url = isset($validated["{$prefix}_maps_url"]) ? trim((string) $validated["{$prefix}_maps_url"]) : '';
+        $url = $url === '' ? null : $url;
+
+        if (($lat === null || $lng === null) && $url !== null) {
+            $parsed = GoogleMapsLink::parse($url);
+            if ($parsed !== null) {
+                [$lat, $lng] = $parsed;
+            }
+        }
+
+        $lat = is_numeric($lat) ? (float) $lat : null;
+        $lng = is_numeric($lng) ? (float) $lng : null;
+
+        if ($url === null && $lat !== null && $lng !== null) {
+            $url = GoogleMapsLink::url($lat, $lng);
+        }
+
+        return [
+            "{$prefix}_latitude" => $lat,
+            "{$prefix}_longitude" => $lng,
+            "{$prefix}_maps_url" => $url,
+        ];
     }
 }

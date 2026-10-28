@@ -64,10 +64,24 @@
                         <div class="md:col-span-2">
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Pickup Address</dt>
                             <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->pickup_address }}</dd>
+                            @if($order->pickup_maps_url)
+                                <dd class="mt-1">
+                                    <a href="{{ $order->pickup_maps_url }}" target="_blank" rel="noopener noreferrer" class="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                                        {{ __('Buka pickup di Google Maps') }}
+                                    </a>
+                                </dd>
+                            @endif
                         </div>
                         <div class="md:col-span-2">
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Destination Address</dt>
                             <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->destination_address }}</dd>
+                            @if($order->destination_maps_url)
+                                <dd class="mt-1">
+                                    <a href="{{ $order->destination_maps_url }}" target="_blank" rel="noopener noreferrer" class="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                                        {{ __('Buka destination di Google Maps') }}
+                                    </a>
+                                </dd>
+                            @endif
                         </div>
                         <div>
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Pickup Datetime</dt>

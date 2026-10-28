@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\GoogleMapsLink;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,7 +23,13 @@ class Order extends Model
         'customer_phone',
         'appointment',
         'pickup_address',
+        'pickup_latitude',
+        'pickup_longitude',
+        'pickup_maps_url',
         'destination_address',
+        'destination_latitude',
+        'destination_longitude',
+        'destination_maps_url',
         'pickup_datetime',
         'price',
         'payment_method',
@@ -36,6 +43,10 @@ class Order extends Model
     protected $casts = [
         'pickup_datetime' => 'datetime',
         'price' => 'integer',
+        'pickup_latitude' => 'float',
+        'pickup_longitude' => 'float',
+        'destination_latitude' => 'float',
+        'destination_longitude' => 'float',
     ];
 
     public function division(): BelongsTo
@@ -126,5 +137,27 @@ class Order extends Model
             ->exists();
 
         return $isDone ? now() : null;
+    }
+
+    public function getPickupMapsUrlAttribute(?string $value): ?string
+    {
+        return $this->resolvedMapsUrl($value, $this->pickup_latitude, $this->pickup_longitude);
+    }
+
+    public function getDestinationMapsUrlAttribute(?string $value): ?string
+    {
+        return $this->resolvedMapsUrl($value, $this->destination_latitude, $this->destination_longitude);
+    }
+
+    private function resolvedMapsUrl(?string $stored, mixed $latitude, mixed $longitude): ?string
+    {
+        if (filled($stored)) {
+            return $stored;
+        }
+
+        return GoogleMapsLink::url(
+            is_numeric($latitude) ? (float) $latitude : null,
+            is_numeric($longitude) ? (float) $longitude : null,
+        );
     }
 }

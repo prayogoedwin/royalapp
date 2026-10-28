@@ -110,17 +110,24 @@
             </div>
 
             <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ __('Pickup Address') }} <span class="text-red-500">*</span></label>
-                    <textarea name="pickup_address" required rows="3" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">{{ old('pickup_address') }}</textarea>
-                    @error('pickup_address')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ __('Destination Address') }} <span class="text-red-500">*</span></label>
-                    <textarea name="destination_address" required rows="3" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">{{ old('destination_address') }}</textarea>
-                    @error('destination_address')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                </div>
+                @include('orders.partials.place-field', [
+                    'prefix' => 'pickup',
+                    'label' => __('Pickup Address'),
+                    'required' => true,
+                    'address' => old('pickup_address'),
+                    'latitude' => old('pickup_latitude'),
+                    'longitude' => old('pickup_longitude'),
+                    'mapsUrl' => old('pickup_maps_url'),
+                ])
+                @include('orders.partials.place-field', [
+                    'prefix' => 'destination',
+                    'label' => __('Destination Address'),
+                    'required' => true,
+                    'address' => old('destination_address'),
+                    'latitude' => old('destination_latitude'),
+                    'longitude' => old('destination_longitude'),
+                    'mapsUrl' => old('destination_maps_url'),
+                ])
             </div>
 
             <div class="mt-6">
