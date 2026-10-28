@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Support\GoogleMapsLink;
 use App\Support\UploadPath;
+use App\Support\WhatsAppLink;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -146,6 +147,11 @@ class Order extends Model
             ->exists();
 
         return $isDone ? now() : null;
+    }
+
+    public function whatsappUrl(): ?string
+    {
+        return WhatsAppLink::url($this->customer_phone);
     }
 
     public function getPickupMapsUrlAttribute(?string $value): ?string

@@ -16,11 +16,19 @@
             <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ __('Edit Order') }} {{ $order->order_number }}</h1>
             <p class="text-gray-600 dark:text-gray-400 mt-1">{{ __('Update order data') }}</p>
         </div>
-        @if(auth()->user()->hasPermission('show-orders'))
-            <x-button type="primary" tag="a" href="{{ route('orders.surat-jalan', $order) }}" target="_blank">
-                Surat Jalan
-            </x-button>
-        @endif
+        <div class="flex flex-wrap gap-2">
+            @if($order->whatsappUrl())
+                <a href="{{ $order->whatsappUrl() }}" target="_blank" rel="noopener noreferrer"
+                    class="inline-flex items-center justify-center px-4 py-2 rounded-lg text-white font-medium bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    WhatsApp
+                </a>
+            @endif
+            @if(auth()->user()->hasPermission('show-orders'))
+                <x-button type="primary" tag="a" href="{{ route('orders.surat-jalan', $order) }}" target="_blank">
+                    Surat Jalan
+                </x-button>
+            @endif
+        </div>
     </div>
 
     @if(session('status'))
@@ -82,6 +90,11 @@
 
                 <div>
                     <x-forms.input label="Customer Phone" name="customer_phone" type="text" value="{{ old('customer_phone', $order->customer_phone) }}" required />
+                    @if($order->whatsappUrl())
+                        <a href="{{ $order->whatsappUrl() }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center mt-2 text-sm font-medium text-green-600 dark:text-green-400 hover:underline">
+                            Buka WhatsApp Web
+                        </a>
+                    @endif
                 </div>
 
                 <div>

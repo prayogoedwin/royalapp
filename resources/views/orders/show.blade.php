@@ -51,7 +51,13 @@
                         </div>
                         <div>
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Phone</dt>
-                            <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->customer_phone }}</dd>
+                            <dd class="text-base text-gray-900 dark:text-gray-100">
+                                @if($order->whatsappUrl())
+                                    <a href="{{ $order->whatsappUrl() }}" target="_blank" rel="noopener noreferrer" class="text-green-600 dark:text-green-400 hover:underline">{{ $order->customer_phone }}</a>
+                                @else
+                                    {{ $order->customer_phone }}
+                                @endif
+                            </dd>
                         </div>
                         <div>
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Division</dt>
