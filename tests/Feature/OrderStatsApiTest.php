@@ -63,6 +63,23 @@ class OrderStatsApiTest extends TestCase
             ->assertJsonPath('data.cancelled_orders', 0);
     }
 
+    public function test_lists_crew_orders_newest_first(): void
+    {
+        [$user, $employee] = $this->makeEmployeeUser();
+        $status = $this->makeStatus('Pending');
+        $older = $this->makeOrder($status, $employee);
+        $newer = $this->makeOrder($status, $employee);
+        $older->forceFill(['created_at' => now()->subDay()])->save();
+        $newer->forceFill(['created_at' => now()])->save();
+
+        Sanctum::actingAs($user);
+
+        $this->getJson('/api/orders')
+            ->assertOk()
+            ->assertJsonPath('data.data.0.id', $newer->id)
+            ->assertJsonPath('data.data.1.id', $older->id);
+    }
+
     /**
      * @return array{0: User, 1: Employee}
      */

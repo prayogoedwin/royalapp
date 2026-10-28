@@ -93,10 +93,13 @@ class OrderController extends Controller
         if ($request->ajax()) {
             $orders = Order::with(['division', 'orderStatus'])
                 ->select('orders.*')
-                ->orderBy('created_at')
-                ->orderBy('id');
+                ->orderByDesc('created_at')
+                ->orderByDesc('id');
 
             return DataTables::of($orders)
+                ->orderColumn('created_at', function ($query, string $order): void {
+                    $query->orderBy('created_at', $order)->orderBy('id', $order);
+                })
                 ->addColumn('division_name', function ($order) {
                     return $order->division->nama;
                 })

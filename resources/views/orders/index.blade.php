@@ -66,7 +66,7 @@
                     { data: 'created_at', name: 'created_at' },
                     { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-right whitespace-nowrap' }
                 ],
-                order: [[6, 'asc']],
+                order: [[6, 'desc']],
                 language: {
                     search: "_INPUT_",
                     searchPlaceholder: "Search orders...",

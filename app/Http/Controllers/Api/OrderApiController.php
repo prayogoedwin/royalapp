@@ -97,7 +97,10 @@ class OrderApiController extends Controller
             });
         }
 
-        $orders = $query->orderBy('id')->paginate($perPage);
+        $orders = $query
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->paginate($perPage);
 
         return $this->okResponse($orders);
     }
