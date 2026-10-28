@@ -11,6 +11,7 @@ use App\Models\OrderStatus;
 use App\Models\Position;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -38,7 +39,36 @@ class OrderSuratJalanApiTest extends TestCase
             ->assertSee('SURAT JALAN', false)
             ->assertSee($order->order_number, false)
             ->assertSee('PENGIRIM', false)
-            ->assertSee('PERLENGKAPAN KENDARAAN', false);
+            ->assertSee('PERLENGKAPAN KENDARAAN', false)
+            ->assertSee('Simpan', false)
+            ->assertSee('sj-pad', false);
+    }
+
+    public function test_crew_can_save_surat_jalan_checklist(): void
+    {
+        Storage::fake('public');
+        [$user, $order] = $this->crewOrder();
+        Sanctum::actingAs($user);
+        $png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+
+        $this->postJson('/api/orders/'.$order->id.'/surat-jalan', [
+            'items' => [
+                ['name' => 'Kunci Kontak', 'status' => 'ada'],
+            ],
+            'signatures' => [
+                'driver' => $png,
+            ],
+        ])
+            ->assertOk()
+            ->assertJsonPath('status', true)
+            ->assertJsonPath('message', 'Surat jalan tersimpan.');
+
+        $order->refresh();
+        $this->assertSame('ada', collect($order->surat_jalan_checklist['items'])->firstWhere('name', 'Kunci Kontak')['status']);
+        $this->assertNotEmpty($order->surat_jalan_public_token);
+        $this->get(route('surat-jalan.public', $order->surat_jalan_public_token))
+            ->assertOk()
+            ->assertSee($order->order_number, false);
     }
 
     public function test_webview_can_open_surat_jalan_with_query_token(): void

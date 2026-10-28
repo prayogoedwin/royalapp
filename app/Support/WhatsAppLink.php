@@ -11,7 +11,7 @@ class WhatsAppLink
         return preg_replace('/\D+/', '', trim((string) $phone)) ?? '';
     }
 
-    public static function url(?string $phone): ?string
+    public static function url(?string $phone, ?string $text = null): ?string
     {
         $digits = self::internationalDigits($phone);
 
@@ -19,7 +19,12 @@ class WhatsAppLink
             return null;
         }
 
-        return 'https://web.whatsapp.com/send?phone='.$digits;
+        $url = 'https://web.whatsapp.com/send?phone='.$digits;
+        if ($text !== null && trim($text) !== '') {
+            $url .= '&text='.rawurlencode($text);
+        }
+
+        return $url;
     }
 
     public static function internationalDigits(?string $phone): ?string

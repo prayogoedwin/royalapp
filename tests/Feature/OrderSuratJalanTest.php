@@ -16,6 +16,7 @@ use App\Models\Unit;
 use App\Models\User;
 use App\Support\SuratJalanData;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class OrderSuratJalanTest extends TestCase
@@ -40,7 +41,7 @@ class OrderSuratJalanTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_surat_jalan_returns_pdf_for_authorized_user(): void
+    public function test_surat_jalan_returns_interactive_html_for_authorized_user(): void
     {
         $user = $this->userWithPermissions(['show-orders']);
         $order = $this->makeOrder('RT.2026.10.0001', 'RT01', 'Towing');
@@ -48,8 +49,59 @@ class OrderSuratJalanTest extends TestCase
         $this->actingAs($user)
             ->get(route('orders.surat-jalan', $order))
             ->assertOk()
-            ->assertHeader('content-type', 'application/pdf')
-            ->assertHeader('content-disposition', 'inline; filename="surat-jalan-RT.2026.10.0001.pdf"');
+            ->assertSee('SURAT JALAN', false)
+            ->assertSee('Simpan', false)
+            ->assertSee('Cetak', false)
+            ->assertSee('Kunci Kontak', false)
+            ->assertSee('sj-pad', false);
+    }
+
+    public function test_can_save_checklist_and_reopen_saved_state(): void
+    {
+        Storage::fake('public');
+        $user = $this->userWithPermissions(['show-orders']);
+        $order = $this->makeOrder('RT.SAVE.1', 'RT01', 'Towing');
+        $png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+
+        $this->actingAs($user)
+            ->postJson(route('orders.surat-jalan.save', $order), [
+                'items' => [
+                    ['name' => 'Kunci Kontak', 'status' => 'ada'],
+                    ['name' => 'P3K', 'status' => 'tidak'],
+                ],
+                'signatures' => [
+                    'pengirim' => $png,
+                ],
+            ])
+            ->assertOk()
+            ->assertJsonPath('status', true);
+
+        $order->refresh();
+        $this->assertNotEmpty($order->surat_jalan_public_token);
+        $this->assertSame('ada', collect($order->surat_jalan_checklist['items'])->firstWhere('name', 'Kunci Kontak')['status']);
+        $this->assertSame('tidak', collect($order->surat_jalan_checklist['items'])->firstWhere('name', 'P3K')['status']);
+        $this->assertNotEmpty($order->surat_jalan_checklist['ttd']['pengirim']);
+        $this->assertDatabaseHas('order_photos', [
+            'order_id' => $order->id,
+            'title' => 'TTD Surat Jalan Pengirim',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('orders.surat-jalan', $order))
+            ->assertOk()
+            ->assertSee('value="ada"', false)
+            ->assertSee('checked', false)
+            ->assertSee('Kirim WA', false);
+
+        $this->get(route('surat-jalan.public', $order->surat_jalan_public_token))
+            ->assertOk()
+            ->assertSee('SURAT JALAN', false)
+            ->assertSee('Kunci Kontak', false)
+            ->assertDontSee('Simpan', false);
+
+        $this->get(route('surat-jalan.public', $order->surat_jalan_public_token).'?download=1')
+            ->assertOk()
+            ->assertHeader('content-disposition', 'attachment; filename="surat-jalan-RT.SAVE.1.html"');
     }
 
     public function test_surat_jalan_maps_vehicle_sender_and_receiver_automatically(): void

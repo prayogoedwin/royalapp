@@ -102,9 +102,60 @@ class SuratJalanData
             'perlengkapan' => static::perlengkapan(),
             'perlengkapan_kiri' => static::perlengkapanKolom()['kiri'],
             'perlengkapan_kanan' => static::perlengkapanKolom()['kanan'],
+            'checklist_map' => static::checklistMap($order),
+            'ttd_urls' => static::ttdUrls($order),
+            'saved' => static::isSaved($order),
+            'public_url' => filled($order->surat_jalan_public_token)
+                ? route('surat-jalan.public', $order->surat_jalan_public_token)
+                : null,
             'cars' => static::carSrcs(),
             'brand_blue' => (string) config('royal.brand_blue', '#4CA7DC'),
         ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function checklistMap(Order $order): array
+    {
+        $items = is_array($order->surat_jalan_checklist['items'] ?? null)
+            ? $order->surat_jalan_checklist['items']
+            : [];
+        $map = [];
+
+        foreach ($items as $item) {
+            $name = trim((string) ($item['name'] ?? ''));
+            if ($name === '') {
+                continue;
+            }
+            $map[$name] = strtolower(trim((string) ($item['status'] ?? '')));
+        }
+
+        return $map;
+    }
+
+    /**
+     * @return array{pengirim: ?string, penerima: ?string, driver: ?string}
+     */
+    public static function ttdUrls(Order $order): array
+    {
+        $ttd = is_array($order->surat_jalan_checklist['ttd'] ?? null)
+            ? $order->surat_jalan_checklist['ttd']
+            : [];
+        $urls = [];
+
+        foreach (['pengirim', 'penerima', 'driver'] as $role) {
+            $path = $ttd[$role] ?? null;
+            $urls[$role] = is_string($path) && $path !== '' ? asset('storage/'.$path) : null;
+        }
+
+        return $urls;
+    }
+
+    public static function isSaved(Order $order): bool
+    {
+        return is_array($order->surat_jalan_checklist['items'] ?? null)
+            && $order->surat_jalan_checklist['items'] !== [];
     }
 
     public static function logoSrc(): ?string

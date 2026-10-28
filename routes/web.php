@@ -22,6 +22,10 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehicleMaintenanceController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('sj/{token}', [OrderController::class, 'publicSuratJalan'])
+    ->name('surat-jalan.public')
+    ->where('token', '[A-Za-z0-9]+');
+
 Route::get('/', function () {
     return auth()->check()
         ? redirect()->route('dashboard')
@@ -176,6 +180,7 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('permission:create-orders|edit-orders');
     Route::post('orders', [OrderController::class, 'store'])->name('orders.store')->middleware('permission:create-orders');
     Route::get('orders/{order}/surat-jalan', [OrderController::class, 'suratJalan'])->name('orders.surat-jalan')->middleware('permission:show-orders');
+    Route::post('orders/{order}/surat-jalan', [OrderController::class, 'saveSuratJalan'])->name('orders.surat-jalan.save')->middleware('permission:show-orders');
     Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show')->middleware('permission:show-orders');
     Route::get('orders/{order}/edit', [OrderController::class, 'edit'])->name('orders.edit')
         ->middleware('permission:edit-orders|edit-order-report|create-order-expenses|create-order-etoll|create-order-photos|create-order-vehicle-issues|edit-order-vehicle-issues');

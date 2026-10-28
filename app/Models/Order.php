@@ -40,6 +40,8 @@ class Order extends Model
         'payment_status',
         'payment_proof',
         'notes',
+        'surat_jalan_checklist',
+        'surat_jalan_public_token',
         'created_by',
         'updated_by',
         'deleted_by',
@@ -52,6 +54,7 @@ class Order extends Model
         'pickup_longitude' => 'float',
         'destination_latitude' => 'float',
         'destination_longitude' => 'float',
+        'surat_jalan_checklist' => 'array',
     ];
 
     protected $appends = [

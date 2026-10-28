@@ -21,6 +21,14 @@ class WhatsAppLinkTest extends TestCase
         );
     }
 
+    public function test_appends_message_text(): void
+    {
+        $this->assertSame(
+            'https://web.whatsapp.com/send?phone=6281323567354&text=Halo',
+            WhatsAppLink::url('0813-2356-7354', 'Halo')
+        );
+    }
+
     public function test_accepts_plus_country_code(): void
     {
         $this->assertSame(

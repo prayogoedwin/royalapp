@@ -6,6 +6,16 @@
     @php
         $brand_blue = $brand_blue ?? '#4CA7DC';
         $cars = $cars ?? [];
+        $editable = $editable ?? false;
+        $is_public = $is_public ?? false;
+        $saved = $saved ?? false;
+        $save_url = $save_url ?? null;
+        $save_token = $save_token ?? null;
+        $csrf = $csrf ?? null;
+        $public_url = $public_url ?? null;
+        $wa_url = $wa_url ?? null;
+        $checklist_map = $checklist_map ?? [];
+        $ttd_urls = $ttd_urls ?? ['pengirim' => null, 'penerima' => null, 'driver' => null];
     @endphp
     <title>Surat Jalan {{ $nomor }}</title>
     <style>
@@ -110,12 +120,56 @@
         .notice ul { margin: 0; padding-left: 14px; }
         .notice li { margin-bottom: 3px; font-size: 7.5px; line-height: 1.35; color: #333; }
         .pay-body { font-size: 8px; line-height: 1.4; white-space: pre-wrap; }
+        .mark-choice { display: inline-flex; align-items: center; justify-content: center; width: 100%; min-height: 18px; cursor: pointer; }
+        .mark-choice input { position: absolute; opacity: 0; width: 0; height: 0; }
+        .mark-choice .tick { color: transparent; font-weight: bold; }
+        .mark-choice input:checked + .tick { color: #111; }
+        .sign-box { position: relative; overflow: hidden; }
+        .sign-box img, .sign-box canvas { width: 100%; height: 54px; display: block; }
+        .sign-box canvas { touch-action: none; background: #f2f2f2; cursor: crosshair; }
+        .sj-toolbar {
+            display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px;
+            position: sticky; top: 0; background: #fff; padding: 8px 0; z-index: 5;
+        }
+        .sj-toolbar button, .sj-toolbar a {
+            display: inline-flex; align-items: center; justify-content: center;
+            padding: 8px 12px; border-radius: 8px; border: 0; font-size: 13px;
+            font-weight: 600; text-decoration: none; cursor: pointer; color: #fff;
+        }
+        .sj-btn-save { background: #2563eb; }
+        .sj-btn-print { background: #374151; }
+        .sj-btn-wa { background: #16a34a; }
+        .sj-btn-download { background: #0f766e; }
+        .sj-status { font-size: 12px; color: #166534; margin: 0 0 10px; }
+        .sj-status.error { color: #b91c1c; }
         @media screen {
             body { max-width: 800px; margin: 0 auto; padding: 16px; background: #fff; }
+        }
+        @media print {
+            .sj-toolbar, .sj-status, .sj-resign { display: none !important; }
+            body { max-width: none; padding: 0; }
+            .sign-box canvas { display: none !important; }
         }
     </style>
 </head>
 <body>
+    @if($editable || $public_url)
+        <div class="sj-toolbar">
+            @if($editable && $save_url)
+                <button type="button" class="sj-btn-save" id="sj-save">Simpan</button>
+            @endif
+            <button type="button" class="sj-btn-print" id="sj-print">Cetak</button>
+            @if($wa_url)
+                <a class="sj-btn-wa" id="sj-wa" href="{{ $wa_url }}" target="_blank" rel="noopener noreferrer">Kirim WA</a>
+            @elseif($editable)
+                <a class="sj-btn-wa" id="sj-wa" href="#" target="_blank" rel="noopener noreferrer" hidden>Kirim WA</a>
+            @endif
+            @if($public_url)
+                <a class="sj-btn-download" href="{{ $public_url }}?download=1">Unduh HTML</a>
+            @endif
+        </div>
+        <div class="sj-status" id="sj-status" @if(!$saved) hidden @endif>Checklist surat jalan tersimpan.</div>
+    @endif
     <table class="top">
         <tr>
             <td style="width: 26%;">
@@ -265,11 +319,7 @@
                     </thead>
                     <tbody>
                         @foreach($perlengkapan_kiri as $i => $item)
-                            <tr class="{{ $i % 2 === 1 ? 'alt' : '' }}">
-                                <td class="item">{{ $item }}</td>
-                                <td class="mark"></td>
-                                <td class="mark"></td>
-                            </tr>
+                            @include('orders.pdf.partials.perlengkapan-row', ['item' => $item, 'i' => $i])
                         @endforeach
                     </tbody>
                 </table>
@@ -286,11 +336,7 @@
                     </thead>
                     <tbody>
                         @foreach($perlengkapan_kanan as $i => $item)
-                            <tr class="{{ $i % 2 === 1 ? 'alt' : '' }}">
-                                <td class="item">{{ $item }}</td>
-                                <td class="mark"></td>
-                                <td class="mark"></td>
-                            </tr>
+                            @include('orders.pdf.partials.perlengkapan-row', ['item' => $item, 'i' => $i])
                         @endforeach
                     </tbody>
                 </table>
@@ -300,21 +346,25 @@
 
     <table class="signs">
         <tr>
-            <td>
-                <div class="sign-box"></div>
-                <div class="sign-label">PENGIRIM</div>
-                <div class="sign-name">{{ $pengirim_nama }}</div>
-            </td>
-            <td>
-                <div class="sign-box"></div>
-                <div class="sign-label">PENERIMA</div>
-                <div class="sign-name">{{ $penerima_nama }}</div>
-            </td>
-            <td>
-                <div class="sign-box"></div>
-                <div class="sign-label">DRIVER</div>
-                <div class="sign-name">{{ $driver }}</div>
-            </td>
+            @foreach(['pengirim' => $pengirim_nama, 'penerima' => $penerima_nama, 'driver' => $driver] as $role => $signName)
+                <td>
+                    <div class="sign-box" data-role="{{ $role }}">
+                        @if(!empty($ttd_urls[$role]))
+                            <img src="{{ $ttd_urls[$role] }}" alt="TTD {{ $role }}" class="sj-ttd-img">
+                        @endif
+                        @if($editable)
+                            <canvas class="sj-pad" data-role="{{ $role }}" @if(!empty($ttd_urls[$role])) hidden @endif></canvas>
+                        @endif
+                    </div>
+                    @if($editable)
+                        <button type="button" class="sj-resign" data-role="{{ $role }}" style="margin:4px 0;font-size:9px;background:none;border:0;color:#2563eb;cursor:pointer;">
+                            {{ !empty($ttd_urls[$role]) ? 'Tanda tangan ulang' : 'Tanda tangan di sini' }}
+                        </button>
+                    @endif
+                    <div class="sign-label">{{ strtoupper($role) }}</div>
+                    <div class="sign-name">{{ $signName }}</div>
+                </td>
+            @endforeach
         </tr>
     </table>
 
@@ -335,5 +385,141 @@
             </td>
         </tr>
     </table>
+    @if($editable && $save_url)
+        <script>
+            window.sjConfig = {
+                saveUrl: @json($save_url),
+                token: @json($save_token),
+                csrf: @json($csrf)
+            };
+
+            (function () {
+                var pads = {};
+                var dirty = {};
+
+                function setupPad(canvas) {
+                    var role = canvas.getAttribute('data-role');
+                    var ctx = canvas.getContext('2d');
+                    var drawing = false;
+                    function size() {
+                        var rect = canvas.getBoundingClientRect();
+                        var ratio = window.devicePixelRatio || 1;
+                        canvas.width = Math.max(rect.width, 120) * ratio;
+                        canvas.height = 54 * ratio;
+                        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+                        ctx.strokeStyle = '#111';
+                        ctx.lineWidth = 2;
+                        ctx.lineCap = 'round';
+                    }
+                    size();
+                    function pos(event) {
+                        var rect = canvas.getBoundingClientRect();
+                        var point = event.touches ? event.touches[0] : event;
+                        return { x: point.clientX - rect.left, y: point.clientY - rect.top };
+                    }
+                    function start(event) {
+                        event.preventDefault();
+                        drawing = true;
+                        dirty[role] = true;
+                        var p = pos(event);
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                    }
+                    function move(event) {
+                        if (!drawing) return;
+                        event.preventDefault();
+                        var p = pos(event);
+                        ctx.lineTo(p.x, p.y);
+                        ctx.stroke();
+                    }
+                    function end() { drawing = false; }
+                    canvas.addEventListener('mousedown', start);
+                    canvas.addEventListener('mousemove', move);
+                    window.addEventListener('mouseup', end);
+                    canvas.addEventListener('touchstart', start, { passive: false });
+                    canvas.addEventListener('touchmove', move, { passive: false });
+                    canvas.addEventListener('touchend', end);
+                    pads[role] = canvas;
+                }
+
+                document.querySelectorAll('canvas.sj-pad').forEach(setupPad);
+
+                document.querySelectorAll('.sj-resign').forEach(function (button) {
+                    button.addEventListener('click', function () {
+                        var role = button.getAttribute('data-role');
+                        var box = button.previousElementSibling;
+                        var img = box.querySelector('img');
+                        var canvas = box.querySelector('canvas');
+                        if (img) img.hidden = true;
+                        if (canvas) {
+                            canvas.hidden = false;
+                            var ctx = canvas.getContext('2d');
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                            dirty[role] = false;
+                        }
+                    });
+                });
+
+                document.getElementById('sj-print').addEventListener('click', function () {
+                    window.print();
+                });
+
+                document.getElementById('sj-save').addEventListener('click', function () {
+                    var items = [];
+                    var seen = {};
+                    document.querySelectorAll('input[data-item]').forEach(function (input) {
+                        var name = input.getAttribute('data-item');
+                        if (!seen[name]) {
+                            seen[name] = true;
+                            items.push({ name: name, status: '' });
+                        }
+                        if (input.checked) {
+                            items.filter(function (row) { return row.name === name; })[0].status = input.value;
+                        }
+                    });
+                    var signatures = {};
+                    Object.keys(pads).forEach(function (role) {
+                        signatures[role] = dirty[role] ? pads[role].toDataURL('image/png') : '';
+                    });
+                    var status = document.getElementById('sj-status');
+                    status.hidden = false;
+                    status.classList.remove('error');
+                    status.textContent = 'Menyimpan...';
+                    var headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+                    if (window.sjConfig.csrf) headers['X-CSRF-TOKEN'] = window.sjConfig.csrf;
+                    if (window.sjConfig.token) headers['Authorization'] = 'Bearer ' + window.sjConfig.token;
+                    fetch(window.sjConfig.saveUrl, {
+                        method: 'POST',
+                        headers: headers,
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ items: items, signatures: signatures })
+                    }).then(function (res) { return res.json().then(function (body) { return { ok: res.ok, body: body }; }); })
+                    .then(function (result) {
+                        if (!result.ok) {
+                            throw new Error(result.body.message || 'Gagal menyimpan');
+                        }
+                        status.textContent = 'Tersimpan. Silakan cetak atau kirim WA.';
+                        if (result.body.data && result.body.data.wa_url) {
+                            var wa = document.getElementById('sj-wa');
+                            wa.href = result.body.data.wa_url;
+                            wa.hidden = false;
+                        }
+                        if (result.body.data && result.body.data.public_url) {
+                            window.location.reload();
+                        }
+                    }).catch(function (error) {
+                        status.classList.add('error');
+                        status.textContent = error.message || 'Gagal menyimpan';
+                    });
+                });
+            })();
+        </script>
+    @elseif($public_url || $editable)
+        <script>
+            document.getElementById('sj-print') && document.getElementById('sj-print').addEventListener('click', function () {
+                window.print();
+            });
+        </script>
+    @endif
 </body>
 </html>

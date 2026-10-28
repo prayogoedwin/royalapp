@@ -15,13 +15,13 @@ use App\Models\OrderStatus;
 use App\Models\OrderTowing;
 use App\Models\Unit;
 use App\Services\Firebase\CrewPushNotifier;
+use App\Services\SuratJalanChecklistService;
 use App\Support\GoogleMapsLink;
 use App\Support\OrderCategoryOptions;
 use App\Support\OrderOptions;
-use App\Support\SuratJalanData;
 use App\Support\UploadPath;
 use App\Support\WhatsAppLink;
-use Dompdf\Dompdf;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -29,6 +29,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use InvalidArgumentException;
 use Yajra\DataTables\Facades\DataTables;
 
 class OrderController extends Controller
@@ -352,22 +353,76 @@ class OrderController extends Controller
         return view('orders.show', compact('order'));
     }
 
-    public function suratJalan(Order $order): Response
+    public function suratJalan(Order $order, SuratJalanChecklistService $suratJalan): View
     {
-        $html = view('orders.pdf.surat_jalan', SuratJalanData::fromOrder($order))->render();
+        return view('orders.pdf.surat_jalan', $suratJalan->viewPayload($order, [
+            'editable' => true,
+            'is_public' => false,
+            'save_url' => route('orders.surat-jalan.save', $order),
+            'csrf' => csrf_token(),
+            'save_token' => null,
+        ]));
+    }
 
-        $dompdf = new Dompdf([
-            'isRemoteEnabled' => false,
+    public function saveSuratJalan(Request $request, Order $order, SuratJalanChecklistService $suratJalan): JsonResponse
+    {
+        $validated = $request->validate([
+            'items' => ['required', 'array'],
+            'items.*.name' => ['required', 'string', 'max:255'],
+            'items.*.status' => ['nullable', 'string', 'in:ada,tidak'],
+            'signatures' => ['nullable', 'array'],
+            'signatures.pengirim' => ['nullable', 'string'],
+            'signatures.penerima' => ['nullable', 'string'],
+            'signatures.driver' => ['nullable', 'string'],
         ]);
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('a4', 'portrait');
-        $dompdf->render();
 
-        $fileName = 'surat-jalan-'.str_replace(['/', '\\'], '-', $order->order_number).'.pdf';
+        try {
+            $suratJalan->save(
+                $order,
+                $validated['items'],
+                $validated['signatures'] ?? [],
+                $request->user()?->id,
+            );
+        } catch (InvalidArgumentException $exception) {
+            return response()->json([
+                'status' => false,
+                'message' => $exception->getMessage(),
+                'data' => [],
+            ], 422);
+        }
 
-        return response($dompdf->output(), 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="'.$fileName.'"',
+        $order->refresh();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Surat jalan tersimpan.',
+            'data' => [
+                'public_url' => $suratJalan->publicUrl($order),
+                'wa_url' => $suratJalan->waUrl($order),
+            ],
+        ]);
+    }
+
+    public function publicSuratJalan(Request $request, string $token, SuratJalanChecklistService $suratJalan): View|Response
+    {
+        $order = Order::query()->where('surat_jalan_public_token', $token)->firstOrFail();
+        $view = view('orders.pdf.surat_jalan', $suratJalan->viewPayload($order, [
+            'editable' => false,
+            'is_public' => true,
+            'save_url' => null,
+            'csrf' => null,
+            'save_token' => null,
+        ]));
+
+        if (! $request->boolean('download')) {
+            return $view;
+        }
+
+        $fileName = 'surat-jalan-'.str_replace(['/', '\\'], '-', $order->order_number).'.html';
+
+        return response($view->render(), 200, [
+            'Content-Type' => 'text/html; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
         ]);
     }
 

@@ -38,6 +38,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders', [OrderApiController::class, 'myOrders']);
     Route::post('/orders/bukti-pembayaran', [OrderApiController::class, 'storePaymentProof']);
     Route::get('/orders/{order}/surat-jalan', [OrderApiController::class, 'suratJalan']);
+    Route::post('/orders/{order}/surat-jalan', [OrderApiController::class, 'saveSuratJalan']);
     Route::get('/orders/{order}', [OrderApiController::class, 'show']);
 
     Route::get('/orders/{order}/photos', [OrderApiController::class, 'photos']);

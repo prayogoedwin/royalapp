@@ -515,6 +515,49 @@ class ApiDocumentation
     )]
     public function orderSuratJalan(): void {}
 
+    #[OA\Post(
+        path: '/api/orders/{order}/surat-jalan',
+        tags: ['Orders'],
+        summary: 'Simpan checklist perlengkapan dan tanda tangan surat jalan',
+        security: [['sanctum' => []]],
+        parameters: [
+            new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer', example: 1)),
+            new OA\Parameter(name: 'token', in: 'query', required: false, description: 'Sanctum token for WebView if Authorization header is not sent', schema: new OA\Schema(type: 'string')),
+        ],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['items'],
+                properties: [
+                    new OA\Property(
+                        property: 'items',
+                        type: 'array',
+                        items: new OA\Items(
+                            properties: [
+                                new OA\Property(property: 'name', type: 'string', example: 'Kunci Kontak'),
+                                new OA\Property(property: 'status', type: 'string', example: 'ada', enum: ['ada', 'tidak']),
+                            ]
+                        )
+                    ),
+                    new OA\Property(
+                        property: 'signatures',
+                        properties: [
+                            new OA\Property(property: 'pengirim', type: 'string', example: 'data:image/png;base64,...'),
+                            new OA\Property(property: 'penerima', type: 'string'),
+                            new OA\Property(property: 'driver', type: 'string'),
+                        ]
+                    ),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'OK, returns public_url and wa_url'),
+            new OA\Response(response: 401, description: 'Unauthenticated'),
+            new OA\Response(response: 404, description: 'Order not found'),
+        ]
+    )]
+    public function saveOrderSuratJalan(): void {}
+
     #[OA\Get(path: '/api/orders/{order}/photos', tags: ['Order Photos'], summary: 'List photos', security: [['sanctum' => []]], parameters: [new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))], responses: [new OA\Response(response: 200, description: 'OK')])]
     #[OA\Post(
         path: '/api/orders/{order}/photos',

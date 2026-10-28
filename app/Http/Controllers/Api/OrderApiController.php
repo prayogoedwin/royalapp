@@ -10,13 +10,14 @@ use App\Models\OrderPhoto;
 use App\Models\OrderReport;
 use App\Models\OrderStatus;
 use App\Models\OrderVehicleIssue;
+use App\Services\SuratJalanChecklistService;
 use App\Support\OrderCategoryOptions;
-use App\Support\SuratJalanData;
 use App\Support\UploadPath;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
+use InvalidArgumentException;
 use OpenApi\Annotations as OA;
 
 class OrderApiController extends Controller
@@ -217,16 +218,60 @@ class OrderApiController extends Controller
      *     @OA\Response(response=200, description="HTML")
      * )
      */
-    public function suratJalan(Request $request, int $orderId): Response|JsonResponse
+    public function suratJalan(Request $request, int $orderId, SuratJalanChecklistService $suratJalan): Response|JsonResponse
     {
         $order = $this->findUserOrder($request, $orderId);
         if (! $order) {
             return $this->errorResponse('Order not found.', 404);
         }
 
+        $token = $request->bearerToken() ?: $request->query('token');
+
         return response()
-            ->view('orders.pdf.surat_jalan', SuratJalanData::fromOrder($order))
+            ->view('orders.pdf.surat_jalan', $suratJalan->viewPayload($order, [
+                'editable' => true,
+                'is_public' => false,
+                'save_url' => url('/api/orders/'.$order->id.'/surat-jalan'),
+                'save_token' => $token,
+                'csrf' => null,
+            ]))
             ->header('Content-Type', 'text/html; charset=UTF-8');
+    }
+
+    public function saveSuratJalan(Request $request, int $orderId, SuratJalanChecklistService $suratJalan): JsonResponse
+    {
+        $order = $this->findUserOrder($request, $orderId);
+        if (! $order) {
+            return $this->errorResponse('Order not found.', 404);
+        }
+
+        $validated = $request->validate([
+            'items' => ['required', 'array'],
+            'items.*.name' => ['required', 'string', 'max:255'],
+            'items.*.status' => ['nullable', 'string', 'in:ada,tidak'],
+            'signatures' => ['nullable', 'array'],
+            'signatures.pengirim' => ['nullable', 'string'],
+            'signatures.penerima' => ['nullable', 'string'],
+            'signatures.driver' => ['nullable', 'string'],
+        ]);
+
+        try {
+            $suratJalan->save(
+                $order,
+                $validated['items'],
+                $validated['signatures'] ?? [],
+                $request->user()?->id,
+            );
+        } catch (InvalidArgumentException $exception) {
+            return $this->errorResponse($exception->getMessage(), 422);
+        }
+
+        $order->refresh();
+
+        return $this->okResponse([
+            'public_url' => $suratJalan->publicUrl($order),
+            'wa_url' => $suratJalan->waUrl($order),
+        ], 'Surat jalan tersimpan.');
     }
 
     /** @OA\Get(path="/api/orders/{order}/photos", tags={"Order Photos"}, summary="List order photos", security={{"sanctum":{}}}, @OA\Parameter(name="order", in="path", required=true, @OA\Schema(type="integer")), @OA\Response(response=200, description="Success")) */
