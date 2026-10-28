@@ -7,6 +7,12 @@ use PHPUnit\Framework\TestCase;
 
 class WhatsAppLinkTest extends TestCase
 {
+    public function test_strips_dashes_for_local_display(): void
+    {
+        $this->assertSame('081323567354', WhatsAppLink::localDisplay('0813-2356-7354'));
+        $this->assertSame('081323567354', WhatsAppLink::localDisplay('0813 2356 7354'));
+    }
+
     public function test_converts_indonesian_mobile_to_whatsapp_web_url(): void
     {
         $this->assertSame(

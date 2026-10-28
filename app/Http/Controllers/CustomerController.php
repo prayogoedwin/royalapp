@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Support\WhatsAppLink;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -40,9 +41,10 @@ class CustomerController extends Controller
                 })
                 ->editColumn('customer_phone', function ($row) {
                     $phone = (string) $row->customer_phone;
+                    $display = WhatsAppLink::localDisplay($phone) ?: $phone;
 
-                    return '<span class="font-medium">'.e($phone).'</span>
-                        <button type="button" class="ml-2 text-xs text-blue-600 dark:text-blue-400 hover:underline" data-copy="'.e($phone).'">Copy</button>';
+                    return '<span class="font-medium">'.e($display).'</span>
+                        <button type="button" class="ml-2 text-xs text-blue-600 dark:text-blue-400 hover:underline" data-copy="'.e($display).'">Copy</button>';
                 })
                 ->editColumn('last_order_at', function ($row) {
                     return $row->last_order_at
@@ -57,7 +59,7 @@ class CustomerController extends Controller
                     if (auth()->user()->hasPermission('create-orders')) {
                         $actions .= '<a href="'.route('orders.create', [
                             'customer_name' => $name,
-                            'customer_phone' => $phone,
+                            'customer_phone' => WhatsAppLink::localDisplay($phone) ?: $phone,
                         ]).'" class="text-blue-600 dark:text-blue-400 hover:underline">Repeat Order</a>';
                     }
 
@@ -92,6 +94,7 @@ class CustomerController extends Controller
 
         return view('customers.show', [
             'phone' => $phone,
+            'displayPhone' => WhatsAppLink::localDisplay($phone) ?: $phone,
             'name' => $latest->customer_name,
             'totalOrders' => $totalOrders,
             'lastOrder' => $latest,

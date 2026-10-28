@@ -15,8 +15,8 @@
         <div>
             <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ $name }}</h1>
             <p class="text-gray-600 dark:text-gray-400 mt-1">
-                {{ $phone }}
-                <button type="button" class="ml-2 text-sm text-blue-600 dark:text-blue-400 hover:underline" data-copy="{{ $phone }}">Copy</button>
+                {{ $displayPhone }}
+                <button type="button" class="ml-2 text-sm text-blue-600 dark:text-blue-400 hover:underline" data-copy="{{ $displayPhone }}">Copy</button>
             </p>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 {{ __('Jumlah order:') }} <span class="font-semibold">{{ number_format($totalOrders) }}</span>
@@ -24,7 +24,7 @@
         </div>
         <div class="flex flex-wrap gap-2">
             @if(auth()->user()->hasPermission('create-orders'))
-                <x-button type="primary" tag="a" href="{{ route('orders.create', ['customer_name' => $name, 'customer_phone' => $phone]) }}">
+                <x-button type="primary" tag="a" href="{{ route('orders.create', ['customer_name' => $name, 'customer_phone' => $displayPhone]) }}">
                     {{ __('Repeat Order') }}
                 </x-button>
             @endif

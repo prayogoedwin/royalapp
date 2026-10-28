@@ -20,6 +20,7 @@ use App\Support\OrderCategoryOptions;
 use App\Support\OrderOptions;
 use App\Support\SuratJalanData;
 use App\Support\UploadPath;
+use App\Support\WhatsAppLink;
 use Dompdf\Dompdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -175,7 +176,7 @@ class OrderController extends Controller
         $employeeAvailability = $this->buildEmployeeAvailability($employees);
 
         $prefillName = $request->query('customer_name');
-        $prefillPhone = $request->query('customer_phone');
+        $prefillPhone = WhatsAppLink::localDisplay($request->query('customer_phone'));
 
         return view('orders.create', compact(
             'divisions',

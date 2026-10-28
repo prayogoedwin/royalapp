@@ -6,6 +6,11 @@ use Illuminate\Support\Str;
 
 class WhatsAppLink
 {
+    public static function localDisplay(?string $phone): string
+    {
+        return preg_replace('/\D+/', '', trim((string) $phone)) ?? '';
+    }
+
     public static function url(?string $phone): ?string
     {
         $digits = self::internationalDigits($phone);
@@ -19,7 +24,7 @@ class WhatsAppLink
 
     public static function internationalDigits(?string $phone): ?string
     {
-        $digits = preg_replace('/\D+/', '', trim((string) $phone)) ?? '';
+        $digits = self::localDisplay($phone);
 
         if ($digits === '') {
             return null;

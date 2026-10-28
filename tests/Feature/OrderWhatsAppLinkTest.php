@@ -24,7 +24,8 @@ class OrderWhatsAppLinkTest extends TestCase
             ->get(route('orders.show', $order))
             ->assertOk()
             ->assertSee('https://web.whatsapp.com/send?phone=6281323567354', false)
-            ->assertSee('0813-2356-7354');
+            ->assertSee('081323567354')
+            ->assertDontSee('0813-2356-7354');
     }
 
     public function test_edit_order_shows_whatsapp_button(): void
