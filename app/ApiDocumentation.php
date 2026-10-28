@@ -325,6 +325,29 @@ class ApiDocumentation
     )]
     public function absensiRecapBulanan(): void {}
 
+    #[OA\Post(
+        path: '/api/lokasi-terkini',
+        tags: ['Lokasi'],
+        summary: 'Kirim koordinat terkini dari HP. user_id dan employee_id diambil dari token, bukan dari body.',
+        security: [['sanctum' => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['latitude', 'longitude'],
+                properties: [
+                    new OA\Property(property: 'latitude', type: 'number', format: 'float', example: -6.2088),
+                    new OA\Property(property: 'longitude', type: 'number', format: 'float', example: 106.8456),
+                    new OA\Property(property: 'lat', type: 'number', format: 'float', nullable: true, example: -6.2088, description: 'Alias latitude'),
+                    new OA\Property(property: 'lng', type: 'number', format: 'float', nullable: true, example: 106.8456, description: 'Alias longitude'),
+                    new OA\Property(property: 'waktu_hp', type: 'string', format: 'date-time', nullable: true, example: '2026-10-28 15:20:00', description: 'Waktu jam HP. Kosong = waktu server.'),
+                    new OA\Property(property: 'datetime', type: 'string', format: 'date-time', nullable: true, description: 'Alias waktu_hp'),
+                ]
+            )
+        ),
+        responses: [new OA\Response(response: 200, description: 'OK')]
+    )]
+    public function lokasiTerkiniStore(): void {}
+
     #[OA\Get(
         path: '/api/order-statuses',
         tags: ['Orders'],

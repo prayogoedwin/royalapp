@@ -63,6 +63,11 @@ class Employee extends Model
         return $this->hasMany(OrderCrew::class);
     }
 
+    public function lokasiTerkini(): HasMany
+    {
+        return $this->hasMany(LokasiTerkini::class);
+    }
+
     public function vehicleMaintenancePics(): HasMany
     {
         return $this->hasMany(VehicleMaintenancePic::class);

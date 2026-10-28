@@ -83,6 +83,11 @@ class User extends Authenticatable
         return $this->hasMany(UserDevice::class);
     }
 
+    public function lokasiTerkini(): HasMany
+    {
+        return $this->hasMany(LokasiTerkini::class);
+    }
+
     public function hasRole(string $role): bool
     {
         return $this->roles()->where('name', $role)->exists();

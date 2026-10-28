@@ -35,6 +35,8 @@
                 'extraLabel' => __('Nomor order'),
                 'scroll' => true,
             ])
+
+            @include('leaderboard.partials.lokasi-map', ['points' => $lokasiPoints])
         </div>
 
         {{-- Order Done --}}

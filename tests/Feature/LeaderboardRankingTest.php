@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Division;
 use App\Models\Employee;
 use App\Models\EmployeeType;
+use App\Models\LokasiTerkini;
 use App\Models\Order;
 use App\Models\OrderCrew;
 use App\Models\OrderReport;
@@ -120,6 +121,55 @@ class LeaderboardRankingTest extends TestCase
             ->assertSee($order->order_number)
             ->assertSee('Driver Selesai')
             ->assertDontSee('Nurse Ongoing');
+    }
+
+    public function test_leaderboard_map_shows_ongoing_driver_points_with_latest_flag(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-28 15:30:00'));
+
+        $viewer = $this->userWithPermissions(['view-leaderboard']);
+        $ongoing = $this->makeStatus('Ongoing');
+        $done = $this->makeStatus('Done');
+
+        $busy = $this->makeEmployee('Driver Ongoing', 'Driver');
+        $finished = $this->makeEmployee('Driver Selesai', 'Driver');
+        $this->makeDoneOrder($ongoing, $busy, 'driver');
+        $this->makeDoneOrder($done, $finished, 'driver');
+
+        LokasiTerkini::create([
+            'user_id' => $busy->user_id,
+            'employee_id' => $busy->id,
+            'latitude' => -6.2000,
+            'longitude' => 106.8000,
+            'waktu_hp' => now()->setTime(14, 10),
+        ]);
+        $latest = LokasiTerkini::create([
+            'user_id' => $busy->user_id,
+            'employee_id' => $busy->id,
+            'latitude' => -6.2100,
+            'longitude' => 106.8456,
+            'waktu_hp' => now()->setTime(15, 20),
+        ]);
+        LokasiTerkini::create([
+            'user_id' => $finished->user_id,
+            'employee_id' => $finished->id,
+            'latitude' => -7.2500,
+            'longitude' => 112.7500,
+            'waktu_hp' => now()->setTime(15, 00),
+        ]);
+
+        $this->actingAs($viewer)
+            ->get(route('leaderboard.index'))
+            ->assertOk()
+            ->assertSee('Peta lokasi hari ini')
+            ->assertSee('id="lokasi-map"', false)
+            ->assertSee('14:10')
+            ->assertSee('15:20')
+            ->assertSee('-6.21%2C106.8456', false)
+            ->assertSee('"is_latest":true', false)
+            ->assertDontSee('-7.25%2C112.75', false);
+
+        $this->assertNotNull($latest);
     }
 
     public function test_default_period_is_today_and_form_has_start_end_dates(): void

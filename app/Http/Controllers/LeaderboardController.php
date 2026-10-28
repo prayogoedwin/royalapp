@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Absensi;
+use App\Models\LokasiTerkini;
 use App\Models\OrderStatus;
+use App\Support\GoogleMapsLink;
 use Carbon\Carbon;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
@@ -169,6 +171,7 @@ class LeaderboardController extends Controller
         $kmDone = collect();
         $tasksDone = collect();
         $ongoingDrivers = $this->ongoingDriversRanking();
+        $lokasiPoints = $this->ongoingDriversLocations($ongoingDrivers);
 
         if ($doneStatusId) {
             $ordersDone = $this->ordersDoneRanking($bounds, (int) $doneStatusId);
@@ -182,6 +185,7 @@ class LeaderboardController extends Controller
 
         return view('leaderboard.index', array_merge($period, compact(
             'ongoingDrivers',
+            'lokasiPoints',
             'ordersDone',
             'kmDone',
             'tasksDone',
@@ -298,6 +302,52 @@ class LeaderboardController extends Controller
 
             return $row;
         });
+    }
+
+    /**
+     * @return list<array{id: int, user_id: int, name: string, latitude: float, longitude: float, waktu_hp: string, waktu_label: string, tanggal_label: string, maps_url: string|null, is_latest: bool}>
+     */
+    protected function ongoingDriversLocations(Collection $drivers): array
+    {
+        $userIds = $drivers->pluck('id')->filter()->values();
+        if ($userIds->isEmpty()) {
+            return [];
+        }
+
+        $today = now();
+        $rows = LokasiTerkini::query()
+            ->with('user:id,name')
+            ->whereIn('user_id', $userIds)
+            ->whereBetween('waktu_hp', [$today->copy()->startOfDay(), $today->copy()->endOfDay()])
+            ->orderBy('waktu_hp')
+            ->orderBy('id')
+            ->get();
+
+        $latestIds = $rows
+            ->groupBy('user_id')
+            ->map(fn (Collection $group) => $group->last()?->id);
+
+        $names = $drivers->keyBy('id');
+
+        return $rows->map(function (LokasiTerkini $row) use ($latestIds, $names): array {
+            $latitude = (float) $row->latitude;
+            $longitude = (float) $row->longitude;
+            $waktu = $row->waktu_hp;
+
+            return [
+                'id' => (int) $row->id,
+                'user_id' => (int) $row->user_id,
+                'name' => $row->user?->name ?? ($names->get($row->user_id)?->name ?? ''),
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'waktu_hp' => $waktu?->toDateTimeString() ?? '',
+                'waktu_label' => $waktu?->format('H:i') ?? '',
+                'tanggal_label' => $waktu ? $this->formatDay($waktu).' '.$waktu->format('H:i') : '',
+                'maps_url' => GoogleMapsLink::url($latitude, $longitude),
+                'is_latest' => $latestIds->get($row->user_id) === $row->id
+                    || $latestIds->get((string) $row->user_id) === $row->id,
+            ];
+        })->all();
     }
 
     /**

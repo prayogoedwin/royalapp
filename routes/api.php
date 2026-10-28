@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AbsensiApiController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DeviceTokenController;
+use App\Http\Controllers\Api\LokasiTerkiniController;
 use App\Http\Controllers\Api\MasterApiController;
 use App\Http\Controllers\Api\OrderApiController;
 use App\Http\Controllers\Api\TaskApiController;
@@ -27,6 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/absensi/pulang', [AbsensiApiController::class, 'storePulang']);
     Route::get('/absensi/latest', [AbsensiApiController::class, 'latest']);
     Route::get('/absensi/rekap-bulanan', [AbsensiApiController::class, 'monthlyRecap']);
+    Route::post('/lokasi-terkini', [LokasiTerkiniController::class, 'store']);
 
     Route::get('/order-statuses', [OrderApiController::class, 'statuses']);
     Route::get('/order-expense-categories', [OrderApiController::class, 'expenseCategories']);
