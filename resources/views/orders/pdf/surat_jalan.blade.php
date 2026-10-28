@@ -14,6 +14,7 @@
         $csrf = $csrf ?? null;
         $public_url = $public_url ?? null;
         $wa_url = $wa_url ?? null;
+        $wa_native_url = $wa_native_url ?? null;
         $checklist_map = $checklist_map ?? [];
         $ttd_urls = $ttd_urls ?? ['pengirim' => null, 'penerima' => null, 'driver' => null];
     @endphp
@@ -160,9 +161,9 @@
             @endif
             <button type="button" class="sj-btn-print" id="sj-print">Cetak</button>
             @if($wa_url)
-                <a class="sj-btn-wa" id="sj-wa" href="{{ $wa_url }}" target="_blank" rel="noopener noreferrer">Kirim WA</a>
+                <a class="sj-btn-wa" id="sj-wa" href="{{ $wa_url }}" data-native="{{ $wa_native_url }}" rel="noopener noreferrer">Kirim WA</a>
             @elseif($editable)
-                <a class="sj-btn-wa" id="sj-wa" href="#" target="_blank" rel="noopener noreferrer" hidden>Kirim WA</a>
+                <a class="sj-btn-wa" id="sj-wa" href="#" data-native="" rel="noopener noreferrer" hidden>Kirim WA</a>
             @endif
             @if($public_url)
                 <a class="sj-btn-download" href="{{ $public_url }}?download=1">Unduh HTML</a>
@@ -502,6 +503,7 @@
                         if (result.body.data && result.body.data.wa_url) {
                             var wa = document.getElementById('sj-wa');
                             wa.href = result.body.data.wa_url;
+                            wa.setAttribute('data-native', result.body.data.wa_native_url || '');
                             wa.hidden = false;
                         }
                         if (result.body.data && result.body.data.public_url) {
@@ -521,5 +523,38 @@
             });
         </script>
     @endif
+    <script>
+        function bindWhatsAppButton() {
+            var wa = document.getElementById('sj-wa');
+            if (!wa || wa.getAttribute('data-bound') === '1') {
+                return;
+            }
+            wa.setAttribute('data-bound', '1');
+            wa.addEventListener('click', function (event) {
+                var href = wa.getAttribute('href') || '';
+                if (!href || href === '#') {
+                    event.preventDefault();
+                    return;
+                }
+                event.preventDefault();
+                var native = wa.getAttribute('data-native') || '';
+                var android = /Android/i.test(navigator.userAgent || '');
+                if (android && native) {
+                    var fallback = encodeURIComponent(href);
+                    var path = native.replace(/^whatsapp:\/\//, '');
+                    window.location.href = 'intent://' + path + '#Intent;scheme=whatsapp;package=com.whatsapp;S.browser_fallback_url=' + fallback + ';end';
+                    setTimeout(function () { window.location.href = href; }, 800);
+                    return;
+                }
+                if (native) {
+                    window.location.href = native;
+                    setTimeout(function () { window.location.href = href; }, 800);
+                    return;
+                }
+                window.location.href = href;
+            });
+        }
+        bindWhatsAppButton();
+    </script>
 </body>
 </html>

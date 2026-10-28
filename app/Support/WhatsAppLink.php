@@ -27,6 +27,38 @@ class WhatsAppLink
         return $url;
     }
 
+    public static function appUrl(?string $phone, ?string $text = null): ?string
+    {
+        $digits = self::internationalDigits($phone);
+
+        if ($digits === null) {
+            return null;
+        }
+
+        $url = 'https://wa.me/'.$digits;
+        if ($text !== null && trim($text) !== '') {
+            $url .= '?text='.rawurlencode($text);
+        }
+
+        return $url;
+    }
+
+    public static function nativeUrl(?string $phone, ?string $text = null): ?string
+    {
+        $digits = self::internationalDigits($phone);
+
+        if ($digits === null) {
+            return null;
+        }
+
+        $url = 'whatsapp://send?phone='.$digits;
+        if ($text !== null && trim($text) !== '') {
+            $url .= '&text='.rawurlencode($text);
+        }
+
+        return $url;
+    }
+
     public static function internationalDigits(?string $phone): ?string
     {
         $digits = self::localDisplay($phone);

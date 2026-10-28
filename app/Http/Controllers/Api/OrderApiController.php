@@ -271,6 +271,7 @@ class OrderApiController extends Controller
         return $this->okResponse([
             'public_url' => $suratJalan->publicUrl($order),
             'wa_url' => $suratJalan->waUrl($order),
+            'wa_native_url' => $suratJalan->waNativeUrl($order),
         ], 'Surat jalan tersimpan.');
     }
 

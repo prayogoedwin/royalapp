@@ -51,17 +51,20 @@ class OrderSuratJalanApiTest extends TestCase
         Sanctum::actingAs($user);
         $png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
 
-        $this->postJson('/api/orders/'.$order->id.'/surat-jalan', [
+        $response = $this->postJson('/api/orders/'.$order->id.'/surat-jalan', [
             'items' => [
                 ['name' => 'Kunci Kontak', 'status' => 'ada'],
             ],
             'signatures' => [
                 'driver' => $png,
             ],
-        ])
-            ->assertOk()
+        ]);
+
+        $response->assertOk()
             ->assertJsonPath('status', true)
             ->assertJsonPath('message', 'Surat jalan tersimpan.');
+        $this->assertStringStartsWith('https://wa.me/', (string) $response->json('data.wa_url'));
+        $this->assertStringStartsWith('whatsapp://send?phone=', (string) $response->json('data.wa_native_url'));
 
         $order->refresh();
         $this->assertSame('ada', collect($order->surat_jalan_checklist['items'])->firstWhere('name', 'Kunci Kontak')['status']);

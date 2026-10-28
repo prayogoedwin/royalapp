@@ -399,6 +399,7 @@ class OrderController extends Controller
             'data' => [
                 'public_url' => $suratJalan->publicUrl($order),
                 'wa_url' => $suratJalan->waUrl($order),
+                'wa_native_url' => $suratJalan->waNativeUrl($order),
             ],
         ]);
     }

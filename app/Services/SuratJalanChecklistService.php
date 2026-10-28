@@ -55,6 +55,7 @@ class SuratJalanChecklistService
     {
         return array_merge(SuratJalanData::fromOrder($order), [
             'wa_url' => $this->waUrl($order),
+            'wa_native_url' => $this->waNativeUrl($order),
         ], $extra);
     }
 
@@ -76,7 +77,19 @@ class SuratJalanChecklistService
 
         $text = 'Surat Jalan '.$order->order_number."\n".$publicUrl;
 
-        return WhatsAppLink::url($order->customer_phone, $text);
+        return WhatsAppLink::appUrl($order->customer_phone, $text);
+    }
+
+    public function waNativeUrl(Order $order): ?string
+    {
+        $publicUrl = $this->publicUrl($order);
+        if ($publicUrl === null) {
+            return null;
+        }
+
+        $text = 'Surat Jalan '.$order->order_number."\n".$publicUrl;
+
+        return WhatsAppLink::nativeUrl($order->customer_phone, $text);
     }
 
     /**
