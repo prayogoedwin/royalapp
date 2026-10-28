@@ -5,6 +5,7 @@
     $extraKey = $extraKey ?? null;
     $extraLabel = $extraLabel ?? __('Nomor order');
     $scroll = $scroll ?? false;
+    $showColor = $showColor ?? false;
     $colspan = $extraKey ? 4 : 3;
 @endphp
 
@@ -25,8 +26,15 @@
                 <tr>
                     <td class="{{ $tdClass }}">{{ $i + 1 }}</td>
                     <td class="{{ $tdClass }}">
-                        <div class="font-medium">{{ $row->name }}</div>
-                        <div class="text-xs text-gray-500">{{ $row->email }}</div>
+                        <div class="flex items-center gap-2">
+                            @if($showColor && !empty($row->color))
+                                <span class="inline-block w-3 h-3 rounded-full shrink-0 ring-2 ring-white dark:ring-gray-800 shadow" style="background-color: {{ $row->color }}"></span>
+                            @endif
+                            <div>
+                                <div class="font-medium">{{ $row->name }}</div>
+                                <div class="text-xs text-gray-500">{{ $row->email }}</div>
+                            </div>
+                        </div>
                     </td>
                     @if($extraKey)
                         <td class="{{ $tdClass }} text-xs text-gray-600 dark:text-gray-300">{{ $row->{$extraKey} }}</td>

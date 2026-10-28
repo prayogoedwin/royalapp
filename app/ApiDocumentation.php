@@ -328,7 +328,7 @@ class ApiDocumentation
     #[OA\Post(
         path: '/api/lokasi-terkini',
         tags: ['Lokasi'],
-        summary: 'Kirim koordinat terkini dari HP. user_id dan employee_id diambil dari token, bukan dari body.',
+        summary: 'Kirim koordinat terkini dari HP. user_id, employee_id, dan created_at diisi server.',
         security: [['sanctum' => []]],
         requestBody: new OA\RequestBody(
             required: true,
@@ -337,14 +337,36 @@ class ApiDocumentation
                 properties: [
                     new OA\Property(property: 'latitude', type: 'number', format: 'float', example: -6.2088),
                     new OA\Property(property: 'longitude', type: 'number', format: 'float', example: 106.8456),
-                    new OA\Property(property: 'lat', type: 'number', format: 'float', nullable: true, example: -6.2088, description: 'Alias latitude'),
-                    new OA\Property(property: 'lng', type: 'number', format: 'float', nullable: true, example: 106.8456, description: 'Alias longitude'),
-                    new OA\Property(property: 'waktu_hp', type: 'string', format: 'date-time', nullable: true, example: '2026-10-28 15:20:00', description: 'Waktu jam HP. Kosong = waktu server.'),
-                    new OA\Property(property: 'datetime', type: 'string', format: 'date-time', nullable: true, description: 'Alias waktu_hp'),
+                    new OA\Property(property: 'lat', type: 'number', format: 'float', description: 'Alias latitude'),
+                    new OA\Property(property: 'lng', type: 'number', format: 'float', description: 'Alias longitude'),
+                    new OA\Property(property: 'waktu_hp', type: 'string', example: '2026-10-28 15:20:00', description: 'Waktu jam HP. Opsional.'),
+                ],
+                example: [
+                    'latitude' => -6.2088,
+                    'longitude' => 106.8456,
+                    'waktu_hp' => '2026-10-28 15:20:00',
                 ]
             )
         ),
-        responses: [new OA\Response(response: 200, description: 'OK')]
+        responses: [new OA\Response(
+            response: 200,
+            description: 'created_at = waktu server',
+            content: new OA\JsonContent(properties: [
+                new OA\Property(property: 'status', type: 'boolean', example: true),
+                new OA\Property(property: 'message', type: 'string', example: 'Lokasi terkini disimpan.'),
+                new OA\Property(property: 'data', properties: [
+                    new OA\Property(property: 'id', type: 'integer', example: 1),
+                    new OA\Property(property: 'user_id', type: 'integer', example: 12),
+                    new OA\Property(property: 'employee_id', type: 'integer', example: 8),
+                    new OA\Property(property: 'latitude', type: 'number', example: -6.2088),
+                    new OA\Property(property: 'longitude', type: 'number', example: 106.8456),
+                    new OA\Property(property: 'waktu_hp', type: 'string', example: '2026-10-28 15:20:00', description: 'Waktu jam HP'),
+                    new OA\Property(property: 'created_at', type: 'string', example: '2026-10-28 15:20:03', description: 'Waktu server'),
+                    new OA\Property(property: 'interval_menit', type: 'integer', example: 10),
+                    new OA\Property(property: 'maps_url', type: 'string'),
+                ]),
+            ])
+        )]
     )]
     public function lokasiTerkiniStore(): void {}
 

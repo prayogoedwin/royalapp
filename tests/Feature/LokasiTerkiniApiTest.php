@@ -8,6 +8,7 @@ use App\Models\EmployeeType;
 use App\Models\LokasiTerkini;
 use App\Models\Position;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -62,6 +63,29 @@ class LokasiTerkiniApiTest extends TestCase
         $this->assertEqualsWithDelta(106.8456, (float) $lokasi->longitude, 0.0001);
         $this->assertSame('2026-10-28 15:20:00', $lokasi->waktu_hp->format('Y-m-d H:i:s'));
         $this->assertNotNull($lokasi->created_at);
+    }
+
+    public function test_datetime_from_client_is_ignored_created_at_uses_server_time(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-28 16:05:00'));
+
+        [$user] = $this->makeEmployeeUser('Driver Server Time');
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/lokasi-terkini', [
+            'latitude' => -6.2088,
+            'longitude' => 106.8456,
+            'datetime' => '2020-01-01 00:00:00',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.waktu_hp', '2026-10-28 16:05:00')
+            ->assertJsonPath('data.created_at', '2026-10-28 16:05:00')
+            ->assertJsonMissingPath('data.datetime');
+
+        $lokasi = LokasiTerkini::query()->first();
+        $this->assertNotNull($lokasi);
+        $this->assertSame('2026-10-28 16:05:00', $lokasi->waktu_hp->format('Y-m-d H:i:s'));
+        $this->assertSame('2026-10-28 16:05:00', $lokasi->created_at->format('Y-m-d H:i:s'));
     }
 
     public function test_accepts_lat_lng_aliases(): void

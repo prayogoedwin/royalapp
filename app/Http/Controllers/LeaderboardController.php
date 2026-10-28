@@ -170,7 +170,7 @@ class LeaderboardController extends Controller
         $ordersDone = collect();
         $kmDone = collect();
         $tasksDone = collect();
-        $ongoingDrivers = $this->ongoingDriversRanking();
+        $ongoingDrivers = $this->assignDriverColors($this->ongoingDriversRanking());
         $lokasiPoints = $this->ongoingDriversLocations($ongoingDrivers);
 
         if ($doneStatusId) {
@@ -305,6 +305,28 @@ class LeaderboardController extends Controller
     }
 
     /**
+     * @return list<string>
+     */
+    protected function driverColorPalette(): array
+    {
+        return [
+            '#dc2626', '#2563eb', '#16a34a', '#d97706', '#7c3aed', '#db2777',
+            '#0891b2', '#65a30d', '#ea580c', '#4f46e5', '#0f766e', '#9f1239',
+        ];
+    }
+
+    protected function assignDriverColors(Collection $drivers): Collection
+    {
+        $palette = $this->driverColorPalette();
+
+        return $drivers->values()->map(function ($row, int $index) use ($palette) {
+            $row->color = $palette[$index % count($palette)];
+
+            return $row;
+        });
+    }
+
+    /**
      * @return list<array{id: int, user_id: int, name: string, latitude: float, longitude: float, waktu_hp: string, waktu_label: string, tanggal_label: string, maps_url: string|null, is_latest: bool}>
      */
     protected function ongoingDriversLocations(Collection $drivers): array
@@ -323,29 +345,32 @@ class LeaderboardController extends Controller
             ->orderBy('id')
             ->get();
 
-        $latestIds = $rows
-            ->groupBy('user_id')
-            ->map(fn (Collection $group) => $group->last()?->id);
-
+        $grouped = $rows->groupBy('user_id');
+        $latestIds = $grouped->map(fn (Collection $group) => $group->last()?->id);
+        $counts = $grouped->map->count();
         $names = $drivers->keyBy('id');
 
-        return $rows->map(function (LokasiTerkini $row) use ($latestIds, $names): array {
+        return $rows->map(function (LokasiTerkini $row) use ($latestIds, $counts, $names): array {
             $latitude = (float) $row->latitude;
             $longitude = (float) $row->longitude;
             $waktu = $row->waktu_hp;
+            $isLatest = $latestIds->get($row->user_id) === $row->id
+                || $latestIds->get((string) $row->user_id) === $row->id;
+            $driver = $names->get($row->user_id) ?? $names->get((string) $row->user_id);
 
             return [
                 'id' => (int) $row->id,
                 'user_id' => (int) $row->user_id,
-                'name' => $row->user?->name ?? ($names->get($row->user_id)?->name ?? ''),
+                'name' => $row->user?->name ?? ($driver?->name ?? ''),
+                'color' => $driver?->color ?? '#2563eb',
                 'latitude' => $latitude,
                 'longitude' => $longitude,
                 'waktu_hp' => $waktu?->toDateTimeString() ?? '',
                 'waktu_label' => $waktu?->format('H:i') ?? '',
                 'tanggal_label' => $waktu ? $this->formatDay($waktu).' '.$waktu->format('H:i') : '',
                 'maps_url' => GoogleMapsLink::url($latitude, $longitude),
-                'is_latest' => $latestIds->get($row->user_id) === $row->id
-                    || $latestIds->get((string) $row->user_id) === $row->id,
+                'is_latest' => $isLatest,
+                'has_previous' => $isLatest && (int) $counts->get($row->user_id, $counts->get((string) $row->user_id, 0)) > 1,
             ];
         })->all();
     }

@@ -41,7 +41,7 @@ class LokasiTerkiniController extends Controller
             'longitude' => $request->input('longitude', $request->input('lng')),
             'waktu_hp' => $request->filled('waktu_hp')
                 ? $request->input('waktu_hp')
-                : ($request->filled('datetime') ? $request->input('datetime') : now()->toDateTimeString()),
+                : now()->toDateTimeString(),
         ]);
 
         $validated = $request->validate([

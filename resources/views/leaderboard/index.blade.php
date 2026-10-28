@@ -34,6 +34,7 @@
                 'extraKey' => 'order_numbers',
                 'extraLabel' => __('Nomor order'),
                 'scroll' => true,
+                'showColor' => true,
             ])
 
             @include('leaderboard.partials.lokasi-map', ['points' => $lokasiPoints])
