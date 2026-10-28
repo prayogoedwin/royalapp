@@ -1,18 +1,18 @@
 <x-layouts.app>
     <div class="mb-6 flex items-center text-sm">
         <a href="{{ route('dashboard') }}"
-            class="text-blue-600 dark:text-blue-400 hover:underline">{{ __('Dashboard') }}</a>
+            class="text-blue-600 dark:text-blue-400 hover:underline">Dashboard</a>
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-2 text-gray-400" fill="none" viewBox="0 0 24 24"
             stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
-        <span class="text-gray-500 dark:text-gray-400">{{ __('Orders') }}</span>
+        <span class="text-gray-500 dark:text-gray-400">Pesanan</span>
     </div>
 
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ __('Orders') }}</h1>
-            <p class="text-gray-600 dark:text-gray-400 mt-1">{{ __('Manage orders') }}</p>
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Pesanan</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">Kelola pesanan</p>
             @if(!empty($customerPhone))
                 <p class="mt-2 text-sm text-blue-700 dark:text-blue-300">
                     {{ __('Filter nomor WA:') }} <span class="font-semibold">{{ $customerPhone }}</span>
@@ -23,7 +23,7 @@
         <div class="flex gap-2">
             @if(auth()->user()->hasPermission('create-orders'))
                 <a href="{{ route('orders.create') }}">
-                    <x-button type="primary">{{ __('Create Order') }}</x-button>
+                    <x-button type="primary">Buat Pesanan</x-button>
                 </a>
             @endif
         </div>
@@ -34,14 +34,14 @@
             <table id="orders-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-900">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Order #') }}</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Customer') }}</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Division') }}</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Pickup') }}</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Price') }}</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Status') }}</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Created At') }}</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Actions') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">No. Pesanan</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Pelanggan</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Divisi</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Penjemputan</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Harga</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Dibuat Pada</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
             </table>
@@ -75,13 +75,13 @@
                 order: [[6, 'desc']],
                 language: {
                     search: "_INPUT_",
-                    searchPlaceholder: "Search orders...",
-                    lengthMenu: "Show _MENU_ entries",
-                    info: "Showing _START_ to _END_ of _TOTAL_ orders",
-                    infoEmpty: "No orders found",
-                    infoFiltered: "(filtered from _MAX_ total orders)",
-                    zeroRecords: "No matching orders found",
-                    emptyTable: "No orders available"
+                    searchPlaceholder: "Cari pesanan...",
+                    lengthMenu: "Tampilkan _MENU_ data",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ pesanan",
+                    infoEmpty: "Pesanan tidak ditemukan",
+                    infoFiltered: "(difilter dari _MAX_ total pesanan)",
+                    zeroRecords: "Tidak ada pesanan yang cocok",
+                    emptyTable: "Belum ada pesanan"
                 },
                 dom: '<"flex flex-col md:flex-row justify-between items-center mb-4"lf>rt<"flex flex-col md:flex-row justify-between items-center mt-4"ip>',
                 pageLength: 10,

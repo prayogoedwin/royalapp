@@ -57,24 +57,24 @@ class EmployeeController extends Controller
                     $canViewPresensiAll = auth()->user()->hasPermission('view-presensi-all');
 
                     if (auth()->user()->hasPermission('show-employees')) {
-                        $actions .= '<a href="'.route('employees.show', $employee).'" class="text-green-600 dark:text-green-400 hover:underline mr-3">View</a>';
+                        $actions .= '<a href="'.route('employees.show', $employee).'" class="text-green-600 dark:text-green-400 hover:underline mr-3">Lihat</a>';
                     }
 
                     if (auth()->user()->hasPermission('edit-employees')) {
-                        $actions .= '<a href="'.route('employees.edit', $employee).'" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Edit</a>';
+                        $actions .= '<a href="'.route('employees.edit', $employee).'" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Ubah</a>';
                     }
 
                     if (auth()->user()->hasPermission('edit-employees') && ! $employee->user) {
-                        $actions .= '<form action="'.route('employees.create-account', $employee).'" method="POST" class="inline" onsubmit="return confirm(\'Buat akun login untuk employee ini? Password default sama dengan NIK.\')">
+                        $actions .= '<form action="'.route('employees.create-account', $employee).'" method="POST" class="inline" onsubmit="return confirm(\'Buat akun login untuk karyawan ini? Password default sama dengan NIK.\')">
                             '.csrf_field().'
                             <button type="submit" class="text-amber-600 dark:text-amber-400 hover:underline mr-3">Buat Akun</button>
                         </form>';
                     }
 
                     if (auth()->user()->hasPermission('delete-employees') && (int) $employee->user_id !== (int) auth()->id()) {
-                        $actions .= '<form action="'.route('employees.destroy', $employee).'" method="POST" class="inline" onsubmit="return confirm(\'Hapus employee ini? Akun user terkait juga akan dihapus.\')">
+                        $actions .= '<form action="'.route('employees.destroy', $employee).'" method="POST" class="inline" onsubmit="return confirm(\'Hapus karyawan ini? Akun pengguna terkait juga akan dihapus.\')">
                             '.csrf_field().method_field('DELETE').'
-                            <button type="submit" class="text-red-600 dark:text-red-400 hover:underline">Delete</button>
+                            <button type="submit" class="text-red-600 dark:text-red-400 hover:underline">Hapus</button>
                         </form>';
                     }
 

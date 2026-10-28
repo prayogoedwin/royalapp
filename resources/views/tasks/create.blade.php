@@ -37,30 +37,30 @@
         }"
     >
         <div class="mb-6 flex items-center text-sm">
-            <a href="{{ route('dashboard') }}" class="text-blue-600 dark:text-blue-400 hover:underline">{{ __('Dashboard') }}</a>
+            <a href="{{ route('dashboard') }}" class="text-blue-600 dark:text-blue-400 hover:underline">Dashboard</a>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
-            <a href="{{ route('tasks.index') }}" class="text-blue-600 dark:text-blue-400 hover:underline">{{ __('Tasks') }}</a>
+            <a href="{{ route('tasks.index') }}" class="text-blue-600 dark:text-blue-400 hover:underline">Tugas</a>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
-            <span class="text-gray-500 dark:text-gray-400">{{ __('Create') }}</span>
+            <span class="text-gray-500 dark:text-gray-400">Buat</span>
         </div>
 
         <div class="mb-6">
-            <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Create Task</h1>
-            <p class="text-gray-600 dark:text-gray-400 mt-1">Create internal task with crew and status.</p>
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Buat Tugas</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">Buat tugas internal dengan crew dan status.</p>
         </div>
 
         <form method="POST" action="{{ route('tasks.store') }}" class="space-y-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             @csrf
             <div>
-                <label class="block text-sm mb-1">Title</label>
+                <label class="block text-sm mb-1">Judul</label>
                 <input name="title" value="{{ old('title') }}" class="w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-700">
             </div>
             <div>
-                <label class="block text-sm mb-1">Description</label>
+                <label class="block text-sm mb-1">Deskripsi</label>
                 <textarea name="description" class="w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-700">{{ old('description') }}</textarea>
             </div>
             <div>
@@ -106,8 +106,8 @@
             </div>
 
             <div class="flex gap-2">
-                <x-button type="primary">Save</x-button>
-                <a href="{{ route('tasks.index') }}"><x-button type="secondary">Back</x-button></a>
+                <x-button type="primary">Simpan</x-button>
+                <a href="{{ route('tasks.index') }}"><x-button type="secondary">Kembali</x-button></a>
             </div>
         </form>
     </div>

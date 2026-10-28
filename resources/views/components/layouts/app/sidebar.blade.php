@@ -39,14 +39,14 @@
 
                             @if(auth()->user()->hasPermission('view-orders'))
                             <x-layouts.sidebar-link href="{{ route('orders.index') }}" icon='fas-file-invoice'
-                                :active="request()->routeIs('orders*')">Orders</x-layouts.sidebar-link>
+                                :active="request()->routeIs('orders*')">Pesanan</x-layouts.sidebar-link>
                             <x-layouts.sidebar-link href="{{ route('customers.index') }}" icon='fas-address-book'
                                 :active="request()->routeIs('customers*')">Customers</x-layouts.sidebar-link>
                             @endif
 
                             @if(auth()->user()->hasPermission('view-tasks'))
                             <x-layouts.sidebar-link href="{{ route('tasks.index') }}" icon='fas-tasks'
-                                :active="request()->routeIs('tasks*') || request()->routeIs('task-*')">Tasks</x-layouts.sidebar-link>
+                                :active="request()->routeIs('tasks*') || request()->routeIs('task-*')">Tugas</x-layouts.sidebar-link>
                             @endif
 
                             @if(auth()->user()->hasPermission('view-vehicle-maintenances'))
@@ -56,12 +56,12 @@
 
                             @if(auth()->user()->hasPermission('view-orders'))
                             <x-layouts.sidebar-link href="{{ route('order-vehicle-issues.index') }}" icon='fas-wrench'
-                                :active="request()->routeIs('order-vehicle-issues*')">Vehicle Issues</x-layouts.sidebar-link>
+                                :active="request()->routeIs('order-vehicle-issues*')">Masalah Kendaraan</x-layouts.sidebar-link>
                             @endif
 
                             @if(auth()->user()->hasPermission('view-employees'))
                             <x-layouts.sidebar-link href="{{ route('employees.index') }}" icon='fas-id-card'
-                                :active="request()->routeIs('employees*')">Employees</x-layouts.sidebar-link>
+                                :active="request()->routeIs('employees*')">Karyawan</x-layouts.sidebar-link>
                             @endif
 
                             {{-- Presensi menu khusus pegawai (buka presensi milik sendiri) --}}

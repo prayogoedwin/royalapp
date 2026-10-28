@@ -1,20 +1,20 @@
 <x-layouts.app>
     <div class="mb-6 flex items-center text-sm">
-        <a href="{{ route('dashboard') }}" class="text-blue-600 dark:text-blue-400 hover:underline">{{ __('Dashboard') }}</a>
+        <a href="{{ route('dashboard') }}" class="text-blue-600 dark:text-blue-400 hover:underline">Dashboard</a>
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
-        <a href="{{ route('orders.index') }}" class="text-blue-600 dark:text-blue-400 hover:underline">{{ __('Orders') }}</a>
+        <a href="{{ route('orders.index') }}" class="text-blue-600 dark:text-blue-400 hover:underline">Pesanan</a>
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
-        <span class="text-gray-500 dark:text-gray-400">{{ __('Edit') }}</span>
+        <span class="text-gray-500 dark:text-gray-400">Ubah</span>
     </div>
 
     <div class="mb-6 flex justify-between items-center">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ __('Edit Order') }} {{ $order->order_number }}</h1>
-            <p class="text-gray-600 dark:text-gray-400 mt-1">{{ __('Update order data') }}</p>
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Ubah Pesanan {{ $order->order_number }}</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">Perbarui data pesanan</p>
         </div>
         <div class="flex flex-wrap gap-2">
             @if($order->whatsappUrl())
@@ -46,7 +46,7 @@
         <input type="hidden" name="update_section" value="basic">
 
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 space-y-6">
-            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">{{ __('Basic Information') }}</h2>
+            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Informasi Dasar</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 @php
@@ -56,18 +56,18 @@
                         ?? '—';
                 @endphp
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ __('Division') }} <span class="text-red-500">*</span></label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Divisi <span class="text-red-500">*</span></label>
                     {{-- Division tidak di-submit; server memakai division order yang ada --}}
                     <input type="hidden" id="division_id" value="{{ $currentDivisionId }}">
                     <div class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-600 text-gray-800 dark:text-gray-100 cursor-not-allowed select-none">
                         {{ $currentDivisionName }}
                     </div>
-                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ __('Division cannot be changed for an existing order.') }}</p>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Divisi tidak dapat diubah untuk pesanan yang sudah ada.</p>
                     @error('division_id')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ __('Status') }} <span class="text-red-500">*</span></label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status <span class="text-red-500">*</span></label>
                     <select name="order_status_id" required class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                         @foreach($orderStatuses as $status)
                             <option value="{{ $status->id }}" @selected(old('order_status_id', $order->order_status_id) == $status->id)>{{ $status->name }}</option>
@@ -77,19 +77,19 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Unit Code (Optional)</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Kode Unit (Opsional)</label>
                     <select name="unit_code" id="unit_code" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-                        <option value="">Select Division first to see units</option>
+                        <option value="">Pilih Divisi dulu untuk melihat unit</option>
                     </select>
                     @error('unit_code')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
-                    <x-forms.input label="Customer Name" name="customer_name" type="text" value="{{ old('customer_name', $order->customer_name) }}" required />
+                    <x-forms.input label="Nama Pelanggan" name="customer_name" type="text" value="{{ old('customer_name', $order->customer_name) }}" required />
                 </div>
 
                 <div>
-                    <x-forms.input label="Customer Phone" name="customer_phone" type="text" value="{{ old('customer_phone', $order->customer_phone) }}" required />
+                    <x-forms.input label="No. HP Pelanggan" name="customer_phone" type="text" value="{{ old('customer_phone', $order->customer_phone) }}" required />
                     @if($order->whatsappUrl())
                         <a href="{{ $order->whatsappUrl() }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center mt-2 text-sm font-medium text-green-600 dark:text-green-400 hover:underline">
                             Buka WhatsApp Web
@@ -98,19 +98,19 @@
                 </div>
 
                 <div>
-                    <x-forms.input label="Appointment" name="appointment" type="text" value="{{ old('appointment', $order->appointment) }}" placeholder="Sebelum Jam 8 / jam 8.05 / IDEM" />
+                    <x-forms.input label="Janji Temu" name="appointment" type="text" value="{{ old('appointment', $order->appointment) }}" placeholder="Sebelum Jam 8 / jam 8.05 / IDEM" />
                 </div>
 
                 <div>
-                    <x-forms.input label="Pickup Date & Time" name="pickup_datetime" type="datetime-local" value="{{ old('pickup_datetime', $order->pickup_datetime->format('Y-m-d\TH:i')) }}" required />
+                    <x-forms.input label="Tanggal & Waktu Penjemputan" name="pickup_datetime" type="datetime-local" value="{{ old('pickup_datetime', $order->pickup_datetime->format('Y-m-d\TH:i')) }}" required />
                 </div>
 
                 <div>
-                    <x-forms.input label="Price" name="price" type="text" inputmode="numeric" value="{{ old('price', $order->price) }}" required />
+                    <x-forms.input label="Harga" name="price" type="text" inputmode="numeric" value="{{ old('price', $order->price) }}" required />
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Payment Method</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Metode Pembayaran</label>
                     <select name="payment_method" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                         <option value="">-</option>
                         @foreach($paymentMethods as $value => $label)
@@ -140,7 +140,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 @include('orders.partials.place-field', [
                     'prefix' => 'pickup',
-                    'label' => __('Pickup Address'),
+                    'label' => 'Alamat Penjemputan',
                     'required' => true,
                     'address' => old('pickup_address', $order->pickup_address),
                     'latitude' => old('pickup_latitude', $order->pickup_latitude),
@@ -149,7 +149,7 @@
                 ])
                 @include('orders.partials.place-field', [
                     'prefix' => 'destination',
-                    'label' => __('Destination Address'),
+                    'label' => 'Alamat Tujuan',
                     'required' => true,
                     'address' => old('destination_address', $order->destination_address),
                     'latitude' => old('destination_latitude', $order->destination_latitude),
@@ -159,20 +159,20 @@
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ __('Notes') }}</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Catatan</label>
                 <textarea name="notes" rows="3" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">{{ old('notes', $order->notes) }}</textarea>
             </div>
 
             @if($order->orderAmbulance)
                 <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-                    <h3 class="text-md font-medium text-gray-800 dark:text-gray-100 mb-3">Ambulance</h3>
+                    <h3 class="text-md font-medium text-gray-800 dark:text-gray-100 mb-3">Ambulans</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Patient Condition</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Kondisi Pasien</label>
                             <textarea name="patient_condition" rows="2" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">{{ old('patient_condition', $order->orderAmbulance->patient_condition) }}</textarea>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Medical Needs</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Kebutuhan Medis</label>
                             <textarea name="medical_needs" rows="2" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">{{ old('medical_needs', $order->orderAmbulance->medical_needs) }}</textarea>
                         </div>
                     </div>
@@ -184,16 +184,16 @@
                     <h3 class="text-md font-medium text-gray-800 dark:text-gray-100 mb-3">Towing</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <x-forms.input label="Car Type" name="car_type" type="text" value="{{ old('car_type', $order->orderTowing->car_type) }}" />
+                            <x-forms.input label="Jenis Mobil" name="car_type" type="text" value="{{ old('car_type', $order->orderTowing->car_type) }}" />
                         </div>
                         <div>
-                            <x-forms.input label="Car Condition" name="car_condition" type="text" value="{{ old('car_condition', $order->orderTowing->car_condition) }}" />
+                            <x-forms.input label="Kondisi Mobil" name="car_condition" type="text" value="{{ old('car_condition', $order->orderTowing->car_condition) }}" />
                         </div>
                         <div>
-                            <x-forms.input label="Receiver Phone" name="receiver_phone" type="text" value="{{ old('receiver_phone', $order->orderTowing->receiver_phone) }}" />
+                            <x-forms.input label="No. HP Penerima" name="receiver_phone" type="text" value="{{ old('receiver_phone', $order->orderTowing->receiver_phone) }}" />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Payment Requirement</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ketentuan Pembayaran</label>
                             <textarea name="payment_requirement" rows="2" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">{{ old('payment_requirement', $order->orderTowing->payment_requirement) }}</textarea>
                         </div>
                     </div>
@@ -201,16 +201,16 @@
             @endif
 
             <div class="flex gap-3 pt-2">
-                <x-button type="primary">{{ __('Update Order') }}</x-button>
+                <x-button type="primary">{{ __('Simpan Pesanan') }}</x-button>
                 <a href="{{ route('orders.show', $order) }}">
-                    <x-button type="secondary">{{ __('Cancel') }}</x-button>
+                    <x-button type="secondary">Batal</x-button>
                 </a>
             </div>
         </div>
     </form>
     @else
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8">
-            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">{{ __('Basic Information') }}</h2>
+            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Informasi Dasar</h2>
             <p class="text-sm text-gray-500 dark:text-gray-400">Anda tidak punya akses untuk mengubah data order. (Hanya bisa isi section driver di bawah.)</p>
         </div>
     @endif
@@ -226,7 +226,7 @@
             <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Crew</h2>
             <div class="flex justify-between items-center mb-3">
                 <p class="text-sm text-gray-500 dark:text-gray-400">Tambahkan / ubah crew yang bertugas pada order ini.</p>
-                <button type="button" onclick="addCrew()" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs">+ Add Crew</button>
+                <button type="button" onclick="addCrew()" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs">+ Tambah Crew</button>
             </div>
             <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
                 🔴 Ongoing, 🟡 Bentrok jadwal pickup, 🟢 Tersedia, ⚫ Off/Inactive (disabled)
@@ -236,7 +236,7 @@
                     <div class="flex gap-3 items-start crew-row">
                         <div class="flex-1">
                             <select name="crew_ids[]" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-                                <option value="">Select Employee</option>
+                                <option value="">Pilih Karyawan</option>
                                 @foreach($employees as $employee)
                                     @php
                                         $availability = $employeeAvailability[$employee->id] ?? ['has_ongoing' => false, 'pickup_slots' => []];
@@ -255,12 +255,12 @@
                         <div class="flex-1">
                             <input type="text" readonly value="{{ $crew->role ?? 'Role from position' }}" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400">
                         </div>
-                        <button type="button" onclick="this.closest('.crew-row').remove()" class="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-xs">Remove</button>
+                        <button type="button" onclick="this.closest('.crew-row').remove()" class="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-xs">Hapus</button>
                     </div>
                 @endforeach
             </div>
             <div class="mt-4">
-                <x-button type="primary" class="!mb-0">Update Crew</x-button>
+                <x-button type="primary" class="!mb-0">Simpan Crew</x-button>
             </div>
         </div>
     </form>
@@ -274,7 +274,7 @@
         <input type="hidden" name="update_section" value="photos">
 
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Photos</h2>
+            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Foto</h2>
 
             @if($order->orderPhotos->isEmpty())
                 <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Belum ada foto. Anda dapat menambahkan foto baru di bawah.</p>
@@ -295,7 +295,7 @@
                                     <p class="text-xs text-gray-500 dark:text-gray-400">{{ $photo->description }}</p>
                                 @endif
                                 @if(auth()->user()->hasPermission('delete-order-photos') || auth()->user()->hasPermission('edit-orders'))
-                                    <button type="submit" form="delete-photo-{{ $photo->id }}" class="text-xs text-red-600 dark:text-red-400 hover:underline">Delete</button>
+                                    <button type="submit" form="delete-photo-{{ $photo->id }}" class="text-xs text-red-600 dark:text-red-400 hover:underline">Hapus</button>
                                 @endif
                             </div>
                         @endforeach
@@ -304,9 +304,9 @@
                 </div>
             @endif
 
-            <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Add New Photos</p>
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tambah Foto Baru</p>
             <div id="photo-list" class="space-y-3 mb-4"></div>
-            <button type="button" onclick="addPhoto()" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs mb-4">+ Add Photo</button>
+            <button type="button" onclick="addPhoto()" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs mb-4">+ Tambah Foto</button>
 
             @if(auth()->user()->hasPermission('create-order-photos') || auth()->user()->hasPermission('edit-orders'))
                 <x-button type="primary">Simpan Foto</x-button>
@@ -323,7 +323,7 @@
         <input type="hidden" name="update_section" value="order_report">
 
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Order Report</h2>
+            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Laporan Pesanan</h2>
 
             <div
                 class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"
@@ -413,7 +413,7 @@
             </div>
 
             <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Catatan</label>
                 <textarea
                     name="notes"
                     rows="3"
@@ -422,7 +422,7 @@
             </div>
 
             <div class="flex items-center gap-3">
-                <x-button type="primary">Update Order Report</x-button>
+                <x-button type="primary">Simpan Pesanan Report</x-button>
                 @if(($order->orderReport ?? null) && (auth()->user()->hasPermission('delete-order-report') || auth()->user()->hasPermission('edit-orders')))
                     <button type="submit"
                             form="delete-order-report"
@@ -443,7 +443,7 @@
         <input type="hidden" name="update_section" value="order_expenses">
 
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Order Expenses</h2>
+            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Pengeluaran Pesanan</h2>
 
             @if($order->orderExpenses->isNotEmpty())
                 <div class="overflow-x-auto mb-4">
@@ -498,7 +498,7 @@
             <div id="expense-list" class="space-y-3 mb-4"></div>
             <button type="button" onclick="addExpenseRow()" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs mb-4">+ Tambah Pengeluaran</button>
 
-            <x-button type="primary">Simpan Expenses</x-button>
+            <x-button type="primary">Simpan Pengeluaran</x-button>
         </div>
     </form>
     @endif
@@ -572,11 +572,11 @@
     {{-- Section: Vehicle Issues (paling bawah) + form tambah dengan upload foto --}}
     @if(auth()->user()->hasPermission('view-order-vehicle-issues') || auth()->user()->hasPermission('show-order-vehicle-issues') || auth()->user()->hasPermission('create-order-vehicle-issues') || auth()->user()->hasPermission('edit-order-vehicle-issues') || auth()->user()->hasPermission('edit-orders'))
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-8">
-        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Vehicle Issues</h2>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Daftar vehicle issue untuk order ini. Tambah baru dengan form di bawah (termasuk upload foto).</p>
+        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Masalah Kendaraan</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Daftar masalah kendaraan untuk pesanan ini. Tambah baru dengan form di bawah (termasuk upload foto).</p>
 
         @if($order->orderVehicleIssues->isEmpty())
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Belum ada vehicle issue.</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Belum ada masalah kendaraan.</p>
         @else
             <ul class="space-y-2 mb-6">
                 @foreach($order->orderVehicleIssues as $issue)
@@ -594,7 +594,7 @@
         @if(auth()->user()->hasPermission('create-order-vehicle-issues') || auth()->user()->hasPermission('edit-orders'))
         <form action="{{ route('order-vehicle-issues.store', $order) }}?from=edit" method="POST" enctype="multipart/form-data" class="border-t border-gray-200 dark:border-gray-700 pt-6">
             @csrf
-            <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Tambah Vehicle Issue (dengan upload foto)</p>
+            <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Tambah masalah kendaraan (dengan upload foto)</p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Kategori <span class="text-red-500">*</span></label>
@@ -628,7 +628,7 @@
                     <input type="file" name="repair_photo" accept="image/*" class="block w-full text-sm text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer bg-white dark:bg-gray-700">
                 </div>
             </div>
-            <x-button type="primary">Tambah Vehicle Issue</x-button>
+            <x-button type="primary">Tambah Masalah Kendaraan</x-button>
         </form>
         @endif
     </div>
@@ -677,7 +677,7 @@
             const divisionId = parseInt(divisionSelect.value);
             const currentUnit = @json(old('unit_code', $order->unit_code));
 
-            unitSelect.innerHTML = '<option value="">Select Unit</option>';
+            unitSelect.innerHTML = '<option value="">Pilih Unit</option>';
 
             if (divisionId && !isNaN(divisionId)) {
                 const filteredUnits = units.filter(unit => Number(unit.division_id) === Number(divisionId));
@@ -727,7 +727,7 @@
             crewItem.innerHTML = `
                 <div class="flex-1">
                     <select name="crew_ids[]" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-                        <option value="">Select Employee</option>
+                        <option value="">Pilih Karyawan</option>
                         ${employees.map(emp => {
                             const isActive = (emp.status || '').toLowerCase() === 'active';
                             return `<option value="${emp.id}" ${isActive ? '' : 'disabled'}>${emp.full_name} - ${emp.position?.nama ?? ''} ${getCrewIndicator(emp)} ${getCrewMonthlyStats(emp)}</option>`;
@@ -737,7 +737,7 @@
                 <div class="flex-1">
                     <input type="text" readonly value="Role will be auto-filled from position" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400">
                 </div>
-                <button type="button" onclick="this.closest('.crew-row').remove()" class="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-xs">Remove</button>
+                <button type="button" onclick="this.closest('.crew-row').remove()" class="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-xs">Hapus</button>
             `;
             crewList.appendChild(crewItem);
         }
@@ -748,8 +748,8 @@
             photoItem.className = 'border border-gray-300 dark:border-gray-600 rounded-md p-4';
             photoItem.innerHTML = `
                 <div class="flex justify-between items-start mb-3">
-                    <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">Photo ${photoCount + 1}</h3>
-                    <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-600 hover:text-red-700 text-sm">Remove</button>
+                    <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">Foto ${photoCount + 1}</h3>
+                    <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-600 hover:text-red-700 text-sm">Hapus</button>
                 </div>
                 <div class="space-y-3">
                     <div>

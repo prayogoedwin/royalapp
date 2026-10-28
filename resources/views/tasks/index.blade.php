@@ -1,21 +1,21 @@
 <x-layouts.app>
     <div class="mb-6 flex items-center text-sm">
         <a href="{{ route('dashboard') }}"
-            class="text-blue-600 dark:text-blue-400 hover:underline">{{ __('Dashboard') }}</a>
+            class="text-blue-600 dark:text-blue-400 hover:underline">Dashboard</a>
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-2 text-gray-400" fill="none" viewBox="0 0 24 24"
             stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
-        <span class="text-gray-500 dark:text-gray-400">{{ __('Tasks') }}</span>
+        <span class="text-gray-500 dark:text-gray-400">Tugas</span>
     </div>
 
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ __('Tasks') }}</h1>
-            <p class="text-gray-600 dark:text-gray-400 mt-1">{{ __('Manage internal tasks') }}</p>
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Tugas</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">Kelola tugas internal</p>
         </div>
         @if(auth()->user()->hasPermission('create-tasks'))
-            <a href="{{ route('tasks.create') }}"><x-button type="primary">{{ __('Create Task') }}</x-button></a>
+            <a href="{{ route('tasks.create') }}"><x-button type="primary">Buat Tugas</x-button></a>
         @endif
     </div>
 
@@ -25,12 +25,12 @@
                 <thead class="bg-gray-50 dark:bg-gray-900">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">ID</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Title</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Judul</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Crew</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Created By</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Created At</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Actions</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Dibuat Oleh</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Dibuat Pada</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Aksi</th>
                     </tr>
                 </thead>
             </table>
@@ -61,7 +61,7 @@
                 order: [[5, 'asc']],
                 language: {
                     search: "_INPUT_",
-                    searchPlaceholder: "Search tasks..."
+                    searchPlaceholder: "Cari tugas..."
                 },
                 dom: '<"flex flex-col md:flex-row justify-between items-center mb-4 gap-3"lf>rt<"flex flex-col md:flex-row justify-between items-center mt-4 gap-3"ip>',
             });

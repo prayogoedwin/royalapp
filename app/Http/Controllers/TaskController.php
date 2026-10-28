@@ -44,15 +44,15 @@ class TaskController extends Controller
                 ->addColumn('actions', function (Task $task) {
                     $actions = '';
                     if (auth()->user()->hasPermission('show-tasks')) {
-                        $actions .= '<a href="'.route('tasks.show', $task).'" class="text-green-600 dark:text-green-400 hover:underline mr-3">View</a>';
+                        $actions .= '<a href="'.route('tasks.show', $task).'" class="text-green-600 dark:text-green-400 hover:underline mr-3">Lihat</a>';
                     }
                     if (auth()->user()->hasPermission('edit-tasks')) {
-                        $actions .= '<a href="'.route('tasks.edit', $task).'" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Edit</a>';
+                        $actions .= '<a href="'.route('tasks.edit', $task).'" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Ubah</a>';
                     }
                     if (auth()->user()->hasPermission('delete-tasks')) {
-                        $actions .= '<form action="'.route('tasks.destroy', $task).'" method="POST" class="inline" onsubmit="return confirm(\'Delete task?\')">'
+                        $actions .= '<form action="'.route('tasks.destroy', $task).'" method="POST" class="inline" onsubmit="return confirm(\'Hapus tugas ini?\')">'
                             .csrf_field().method_field('DELETE')
-                            .'<button type="submit" class="text-red-600 dark:text-red-400 hover:underline">Delete</button></form>';
+                            .'<button type="submit" class="text-red-600 dark:text-red-400 hover:underline">Hapus</button></form>';
                     }
 
                     return $actions ?: '-';

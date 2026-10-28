@@ -1,23 +1,23 @@
 <x-layouts.app>
     <div class="mb-6 flex items-center text-sm">
         <a href="{{ route('dashboard') }}"
-            class="text-blue-600 dark:text-blue-400 hover:underline">{{ __('Dashboard') }}</a>
+            class="text-blue-600 dark:text-blue-400 hover:underline">Dashboard</a>
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-2 text-gray-400" fill="none" viewBox="0 0 24 24"
             stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
-        <span class="text-gray-500 dark:text-gray-400">{{ __('Employees') }}</span>
+        <span class="text-gray-500 dark:text-gray-400">Karyawan</span>
     </div>
 
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ __('Employees') }}</h1>
-            <p class="text-gray-600 dark:text-gray-400 mt-1">{{ __('Manage employee records') }}</p>
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Karyawan</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">Kelola data karyawan</p>
         </div>
         <div class="flex gap-2">
             @if(auth()->user()->hasPermission('create-employees'))
                 <a href="{{ route('employees.create') }}">
-                    <x-button type="primary">{{ __('Create Employee') }}</x-button>
+                    <x-button type="primary">Buat Karyawan</x-button>
                 </a>
             @endif
         </div>
@@ -29,13 +29,13 @@
                 <thead class="bg-gray-50 dark:bg-gray-900">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('NIK') }}</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Full Name') }}</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Position') }}</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Division') }}</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Type') }}</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Status') }}</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Created') }}</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{{ __('Actions') }}</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nama Lengkap</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Jabatan</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Divisi</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tipe</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Dibuat</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
             </table>
@@ -69,13 +69,13 @@
                 order: [[6, 'desc']],
                 language: {
                     search: "_INPUT_",
-                    searchPlaceholder: "Search employees...",
-                    lengthMenu: "Show _MENU_ entries",
-                    info: "Showing _START_ to _END_ of _TOTAL_ employees",
-                    infoEmpty: "No employees found",
-                    infoFiltered: "(filtered from _MAX_ total employees)",
-                    zeroRecords: "No matching employees found",
-                    emptyTable: "No employees available"
+                    searchPlaceholder: "Cari karyawan...",
+                    lengthMenu: "Tampilkan _MENU_ data",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ karyawan",
+                    infoEmpty: "Karyawan tidak ditemukan",
+                    infoFiltered: "(difilter dari _MAX_ total karyawan)",
+                    zeroRecords: "Tidak ada karyawan yang cocok",
+                    emptyTable: "Belum ada karyawan"
                 },
                 dom: '<"flex flex-col md:flex-row justify-between items-center mb-4"lf>rt<"flex flex-col md:flex-row justify-between items-center mt-4"ip>',
                 pageLength: 10,

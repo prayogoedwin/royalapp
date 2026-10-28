@@ -1,30 +1,30 @@
 <x-layouts.app>
     <div class="mb-6 flex items-center text-sm">
-        <a href="{{ route('dashboard') }}" class="text-blue-600 dark:text-blue-400 hover:underline">{{ __('Dashboard') }}</a>
+        <a href="{{ route('dashboard') }}" class="text-blue-600 dark:text-blue-400 hover:underline">Dashboard</a>
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
-        <a href="{{ route('orders.index') }}" class="text-blue-600 dark:text-blue-400 hover:underline">{{ __('Orders') }}</a>
+        <a href="{{ route('orders.index') }}" class="text-blue-600 dark:text-blue-400 hover:underline">Pesanan</a>
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
-        <span class="text-gray-500 dark:text-gray-400">{{ __('Create') }}</span>
+        <span class="text-gray-500 dark:text-gray-400">Buat</span>
     </div>
 
     <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ !empty($prefillPhone) ? __('Repeat Order') : __('Create Order') }}</h1>
+        <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ !empty($prefillPhone) ? 'Ulangi Pesanan' : 'Buat Pesanan' }}</h1>
         <p class="text-gray-600 dark:text-gray-400 mt-1">
             @if(!empty($prefillPhone))
-                {{ __('Customer Name dan Customer Phone sudah terisi dari customer yang dipilih.') }}
+                Nama pelanggan dan nomor HP sudah terisi dari pelanggan yang dipilih.
             @else
-                {{ __('Create a new order') }}
+                Buat pesanan baru
             @endif
         </p>
     </div>
 
     @if($errors->any())
         <div class="mb-4 p-3 rounded bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 text-sm">
-            <p class="font-medium mb-1">{{ __('Failed to create order:') }}</p>
+            <p class="font-medium mb-1">Gagal membuat pesanan:</p>
             <ul class="list-disc list-inside space-y-0.5">
                 @foreach($errors->all() as $error)
                     <li>{{ $error }}</li>
@@ -38,13 +38,13 @@
 
         <!-- Basic Information -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">{{ __('Basic Information') }}</h2>
+            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Informasi Dasar</h2>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ __('Division') }} <span class="text-red-500">*</span></label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Divisi <span class="text-red-500">*</span></label>
                     <select name="division_id" id="division_id" required class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-                        <option value="">{{ __('Select Division') }}</option>
+                        <option value="">Pilih Divisi</option>
                         @foreach($divisions as $division)
                             <option value="{{ $division->id }}" data-name="{{ $division->nama }}" {{ old('division_id') == $division->id ? 'selected' : '' }}>{{ $division->nama }}</option>
                         @endforeach
@@ -53,7 +53,7 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ __('Status') }} <span class="text-red-500">*</span></label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status <span class="text-red-500">*</span></label>
                     <select name="order_status_id" required class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                         @foreach($orderStatuses as $status)
                             <option value="{{ $status->id }}" {{ old('order_status_id', 1) == $status->id ? 'selected' : '' }}>{{ $status->name }}</option>
@@ -63,38 +63,38 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ __('Unit Code (Optional)') }}</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Kode Unit (Opsional)</label>
                     <select name="unit_code" id="unit_code" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-                        <option value="">Select Division first to see units</option>
+                        <option value="">Pilih Divisi dulu untuk melihat unit</option>
                     </select>
-                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Select a Division first, then units will appear here</p>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Pilih Divisi dulu, lalu unit akan muncul di sini</p>
                     @error('unit_code')
                         <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div>
-                    <x-forms.input label="Customer Name" name="customer_name" type="text" value="{{ old('customer_name', $prefillName ?? '') }}" required />
+                    <x-forms.input label="Nama Pelanggan" name="customer_name" type="text" value="{{ old('customer_name', $prefillName ?? '') }}" required />
                 </div>
 
                 <div>
-                    <x-forms.input label="Customer Phone" name="customer_phone" type="text" value="{{ old('customer_phone', $prefillPhone ?? '') }}" required />
+                    <x-forms.input label="No. HP Pelanggan" name="customer_phone" type="text" value="{{ old('customer_phone', $prefillPhone ?? '') }}" required />
                 </div>
 
                 <div>
-                    <x-forms.input label="Appointment" name="appointment" type="text" value="{{ old('appointment') }}" placeholder="Sebelum Jam 8 / jam 8.05 / IDEM" />
+                    <x-forms.input label="Janji Temu" name="appointment" type="text" value="{{ old('appointment') }}" placeholder="Sebelum Jam 8 / jam 8.05 / IDEM" />
                 </div>
 
                 <div>
-                    <x-forms.input label="Pickup Date & Time" name="pickup_datetime" type="datetime-local" value="{{ old('pickup_datetime') }}" required />
+                    <x-forms.input label="Tanggal & Waktu Penjemputan" name="pickup_datetime" type="datetime-local" value="{{ old('pickup_datetime') }}" required />
                 </div>
 
                 <div>
-                    <x-forms.input label="Price" name="price" type="text" inputmode="numeric" value="{{ old('price', 0) }}" required />
+                    <x-forms.input label="Harga" name="price" type="text" inputmode="numeric" value="{{ old('price', 0) }}" required />
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Payment Method</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Metode Pembayaran</label>
                     <select name="payment_method" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                         <option value="">-</option>
                         @foreach($paymentMethods as $value => $label)
@@ -123,7 +123,7 @@
             <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                 @include('orders.partials.place-field', [
                     'prefix' => 'pickup',
-                    'label' => __('Pickup Address'),
+                    'label' => 'Alamat Penjemputan',
                     'required' => true,
                     'address' => old('pickup_address'),
                     'latitude' => old('pickup_latitude'),
@@ -132,7 +132,7 @@
                 ])
                 @include('orders.partials.place-field', [
                     'prefix' => 'destination',
-                    'label' => __('Destination Address'),
+                    'label' => 'Alamat Tujuan',
                     'required' => true,
                     'address' => old('destination_address'),
                     'latitude' => old('destination_latitude'),
@@ -142,22 +142,22 @@
             </div>
 
             <div class="mt-6">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ __('Notes') }}</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Catatan</label>
                 <textarea name="notes" rows="3" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">{{ old('notes') }}</textarea>
             </div>
         </div>
 
         <!-- Ambulance Details (Show if Royal Ambulance selected) -->
         <div id="ambulance-section" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hidden">
-            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">{{ __('Ambulance Details') }}</h2>
+            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Detail Ambulans</h2>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <x-forms.input label="Patient Condition" name="patient_condition" type="text" value="{{ old('patient_condition') }}" />
+                    <x-forms.input label="Kondisi Pasien" name="patient_condition" type="text" value="{{ old('patient_condition') }}" />
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ __('Medical Needs') }}</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Kebutuhan Medis</label>
                     <textarea name="medical_needs" rows="3" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">{{ old('medical_needs') }}</textarea>
                 </div>
             </div>
@@ -165,23 +165,23 @@
 
         <!-- Towing Details (Show if Royal Towing selected) -->
         <div id="towing-section" class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hidden">
-            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">{{ __('Towing Details') }}</h2>
+            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Detail Towing</h2>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <x-forms.input label="Car Type" name="car_type" type="text" value="{{ old('car_type') }}" />
+                    <x-forms.input label="Jenis Mobil" name="car_type" type="text" value="{{ old('car_type') }}" />
                 </div>
                 
                 <div>
-                    <x-forms.input label="Car Condition" name="car_condition" type="text" value="{{ old('car_condition') }}" />
+                    <x-forms.input label="Kondisi Mobil" name="car_condition" type="text" value="{{ old('car_condition') }}" />
                 </div>
                 
                 <div>
-                    <x-forms.input label="Receiver Phone" name="receiver_phone" type="text" value="{{ old('receiver_phone') }}" />
+                    <x-forms.input label="No. HP Penerima" name="receiver_phone" type="text" value="{{ old('receiver_phone') }}" />
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ __('Payment Requirement') }}</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Ketentuan Pembayaran</label>
                     <textarea name="payment_requirement" rows="3" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">{{ old('payment_requirement') }}</textarea>
                 </div>
             </div>
@@ -190,8 +190,8 @@
         <!-- Crew Assignment -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">{{ __('Crew Assignment') }}</h2>
-                <button type="button" onclick="addCrew()" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">+ Add Crew</button>
+                <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Penugasan Crew</h2>
+                <button type="button" onclick="addCrew()" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">+ Tambah Crew</button>
             </div>
             <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
                 🔴 Ongoing, 🟡 Bentrok jadwal pickup, 🟢 Tersedia, ⚫ Off/Inactive (disabled)
@@ -203,17 +203,17 @@
         <!-- Photo Upload -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">{{ __('Photos') }}</h2>
-                <button type="button" onclick="addPhoto()" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">+ Add Photo</button>
+                <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Foto</h2>
+                <button type="button" onclick="addPhoto()" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">+ Tambah Foto</button>
             </div>
             
             <div id="photo-list" class="space-y-3"></div>
         </div>
 
         <div class="flex gap-3">
-            <x-button type="primary">{{ __('Create Order') }}</x-button>
+            <x-button type="primary">Buat Pesanan</x-button>
             <a href="{{ route('orders.index') }}">
-                <x-button type="secondary">{{ __('Cancel') }}</x-button>
+                <x-button type="secondary">Batal</x-button>
             </a>
         </div>
     </form>
@@ -242,7 +242,7 @@
 
             // Filter units by division
             const unitSelect = document.getElementById('unit_code');
-            unitSelect.innerHTML = '<option value="">Select Unit</option>';
+            unitSelect.innerHTML = '<option value="">Pilih Unit</option>';
             
             if (divisionId && !isNaN(divisionId)) {
                 const filteredUnits = units.filter(unit => Number(unit.division_id) === Number(divisionId));
@@ -291,7 +291,7 @@
             crewItem.innerHTML = `
                 <div class="flex-1">
                     <select name="crew_ids[]" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-                        <option value="">Select Employee</option>
+                        <option value="">Pilih Karyawan</option>
                         ${employees.map(emp => {
                             const isActive = (emp.status || '').toLowerCase() === 'active';
                             return `<option value="${emp.id}" ${isActive ? '' : 'disabled'}>${emp.full_name} - ${emp.position?.nama ?? ''} ${getCrewIndicator(emp)} ${getCrewMonthlyStats(emp)}</option>`;
@@ -301,7 +301,7 @@
                 <div class="flex-1">
                     <input type="text" readonly value="Role will be auto-filled from position" class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400">
                 </div>
-                <button type="button" onclick="this.parentElement.remove()" class="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700">Remove</button>
+                <button type="button" onclick="this.parentElement.remove()" class="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700">Hapus</button>
             `;
             crewList.appendChild(crewItem);
             crewCount++;
@@ -313,8 +313,8 @@
             photoItem.className = 'border border-gray-300 dark:border-gray-600 rounded-md p-4';
             photoItem.innerHTML = `
                 <div class="flex justify-between items-start mb-3">
-                    <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">Photo ${photoCount + 1}</h3>
-                    <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-600 hover:text-red-700 text-sm">Remove</button>
+                    <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">Foto ${photoCount + 1}</h3>
+                    <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-600 hover:text-red-700 text-sm">Hapus</button>
                 </div>
                 <div class="space-y-3">
                     <div>

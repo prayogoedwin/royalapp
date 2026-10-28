@@ -4,7 +4,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
-        <a href="{{ route('orders.index') }}" class="text-blue-600 dark:text-blue-400 hover:underline">Orders</a>
+        <a href="{{ route('orders.index') }}" class="text-blue-600 dark:text-blue-400 hover:underline">Pesanan</a>
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
@@ -13,8 +13,8 @@
 
     <div class="mb-6 flex justify-between items-center">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Order {{ $order->order_number }}</h1>
-            <p class="text-gray-600 dark:text-gray-400 mt-1">Detail order dan kendaraan.</p>
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Pesanan {{ $order->order_number }}</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">Detail pesanan dan kendaraan.</p>
         </div>
         <div class="flex gap-2">
             @php
@@ -32,7 +32,7 @@
             @if($canAccessEdit)
                 <a href="{{ route('orders.edit', $order) }}">
                     <x-button type="secondary">
-                        {{ auth()->user()->hasPermission('edit-orders') ? 'Edit Order' : 'Input Data Driver' }}
+                        {{ auth()->user()->hasPermission('edit-orders') ? 'Ubah Pesanan' : 'Input Data Driver' }}
                     </x-button>
                 </a>
             @endif
@@ -43,14 +43,14 @@
         <div class="space-y-6">
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div class="p-6">
-                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Informasi Order</h2>
+                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Informasi Pesanan</h2>
                     <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Customer</dt>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Pelanggan</dt>
                             <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->customer_name }}</dd>
                         </div>
                         <div>
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Phone</dt>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Telepon</dt>
                             <dd class="text-base text-gray-900 dark:text-gray-100">
                                 @if($order->whatsappUrl())
                                     <a href="{{ $order->whatsappUrl() }}" target="_blank" rel="noopener noreferrer" class="text-green-600 dark:text-green-400 hover:underline">{{ $order->customer_phone }}</a>
@@ -60,49 +60,49 @@
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Division</dt>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Divisi</dt>
                             <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->division->nama }}</dd>
                         </div>
                         <div>
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Unit Code</dt>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Kode Unit</dt>
                             <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->unit_code ?? '-' }}</dd>
                         </div>
                         <div class="md:col-span-2">
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Pickup Address</dt>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Alamat Penjemputan</dt>
                             <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->pickup_address }}</dd>
                             @if($order->pickup_maps_url)
                                 <dd class="mt-1">
                                     <a href="{{ $order->pickup_maps_url }}" target="_blank" rel="noopener noreferrer" class="text-sm text-blue-600 dark:text-blue-400 hover:underline">
-                                        {{ __('Buka pickup di Google Maps') }}
+                                        Buka penjemputan di Google Maps
                                     </a>
                                 </dd>
                             @endif
                         </div>
                         <div class="md:col-span-2">
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Destination Address</dt>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Alamat Tujuan</dt>
                             <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->destination_address }}</dd>
                             @if($order->destination_maps_url)
                                 <dd class="mt-1">
                                     <a href="{{ $order->destination_maps_url }}" target="_blank" rel="noopener noreferrer" class="text-sm text-blue-600 dark:text-blue-400 hover:underline">
-                                        {{ __('Buka destination di Google Maps') }}
+                                        Buka tujuan di Google Maps
                                     </a>
                                 </dd>
                             @endif
                         </div>
                         <div>
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Pickup Datetime</dt>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Waktu Penjemputan</dt>
                             <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->pickup_datetime->format('d M Y H:i') }}</dd>
                         </div>
                         <div>
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Appointment</dt>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Janji Temu</dt>
                             <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->appointment ?? '-' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Price</dt>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Harga</dt>
                             <dd class="text-base text-gray-900 dark:text-gray-100">Rp {{ number_format($order->price, 0, ',', '.') }}</dd>
                         </div>
                         <div>
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Payment Method</dt>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Metode Pembayaran</dt>
                             <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->payment_method ?? '-' }}</dd>
                         </div>
                         <div>
@@ -122,7 +122,7 @@
                         </div>
                         @if($order->notes)
                         <div class="md:col-span-2">
-                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Notes</dt>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Catatan</dt>
                             <dd class="text-base text-gray-900 dark:text-gray-100 whitespace-pre-line">{{ $order->notes }}</dd>
                         </div>
                         @endif
@@ -133,9 +133,9 @@
             {{-- Order Report --}}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div class="p-6">
-                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Order Report</h2>
+                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Laporan Pesanan</h2>
                     @if(!$order->orderReport)
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada order report untuk order ini.</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada laporan untuk pesanan ini.</p>
                     @else
                         <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
@@ -172,19 +172,19 @@
                             </div>
                             @if($order->orderReport->submitted_at)
                                 <div>
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Submitted At</dt>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Dikirim Pada</dt>
                                     <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->orderReport->submitted_at?->format('d M Y H:i') }}</dd>
                                 </div>
                             @endif
                             @if($order->orderReport->approved_at)
                                 <div>
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Approved At</dt>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Disetujui Pada</dt>
                                     <dd class="text-base text-gray-900 dark:text-gray-100">{{ $order->orderReport->approved_at?->format('d M Y H:i') }}</dd>
                                 </div>
                             @endif
                             @if($order->orderReport->notes)
                                 <div class="md:col-span-2">
-                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Notes</dt>
+                                    <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Catatan</dt>
                                     <dd class="text-base text-gray-900 dark:text-gray-100 whitespace-pre-line">{{ $order->orderReport->notes }}</dd>
                                 </div>
                             @endif
@@ -197,7 +197,7 @@
                 <div class="p-6">
                     <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Crew</h2>
                     @if($order->orderCrews->isEmpty())
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada crew untuk order ini.</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada crew untuk pesanan ini.</p>
                     @else
                         <ul class="divide-y divide-gray-200 dark:divide-gray-700">
                             @foreach($order->orderCrews as $crew)
@@ -215,9 +215,9 @@
 
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div class="p-6">
-                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Photos</h2>
+                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Foto</h2>
                     @if($order->orderPhotos->isEmpty())
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada foto untuk order ini.</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada foto untuk pesanan ini.</p>
                     @else
                         <div x-data="imageLightbox()">
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -250,9 +250,9 @@
             {{-- Order Expenses --}}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div class="p-6">
-                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Order Expenses</h2>
+                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Pengeluaran Pesanan</h2>
                     @if($order->orderExpenses->isEmpty())
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada pengeluaran untuk order ini.</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada pengeluaran untuk pesanan ini.</p>
                     @else
                         <div class="overflow-x-auto">
                             <table class="min-w-full text-sm">
@@ -289,7 +289,7 @@
                 <div class="p-6">
                     <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">E-Toll</h2>
                     @if($order->orderEtollTransactions->isEmpty())
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada transaksi e-toll untuk order ini.</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada transaksi e-toll untuk pesanan ini.</p>
                     @else
                         <div class="overflow-x-auto">
                             <table class="min-w-full text-sm">
@@ -331,11 +331,11 @@
         {{-- Vehicle Issues, susunan sama seperti di halaman edit, ditaruh di bawah --}}
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="p-6">
-                <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Vehicle Issues</h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Daftar vehicle issue untuk order ini.</p>
+                <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Masalah Kendaraan</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Daftar masalah kendaraan untuk pesanan ini.</p>
 
                 @if($order->orderVehicleIssues->isEmpty())
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada vehicle issue.</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada masalah kendaraan.</p>
                 @else
                     <ul class="space-y-2">
                         @foreach($order->orderVehicleIssues as $issue)

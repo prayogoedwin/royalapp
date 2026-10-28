@@ -125,18 +125,18 @@ class OrderController extends Controller
                     $actions = '';
 
                     if (auth()->user()->hasPermission('show-orders')) {
-                        $actions .= '<a href="'.route('orders.show', $order).'" class="text-green-600 dark:text-green-400 hover:underline mr-3">View</a>';
+                        $actions .= '<a href="'.route('orders.show', $order).'" class="text-green-600 dark:text-green-400 hover:underline mr-3">Lihat</a>';
                         $actions .= '<a href="'.route('orders.surat-jalan', $order).'" class="text-indigo-600 dark:text-indigo-400 hover:underline mr-3" target="_blank">Surat Jalan</a>';
                     }
 
                     if (auth()->user()->hasPermission('edit-orders')) {
-                        $actions .= '<a href="'.route('orders.edit', $order).'" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Edit</a>';
+                        $actions .= '<a href="'.route('orders.edit', $order).'" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Ubah</a>';
                     }
 
                     if (auth()->user()->hasPermission('delete-orders')) {
-                        $actions .= '<form action="'.route('orders.destroy', $order).'" method="POST" class="inline" onsubmit="return confirm(\'Are you sure?\')">
+                        $actions .= '<form action="'.route('orders.destroy', $order).'" method="POST" class="inline" onsubmit="return confirm(\'Yakin ingin menghapus?\')">
                             '.csrf_field().method_field('DELETE').'
-                            <button type="submit" class="text-red-600 dark:text-red-400 hover:underline">Delete</button>
+                            <button type="submit" class="text-red-600 dark:text-red-400 hover:underline">Hapus</button>
                         </form>';
                     }
 

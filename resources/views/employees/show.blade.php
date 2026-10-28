@@ -1,39 +1,39 @@
 <x-layouts.app>
     <div class="mb-6 flex items-center text-sm">
         <a href="{{ route('dashboard') }}"
-            class="text-blue-600 dark:text-blue-400 hover:underline">{{ __('Dashboard') }}</a>
+            class="text-blue-600 dark:text-blue-400 hover:underline">Dashboard</a>
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-2 text-gray-400" fill="none" viewBox="0 0 24 24"
             stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
         <a href="{{ route('employees.index') }}"
-            class="text-blue-600 dark:text-blue-400 hover:underline">{{ __('Employees') }}</a>
+            class="text-blue-600 dark:text-blue-400 hover:underline">Karyawan</a>
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mx-2 text-gray-400" fill="none" viewBox="0 0 24 24"
             stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
-        <span class="text-gray-500 dark:text-gray-400">{{ __('View') }}</span>
+        <span class="text-gray-500 dark:text-gray-400">Lihat</span>
     </div>
 
     <div class="mb-6 flex justify-between items-center">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ __('View Employee') }}</h1>
-            <p class="text-gray-600 dark:text-gray-400 mt-1">{{ __('Employee details') }}</p>
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Detail Karyawan</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">Detail data karyawan</p>
         </div>
         <div class="flex gap-2">
             @if(auth()->user()->hasPermission('edit-employees') && ! $employee->user)
-                <form action="{{ route('employees.create-account', $employee) }}" method="POST" onsubmit="return confirm('Buat akun login untuk employee ini? Password default sama dengan NIK.')">
+                <form action="{{ route('employees.create-account', $employee) }}" method="POST" onsubmit="return confirm('Buat akun login untuk karyawan ini? Password default sama dengan NIK.')">
                     @csrf
                     <x-button type="primary">{{ __('Buat Akun') }}</x-button>
                 </form>
             @endif
             @if(auth()->user()->hasPermission('edit-employees'))
                 <a href="{{ route('employees.edit', $employee) }}">
-                    <x-button type="primary">{{ __('Edit Employee') }}</x-button>
+                    <x-button type="primary">Ubah Karyawan</x-button>
                 </a>
             @endif
             @if(auth()->user()->hasPermission('delete-employees') && (int) $employee->user_id !== (int) auth()->id())
-                <form action="{{ route('employees.destroy', $employee) }}" method="POST" onsubmit="return confirm('Hapus employee ini? Akun user terkait juga akan dihapus.')">
+                <form action="{{ route('employees.destroy', $employee) }}" method="POST" onsubmit="return confirm('Hapus karyawan ini? Akun pengguna terkait juga akan dihapus.')">
                     @csrf
                     @method('DELETE')
                     <x-button type="danger">{{ __('Hapus') }}</x-button>
@@ -59,7 +59,7 @@
                 @endif
             @endif
             <a href="{{ route('employees.index') }}">
-                <x-button type="secondary">{{ __('Back') }}</x-button>
+                <x-button type="secondary">Kembali</x-button>
             </a>
         </div>
     </div>
@@ -70,9 +70,9 @@
             <!-- User Account Information -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between gap-3">
-                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">{{ __('User Account Information') }}</h2>
+                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Informasi Akun Pengguna</h2>
                     @if(auth()->user()->hasPermission('edit-employees') && ! $employee->user)
-                        <form action="{{ route('employees.create-account', $employee) }}" method="POST" onsubmit="return confirm('Buat akun login untuk employee ini? Password default sama dengan NIK.')">
+                        <form action="{{ route('employees.create-account', $employee) }}" method="POST" onsubmit="return confirm('Buat akun login untuk karyawan ini? Password default sama dengan NIK.')">
                             @csrf
                             <x-button type="primary">{{ __('Buat Akun') }}</x-button>
                         </form>
@@ -80,12 +80,12 @@
                 </div>
                 <div class="p-6">
                     @if(! $employee->user)
-                        <p class="mb-4 text-sm text-amber-700 dark:text-amber-300">Employee ini belum punya akun login. Password default akan memakai NIK.</p>
+                        <p class="mb-4 text-sm text-amber-700 dark:text-amber-300">Karyawan ini belum punya akun login. Password default akan memakai NIK.</p>
                     @endif
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {{ __('User Name') }}
+                                Nama Pengguna
                             </label>
                             <div class="text-gray-900 dark:text-gray-100">
                                 {{ $employee->user->name ?? '-' }}
@@ -104,7 +104,7 @@
                         @if($employee->user && $employee->user->roles->count() > 0)
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {{ __('Roles') }}
+                                Peran
                             </label>
                             <div class="flex flex-wrap gap-2">
                                 @foreach($employee->user->roles as $role)
@@ -122,7 +122,7 @@
             <!-- Employee Information -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">{{ __('Employee Information') }}</h2>
+                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Informasi Karyawan</h2>
                 </div>
                 <div class="p-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -137,7 +137,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {{ __('Full Name') }}
+                                Nama Lengkap
                             </label>
                             <div class="text-gray-900 dark:text-gray-100">
                                 {{ $employee->full_name }}
@@ -146,7 +146,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {{ __('Position') }}
+                                Jabatan
                             </label>
                             <div class="text-gray-900 dark:text-gray-100">
                                 {{ $employee->position->nama }}
@@ -155,7 +155,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {{ __('Division') }}
+                                Divisi
                             </label>
                             <div class="text-gray-900 dark:text-gray-100">
                                 {{ $employee->division->nama }}
@@ -164,7 +164,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {{ __('Pool') }}
+                                Pool
                             </label>
                             <div class="text-gray-900 dark:text-gray-100">
                                 {{ $employee->pool?->pool_name ?? '-' }}
@@ -173,7 +173,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {{ __('Employee Type') }}
+                                Tipe Karyawan
                             </label>
                             <div class="text-gray-900 dark:text-gray-100">
                                 {{ $employee->employeeType->nama }}
@@ -182,7 +182,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {{ __('Status') }}
+                                Status
                             </label>
                             <div>
                                 @php
@@ -205,13 +205,13 @@
             <!-- Personal Information -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">{{ __('Personal Information') }}</h2>
+                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Informasi Pribadi</h2>
                 </div>
                 <div class="p-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {{ __('Phone') }}
+                                Telepon
                             </label>
                             <div class="text-gray-900 dark:text-gray-100">
                                 {{ $employee->phone ?? '-' }}
@@ -220,7 +220,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {{ __('Birth Date') }}
+                                Tanggal Lahir
                             </label>
                             <div class="text-gray-900 dark:text-gray-100">
                                 {{ $employee->birth_date ? $employee->birth_date->format('M d, Y') : '-' }}
@@ -229,7 +229,7 @@
 
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                {{ __('Address') }}
+                                Alamat
                             </label>
                             <div class="text-gray-900 dark:text-gray-100">
                                 {{ $employee->address ?? '-' }}
@@ -245,12 +245,12 @@
             <!-- Employment Dates -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">{{ __('Employment Dates') }}</h2>
+                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Tanggal Kepegawaian</h2>
                 </div>
                 <div class="p-6 space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            {{ __('Join Date') }}
+                            Tanggal Masuk
                         </label>
                         <div class="text-gray-900 dark:text-gray-100">
                             {{ $employee->join_date->format('M d, Y') }}
@@ -260,7 +260,7 @@
                     @if($employee->resign_date)
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            {{ __('Resign Date') }}
+                            Tanggal Resign
                         </label>
                         <div class="text-gray-900 dark:text-gray-100">
                             {{ $employee->resign_date->format('M d, Y') }}
@@ -273,12 +273,12 @@
             <!-- Timestamps -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">{{ __('Record Information') }}</h2>
+                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Informasi Rekaman</h2>
                 </div>
                 <div class="p-6 space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            {{ __('Created At') }}
+                            Dibuat Pada
                         </label>
                         <div class="text-gray-900 dark:text-gray-100 text-sm">
                             {{ $employee->created_at->format('M d, Y H:i') }}
@@ -287,7 +287,7 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            {{ __('Updated At') }}
+                            Diperbarui Pada
                         </label>
                         <div class="text-gray-900 dark:text-gray-100 text-sm">
                             {{ $employee->updated_at->format('M d, Y H:i') }}
