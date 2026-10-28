@@ -161,9 +161,9 @@
             @endif
             <button type="button" class="sj-btn-print" id="sj-print">Cetak</button>
             @if($wa_url)
-                <a class="sj-btn-wa" id="sj-wa" href="{{ $wa_url }}" data-native="{{ $wa_native_url }}" data-copy="{{ $public_url }}">Kirim WA</a>
+                <button type="button" class="sj-btn-wa" id="sj-wa" data-wa="{{ $wa_url }}" data-native="{{ $wa_native_url }}" data-copy="{{ $public_url }}">Kirim WA</button>
             @elseif($editable)
-                <a class="sj-btn-wa" id="sj-wa" href="#" data-native="" data-copy="" hidden>Kirim WA</a>
+                <button type="button" class="sj-btn-wa" id="sj-wa" data-wa="" data-native="" data-copy="" hidden>Kirim WA</button>
             @endif
             @if($public_url)
                 <button type="button" class="sj-btn-download" id="sj-copy" data-copy="{{ $public_url }}">Salin link</button>
@@ -503,7 +503,7 @@
                         status.textContent = 'Tersimpan. Silakan cetak atau kirim WA.';
                         if (result.body.data && result.body.data.wa_url) {
                             var wa = document.getElementById('sj-wa');
-                            wa.href = result.body.data.wa_url;
+                            wa.setAttribute('data-wa', result.body.data.wa_url);
                             wa.setAttribute('data-native', result.body.data.wa_native_url || '');
                             wa.setAttribute('data-copy', result.body.data.public_url || '');
                             wa.hidden = false;
@@ -551,7 +551,18 @@
             var ua = navigator.userAgent || '';
             return /\bwv\b|; wv\)|WebView/i.test(ua)
                 || typeof window.ReactNativeWebView !== 'undefined'
-                || typeof window.flutter_inappwebview !== 'undefined';
+                || typeof window.flutter_inappwebview !== 'undefined'
+                || typeof window.Android !== 'undefined';
+        }
+
+        function showStatus(message, isError) {
+            var status = document.getElementById('sj-status');
+            if (!status) {
+                return;
+            }
+            status.hidden = false;
+            status.classList.toggle('error', !!isError);
+            status.textContent = message;
         }
 
         function openExternal(url) {
@@ -582,23 +593,29 @@
             if (wa && wa.getAttribute('data-bound') !== '1') {
                 wa.setAttribute('data-bound', '1');
                 wa.addEventListener('click', function (event) {
-                    var href = wa.getAttribute('href') || '';
-                    if (!href || href === '#') {
-                        event.preventDefault();
-                        return;
-                    }
+                    event.preventDefault();
+                    event.stopPropagation();
+                    var href = wa.getAttribute('data-wa') || '';
                     var native = wa.getAttribute('data-native') || '';
                     var share = wa.getAttribute('data-copy') || '';
+                    if (!href && !native && !share) {
+                        return;
+                    }
+                    var copied = copyText(share);
                     if (openExternal(native || href)) {
-                        event.preventDefault();
+                        showStatus(copied ? 'Link disalin. Jika WhatsApp tidak terbuka, tempel di WA.' : 'Membuka WhatsApp...');
                         return;
                     }
-                    if (isAppWebView()) {
-                        copyText(share);
-                        return;
+                    if (!isAppWebView()) {
+                        var popup = window.open(href, '_blank');
+                        if (popup) {
+                            showStatus('WhatsApp dibuka di tab baru.');
+                            return;
+                        }
                     }
-                    event.preventDefault();
-                    window.open(href, '_blank');
+                    showStatus(copied
+                        ? 'Link disalin. Buka WhatsApp, lalu tempel tautan surat jalan.'
+                        : 'Buka WhatsApp, lalu kirim tautan surat jalan dari Salin link.');
                 });
             }
 
@@ -606,13 +623,8 @@
             if (copyBtn && copyBtn.getAttribute('data-bound') !== '1') {
                 copyBtn.setAttribute('data-bound', '1');
                 copyBtn.addEventListener('click', function () {
-                    var status = document.getElementById('sj-status');
                     if (copyText(copyBtn.getAttribute('data-copy') || '')) {
-                        if (status) {
-                            status.hidden = false;
-                            status.classList.remove('error');
-                            status.textContent = 'Link disalin. Tempel di WhatsApp.';
-                        }
+                        showStatus('Link disalin. Tempel di WhatsApp.');
                     }
                 });
             }
