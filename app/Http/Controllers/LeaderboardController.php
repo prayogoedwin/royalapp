@@ -272,7 +272,7 @@ class LeaderboardController extends Controller
             ->whereNull('order_crews.deleted_at')
             ->whereNotNull('employees.user_id')
             ->whereRaw('LOWER(order_crews.role) in (?, ?)', ['driver', 'sopir'])
-            ->when($bounds, fn ($q) => $q->whereBetween('orders.created_at', [$bounds[0], $bounds[1]]));
+            ->when($bounds, fn ($q) => $this->applyPeriodBounds($q, 'COALESCE(orders.pickup_datetime, orders.created_at)', $bounds));
     }
 
     /**
@@ -352,5 +352,16 @@ class LeaderboardController extends Controller
             ->orderByDesc('total')
             ->limit($limit)
             ->get();
+    }
+
+    /**
+     * @param  array{0: Carbon, 1: Carbon}  $bounds
+     */
+    protected function applyPeriodBounds(Builder $query, string $columnSql, array $bounds): Builder
+    {
+        return $query->whereRaw($columnSql.' BETWEEN ? AND ?', [
+            $bounds[0]->format('Y-m-d H:i:s'),
+            $bounds[1]->format('Y-m-d H:i:s'),
+        ]);
     }
 }

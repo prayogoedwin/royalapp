@@ -8,6 +8,7 @@
 <form
     method="GET"
     action="{{ $action }}"
+    x-ref="form"
     class="mb-8 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-4"
     x-data="{
         allTime: {{ $allTime ? 'true' : 'false' }},
@@ -19,12 +20,17 @@
         ymd(date) {
             return date.getFullYear() + '-' + this.pad(date.getMonth() + 1) + '-' + this.pad(date.getDate())
         },
+        submitForm() {
+            this.$nextTick(() => this.$refs.form.submit())
+        },
         applyToday() {
             const today = this.ymd(new Date())
+            this.allTime = false
             this.startDate = today
             this.endDate = today
             this.year = new Date().getFullYear()
             this.month = ''
+            this.submitForm()
         },
         applyYear() {
             this.startDate = this.year + '-01-01'
@@ -43,13 +49,17 @@
         },
         applyThisMonth() {
             const now = new Date()
+            this.allTime = false
             this.year = now.getFullYear()
             this.month = String(now.getMonth() + 1)
             this.applyMonth()
+            this.submitForm()
         },
         applyThisYear() {
+            this.allTime = false
             this.year = new Date().getFullYear()
             this.applyYear()
+            this.submitForm()
         }
     }"
 >
@@ -61,6 +71,7 @@
                 value="1"
                 class="rounded border-gray-300 dark:border-gray-600"
                 x-model="allTime"
+                @change="submitForm()"
                 @if($allTime) checked @endif
             >
             <span>{{ __('Sepanjang waktu (tanpa filter tanggal)') }}</span>
@@ -114,7 +125,7 @@
                     id="lb_year"
                     name="year"
                     x-model.number="year"
-                    @change="applyMonth()"
+                    @change="applyMonth(); submitForm()"
                     class="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm min-w-[7rem]"
                 >
                     @for($y = $yearOptionsTo; $y >= $yearOptionsFrom; $y--)
@@ -128,7 +139,7 @@
                     id="lb_month"
                     name="month"
                     x-model="month"
-                    @change="applyMonth()"
+                    @change="applyMonth(); submitForm()"
                     class="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm min-w-[11rem]"
                 >
                     <option value="">{{ __('Semua bulan (tahun penuh)') }}</option>
@@ -141,8 +152,8 @@
     </div>
 
     <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-        {{ __('Default: hari ini sampai hari ini. Isi tanggal mulai–selesai, atau pilih bulan/tahun, lalu Terapkan.') }}
+        {{ __('Default: hari ini. Klik Hari ini / Bulan ini / Tahun ini untuk memuat data, atau isi tanggal lalu Terapkan.') }}
         <br>
-        <span class="opacity-90">{{ __('Order & task: filter menurut tanggal dibuat (created_at); absensi: tanggal; komentar & lampiran task: waktu buat.') }}</span>
+        <span class="opacity-90">{{ __('Order: tanggal jemput (pickup), atau tanggal dibuat jika jemput kosong. Task: tanggal dibuat. Absensi: tanggal. Komentar & lampiran: waktu buat.') }}</span>
     </p>
 </form>

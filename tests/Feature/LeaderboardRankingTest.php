@@ -109,7 +109,10 @@ class LeaderboardRankingTest extends TestCase
         $yesterdayDriver = $this->makeEmployee('Driver Kemarin', 'Driver');
         $this->makeDoneOrder($done, $todayDriver, 'driver');
         $old = $this->makeDoneOrder($done, $yesterdayDriver, 'driver');
-        $old->forceFill(['created_at' => now()->subDay()])->save();
+        $old->forceFill([
+            'created_at' => now()->subDay(),
+            'pickup_datetime' => now()->subDay(),
+        ])->save();
 
         $this->actingAs($viewer)
             ->get(route('leaderboard.index'))
@@ -120,6 +123,7 @@ class LeaderboardRankingTest extends TestCase
             ->assertSee('name="end_date"', false)
             ->assertSee('value="2026-10-28"', false)
             ->assertSee('Hari ini (28 Oktober 2026)', false)
+            ->assertSee('submitForm()', false)
             ->assertSee('Driver Hari Ini')
             ->assertDontSee('Driver Kemarin');
     }
@@ -135,7 +139,10 @@ class LeaderboardRankingTest extends TestCase
         $january = $this->makeEmployee('Driver Januari', 'Driver');
         $this->makeDoneOrder($done, $october, 'driver');
         $janOrder = $this->makeDoneOrder($done, $january, 'driver');
-        $janOrder->forceFill(['created_at' => Carbon::parse('2026-01-15 10:00:00')])->save();
+        $janOrder->forceFill([
+            'created_at' => Carbon::parse('2026-01-15 10:00:00'),
+            'pickup_datetime' => Carbon::parse('2026-01-15 10:00:00'),
+        ])->save();
 
         $this->actingAs($viewer)
             ->get(route('leaderboard.index', ['year' => 2026, 'month' => 1]))
@@ -163,7 +170,10 @@ class LeaderboardRankingTest extends TestCase
         $outside = $this->makeEmployee('Driver Luar', 'Driver');
         $this->makeDoneOrder($done, $inRange, 'driver');
         $old = $this->makeDoneOrder($done, $outside, 'driver');
-        $old->forceFill(['created_at' => Carbon::parse('2026-10-01 09:00:00')])->save();
+        $old->forceFill([
+            'created_at' => Carbon::parse('2026-10-01 09:00:00'),
+            'pickup_datetime' => Carbon::parse('2026-10-01 09:00:00'),
+        ])->save();
 
         $this->actingAs($viewer)
             ->get(route('leaderboard.index', [
@@ -174,6 +184,26 @@ class LeaderboardRankingTest extends TestCase
             ->assertSee('20 Oktober 2026 – 28 Oktober 2026', false)
             ->assertSee('Driver Rentang')
             ->assertDontSee('Driver Luar');
+    }
+
+    public function test_year_filter_uses_pickup_datetime_not_created_at(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-28 12:00:00'));
+
+        $viewer = $this->userWithPermissions(['view-leaderboard']);
+        $done = $this->makeStatus('Done');
+
+        $driver = $this->makeEmployee('Driver Pickup 2026', 'Driver');
+        $order = $this->makeDoneOrder($done, $driver, 'driver');
+        $order->forceFill([
+            'created_at' => Carbon::parse('2025-12-20 09:00:00'),
+            'pickup_datetime' => Carbon::parse('2026-03-02 08:00:00'),
+        ])->save();
+
+        $this->actingAs($viewer)
+            ->get(route('leaderboard.index', ['year' => 2026]))
+            ->assertOk()
+            ->assertSee('Driver Pickup 2026');
     }
 
     /**
