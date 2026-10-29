@@ -418,6 +418,7 @@ class OrderController extends Controller
             return view('orders.invoice-brand', [
                 'order' => $order,
                 'suggested' => InvoiceData::suggestedBrand($order),
+                'logos' => InvoiceData::pickerLogos(),
             ]);
         }
 

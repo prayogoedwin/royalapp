@@ -40,12 +40,16 @@
         <p>Pesanan {{ $order->order_number }}. Pilih kop surat — satu pesanan satu invoice.</p>
         <div class="grid">
             <a class="card {{ $suggested === 'ambulance' ? 'suggested' : '' }}" href="{{ route('orders.invoice', [$order, 'brand' => 'ambulance']) }}">
-                <img src="{{ asset('images/invoice/royal-ambulance.png') }}" alt="Royal Ambulance">
+                @if(! empty($logos['ambulance']))
+                    <img src="{{ $logos['ambulance'] }}" alt="Royal Ambulance">
+                @endif
                 <div class="name">Royal Ambulance</div>
                 <div class="hint">Logo, nama, dan rekening Ambulance</div>
             </a>
             <a class="card {{ $suggested === 'towing' ? 'suggested' : '' }}" href="{{ route('orders.invoice', [$order, 'brand' => 'towing']) }}">
-                <img src="{{ asset('images/invoice/royal-towing.png') }}" alt="Royal Towing">
+                @if(! empty($logos['towing']))
+                    <img src="{{ $logos['towing'] }}" alt="Royal Towing">
+                @endif
                 <div class="name">Royal Towing</div>
                 <div class="hint">Logo, nama, dan rekening Towing</div>
             </a>

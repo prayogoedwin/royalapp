@@ -14,6 +14,26 @@ class UploadFolderTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_index_shows_total_storage_and_quota_comparison(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('uploads/2026/10/a.jpg', str_repeat('a', 1024));
+        Storage::disk('public')->put('uploads/2026/09/b.jpg', str_repeat('b', 2048));
+        $user = $this->userWithPermissions(['view-upload-folders']);
+
+        $this->actingAs($user)
+            ->get(route('upload-folders.index'))
+            ->assertOk()
+            ->assertSee('Max 5 GB dan 5.000 file, untuk perbandingan saja.', false)
+            ->assertSee('Penyimpanan total', false)
+            ->assertSee('3,0 KB', false)
+            ->assertSee('dari 5,00 GB', false)
+            ->assertSee('dari 5.000 file', false)
+            ->assertSee('uploads/2026/10', false)
+            ->assertSee('1,0 KB', false)
+            ->assertSee('2,0 KB', false);
+    }
+
     public function test_month_folder_can_be_downloaded_as_zip(): void
     {
         Storage::fake('public');

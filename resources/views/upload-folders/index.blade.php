@@ -12,6 +12,34 @@
         <p class="text-gray-600 dark:text-gray-400 mt-1">
             {{ __('Kelola folder upload berdasarkan tahun dan bulan.') }}
         </p>
+        <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            Max 5 GB dan 5.000 file, untuk perbandingan saja.
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Penyimpanan total</p>
+            <p class="mt-1 text-2xl font-bold text-gray-800 dark:text-gray-100">
+                {{ $totalSizeLabel }}
+                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">dari {{ $maxSizeLabel }}</span>
+            </p>
+            <div class="mt-3 h-2 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                <div class="h-full rounded-full {{ $bytesPercent >= 90 ? 'bg-red-500' : ($bytesPercent >= 70 ? 'bg-amber-500' : 'bg-blue-600') }}" style="width: {{ $bytesPercent }}%"></div>
+            </div>
+            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ $bytesPercent }}% dari max 5 GB</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Jumlah file</p>
+            <p class="mt-1 text-2xl font-bold text-gray-800 dark:text-gray-100">
+                {{ number_format($totalFiles, 0, ',', '.') }}
+                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">dari {{ number_format($maxFiles, 0, ',', '.') }} file</span>
+            </p>
+            <div class="mt-3 h-2 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                <div class="h-full rounded-full {{ $filesPercent >= 90 ? 'bg-red-500' : ($filesPercent >= 70 ? 'bg-amber-500' : 'bg-blue-600') }}" style="width: {{ $filesPercent }}%"></div>
+            </div>
+            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{ $filesPercent }}% dari max 5.000 file</p>
+        </div>
     </div>
 
     <div class="min-w-0 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
@@ -22,7 +50,8 @@
                         <th class="py-2 pr-4 text-left">Tahun</th>
                         <th class="py-2 pr-4 text-left">Bulan</th>
                         <th class="py-2 pr-4 text-left">Folder</th>
-                        <th class="py-2 pr-4 text-left">Total File</th>
+                        <th class="py-2 pr-4 text-left">Jumlah File</th>
+                        <th class="py-2 pr-4 text-left">Ukuran</th>
                         <th class="py-2 pr-4 text-left">Aksi</th>
                     </tr>
                 </thead>
@@ -32,7 +61,8 @@
                             <td class="py-2 pr-4">{{ $folder['year'] }}</td>
                             <td class="py-2 pr-4">{{ $folder['month'] }}</td>
                             <td class="py-2 pr-4 font-mono text-xs">{{ $folder['path'] }}</td>
-                            <td class="py-2 pr-4">{{ $folder['total_files'] }}</td>
+                            <td class="py-2 pr-4">{{ number_format($folder['total_files'], 0, ',', '.') }}</td>
+                            <td class="py-2 pr-4">{{ $folder['total_size_label'] }}</td>
                             <td class="py-2 pr-4">
                                 <div class="flex flex-wrap items-center gap-2" x-data="{ confirming: {{ session('confirm_folder') === $folder['year'].'/'.$folder['month'] ? 'true' : 'false' }} }">
                                     <a href="{{ route('upload-folders.download', ['year' => $folder['year'], 'month' => $folder['month']]) }}"
@@ -72,7 +102,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="py-6 text-center text-gray-500 dark:text-gray-400">
+                            <td colspan="6" class="py-6 text-center text-gray-500 dark:text-gray-400">
                                 {{ __('Belum ada folder upload berbasis tahun/bulan.') }}
                             </td>
                         </tr>

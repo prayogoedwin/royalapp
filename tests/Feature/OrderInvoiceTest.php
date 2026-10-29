@@ -48,6 +48,9 @@ class OrderInvoiceTest extends TestCase
             ->assertSee('Royal Towing', false)
             ->assertSee('brand=ambulance', false)
             ->assertSee('brand=towing', false)
+            ->assertSee('data:image/png;base64,', false)
+            ->assertDontSee('images/invoice/royal-ambulance.png', false)
+            ->assertDontSee('images/invoice/royal-towing.png', false)
             ->assertDontSee('Payment instruction', false);
     }
 

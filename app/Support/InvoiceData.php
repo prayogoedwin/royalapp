@@ -30,6 +30,20 @@ class InvoiceData
         return array_key_exists($brand, static::brands());
     }
 
+    /**
+     * @return array<string, string|null>
+     */
+    public static function pickerLogos(): array
+    {
+        $logos = [];
+
+        foreach (static::brands() as $key => $brand) {
+            $logos[$key] = SuratJalanData::imageDataUri((string) ($brand['logo'] ?? ''));
+        }
+
+        return $logos;
+    }
+
     public static function suggestedBrand(Order $order): string
     {
         $order->loadMissing(['division', 'orderTowing', 'orderAmbulance']);

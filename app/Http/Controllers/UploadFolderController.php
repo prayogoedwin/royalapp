@@ -17,6 +17,10 @@ use ZipArchive;
 
 class UploadFolderController extends Controller
 {
+    public const MAX_BYTES = 5 * 1024 * 1024 * 1024;
+
+    public const MAX_FILES = 5000;
+
     public function index(): View
     {
         $disk = Storage::disk('public');
@@ -28,6 +32,9 @@ class UploadFolderController extends Controller
 
         $folders = [];
         $challenges = [];
+        $totalFiles = 0;
+        $totalBytes = 0;
+
         foreach ($years as $year) {
             $months = collect($disk->directories('uploads/'.$year))
                 ->map(fn (string $dir) => basename($dir))
@@ -38,13 +45,25 @@ class UploadFolderController extends Controller
             foreach ($months as $month) {
                 $prefix = 'uploads/'.$year.'/'.$month;
                 $allFiles = $disk->allFiles($prefix);
+                $folderBytes = 0;
+
+                foreach ($allFiles as $file) {
+                    $folderBytes += (int) $disk->size($file);
+                }
+
+                $fileCount = count($allFiles);
+                $totalFiles += $fileCount;
+                $totalBytes += $folderBytes;
+
                 $code = $this->confirmationCode();
                 $challenges[$year.$month] = $code;
                 $folders[] = [
                     'year' => $year,
                     'month' => $month,
                     'path' => $prefix,
-                    'total_files' => count($allFiles),
+                    'total_files' => $fileCount,
+                    'total_bytes' => $folderBytes,
+                    'total_size_label' => $this->formatBytes($folderBytes),
                     'confirmation_code' => $code,
                 ];
             }
@@ -52,7 +71,17 @@ class UploadFolderController extends Controller
 
         session(['upload_folder_confirm' => $challenges]);
 
-        return view('upload-folders.index', compact('folders'));
+        return view('upload-folders.index', [
+            'folders' => $folders,
+            'totalFiles' => $totalFiles,
+            'totalBytes' => $totalBytes,
+            'totalSizeLabel' => $this->formatBytes($totalBytes),
+            'maxFiles' => self::MAX_FILES,
+            'maxBytes' => self::MAX_BYTES,
+            'maxSizeLabel' => $this->formatBytes(self::MAX_BYTES),
+            'filesPercent' => $this->usagePercent($totalFiles, self::MAX_FILES),
+            'bytesPercent' => $this->usagePercent($totalBytes, self::MAX_BYTES),
+        ]);
     }
 
     public function download(string $year, string $month): BinaryFileResponse|RedirectResponse
@@ -157,5 +186,36 @@ class UploadFolderController extends Controller
         }
 
         return $code;
+    }
+
+    private function usagePercent(int $used, int $max): float
+    {
+        if ($max <= 0) {
+            return 0.0;
+        }
+
+        return min(100, round(($used / $max) * 100, 1));
+    }
+
+    private function formatBytes(int $bytes): string
+    {
+        $units = [
+            ['GB', 1024 ** 3, 2],
+            ['MB', 1024 ** 2, 1],
+            ['KB', 1024, 1],
+            ['B', 1, 0],
+        ];
+
+        foreach ($units as [$unit, $size, $precision]) {
+            if ($bytes >= $size || $unit === 'B') {
+                $value = $precision === 0
+                    ? (string) $bytes
+                    : number_format($bytes / $size, $precision, ',', '.');
+
+                return $value.' '.$unit;
+            }
+        }
+
+        return '0 B';
     }
 }
