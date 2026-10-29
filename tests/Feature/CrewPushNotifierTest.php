@@ -18,6 +18,7 @@ use App\Services\Firebase\CrewPushNotifier;
 use App\Services\Firebase\FcmClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class CrewPushNotifierTest extends TestCase
@@ -111,6 +112,91 @@ class CrewPushNotifierTest extends TestCase
         });
     }
 
+    public function test_notifies_creator_when_status_becomes_done(): void
+    {
+        Bus::fake();
+        $this->mockEnabledFcm();
+
+        $creator = User::factory()->create();
+        $actor = User::factory()->create();
+        $this->actingAs($actor);
+
+        [$driverUser, $driverEmployee] = $this->makeEmployeeUser('Budi Driver');
+        UserDevice::create(['user_id' => $creator->id, 'fcm_token' => 'tok-creator']);
+        UserDevice::create(['user_id' => $driverUser->id, 'fcm_token' => 'tok-driver']);
+
+        $order = $this->makeOrder('Done', [$driverEmployee], $creator->id);
+        $previous = $this->makeStatus('Ongoing');
+
+        app(CrewPushNotifier::class)->notifyCreatorOrderDone($order, (int) $previous->id);
+
+        Bus::assertDispatched(SendCrewPushNotification::class, function (SendCrewPushNotification $job) use ($order) {
+            return $job->tokens === ['tok-creator']
+                && $job->title === 'Order done'
+                && $job->body === 'Budi Driver dengan no order '.$order->order_number.' sudah done, cek website'
+                && $job->data['type'] === 'order_done'
+                && $job->data['order_id'] === (string) $order->id;
+        });
+    }
+
+    public function test_does_not_notify_creator_when_status_was_already_done(): void
+    {
+        Bus::fake();
+        $this->mockEnabledFcm();
+
+        $creator = User::factory()->create();
+        UserDevice::create(['user_id' => $creator->id, 'fcm_token' => 'tok-creator']);
+        [$driverUser, $driverEmployee] = $this->makeEmployeeUser('Budi Driver');
+        $order = $this->makeOrder('Done', [$driverEmployee], $creator->id);
+
+        app(CrewPushNotifier::class)->notifyCreatorOrderDone($order, (int) $order->order_status_id);
+
+        Bus::assertNotDispatched(SendCrewPushNotification::class);
+    }
+
+    public function test_does_not_notify_creator_when_status_is_not_done(): void
+    {
+        Bus::fake();
+        $this->mockEnabledFcm();
+
+        $creator = User::factory()->create();
+        UserDevice::create(['user_id' => $creator->id, 'fcm_token' => 'tok-creator']);
+        [$driverUser, $driverEmployee] = $this->makeEmployeeUser('Budi Driver');
+        $order = $this->makeOrder('Ongoing', [$driverEmployee], $creator->id);
+        $previous = $this->makeStatus('Waiting');
+
+        app(CrewPushNotifier::class)->notifyCreatorOrderDone($order, (int) $previous->id);
+
+        Bus::assertNotDispatched(SendCrewPushNotification::class);
+    }
+
+    public function test_api_report_done_notifies_created_by_account(): void
+    {
+        Bus::fake();
+        $this->mockEnabledFcm();
+
+        $creator = User::factory()->create();
+        UserDevice::create(['user_id' => $creator->id, 'fcm_token' => 'tok-creator']);
+
+        [$driverUser, $driverEmployee] = $this->makeEmployeeUser('Andi Sopir');
+        $done = $this->makeStatus('Done');
+        $order = $this->makeOrder('Ongoing', [$driverEmployee], $creator->id);
+
+        Sanctum::actingAs($driverUser);
+
+        $this->putJson('/api/orders/'.$order->id.'/report', [
+            'km_awal' => 10,
+            'km_akhir' => 20,
+            'order_status_id' => $done->id,
+        ])->assertOk();
+
+        Bus::assertDispatched(SendCrewPushNotification::class, function (SendCrewPushNotification $job) use ($order) {
+            return $job->tokens === ['tok-creator']
+                && $job->body === 'Andi Sopir dengan no order '.$order->order_number.' sudah done, cek website'
+                && $job->data['type'] === 'order_done';
+        });
+    }
+
     private function mockEnabledFcm(): void
     {
         $this->mock(FcmClient::class, function ($mock) {
@@ -150,7 +236,7 @@ class CrewPushNotifierTest extends TestCase
     /**
      * @param  list<Employee>  $employees
      */
-    private function makeOrder(string $statusName, array $employees): Order
+    private function makeOrder(string $statusName, array $employees, ?int $createdBy = null): Order
     {
         $division = Division::query()->firstOrCreate(['nama' => 'Royal Ambulance']);
         $status = $this->makeStatus($statusName);
@@ -165,6 +251,7 @@ class CrewPushNotifierTest extends TestCase
             'destination_address' => 'Bandung',
             'pickup_datetime' => now(),
             'price' => 0,
+            'created_by' => $createdBy,
         ]);
 
         foreach ($employees as $employee) {

@@ -58,6 +58,30 @@ class CrewPushNotifier
         );
     }
 
+    public function notifyCreatorOrderDone(Order $order, int $previousStatusId): void
+    {
+        $order->loadMissing(['orderStatus', 'orderCrews.employee']);
+
+        if ((int) $order->order_status_id === $previousStatusId) {
+            return;
+        }
+
+        if (strtolower((string) $order->orderStatus?->name) !== 'done') {
+            return;
+        }
+
+        if (! $order->created_by) {
+            return;
+        }
+
+        $this->dispatch(
+            collect([(int) $order->created_by]),
+            'Order done',
+            $this->driverName($order).' dengan no order '.$this->orderNumber($order).' sudah done, cek website',
+            $this->orderPayload($order, 'order_done')
+        );
+    }
+
     public function notifyTaskCreated(Task $task): void
     {
         $task->loadMissing(['orderStatus', 'taskCrews.employee']);
@@ -99,6 +123,35 @@ class CrewPushNotifier
         return $number !== ''
             ? '#'.$order->id.' ('.$number.')'
             : '#'.$order->id;
+    }
+
+    private function orderNumber(Order $order): string
+    {
+        $number = trim((string) $order->order_number);
+
+        return $number !== '' ? $number : '#'.$order->id;
+    }
+
+    private function driverName(Order $order): string
+    {
+        foreach ($order->orderCrews as $crew) {
+            $role = strtolower(trim((string) $crew->role));
+            if (in_array($role, ['driver', 'sopir'], true)) {
+                $name = trim((string) ($crew->employee?->full_name ?: $crew->employee?->user?->name));
+                if ($name !== '') {
+                    return $name;
+                }
+            }
+        }
+
+        foreach ($order->orderCrews as $crew) {
+            $name = trim((string) ($crew->employee?->full_name ?: $crew->employee?->user?->name));
+            if ($name !== '') {
+                return $name;
+            }
+        }
+
+        return 'Driver';
     }
 
     /**

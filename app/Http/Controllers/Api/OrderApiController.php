@@ -10,6 +10,7 @@ use App\Models\OrderPhoto;
 use App\Models\OrderReport;
 use App\Models\OrderStatus;
 use App\Models\OrderVehicleIssue;
+use App\Services\Firebase\CrewPushNotifier;
 use App\Services\SuratJalanChecklistService;
 use App\Support\OrderCategoryOptions;
 use App\Support\UploadPath;
@@ -461,6 +462,7 @@ class OrderApiController extends Controller
             'notes' => ['nullable', 'string'],
             'order_status_id' => ['nullable', 'exists:order_statuses,id'],
         ]);
+        $previousStatusId = (int) $order->order_status_id;
         $statusId = (int) ($validated['order_status_id'] ?? $order->order_status_id);
         $report = OrderReport::updateOrCreate(
             ['order_id' => $order->id],
@@ -478,6 +480,11 @@ class OrderApiController extends Controller
         if (! empty($validated['order_status_id'])) {
             $order->update(['order_status_id' => $validated['order_status_id']]);
         }
+
+        app(CrewPushNotifier::class)->notifyCreatorOrderDone(
+            $order->fresh(['orderStatus', 'orderCrews.employee']),
+            $previousStatusId
+        );
 
         return $this->okResponse($report);
     }
