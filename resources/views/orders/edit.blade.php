@@ -27,6 +27,9 @@
                 <x-button type="primary" tag="a" href="{{ route('orders.surat-jalan', $order) }}" target="_blank">
                     Surat Jalan
                 </x-button>
+                <x-button type="secondary" tag="a" href="{{ route('orders.invoice', $order) }}" target="_blank">
+                    Invoice
+                </x-button>
             @endif
         </div>
     </div>

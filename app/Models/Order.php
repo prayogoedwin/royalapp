@@ -50,6 +50,7 @@ class Order extends Model
     protected $casts = [
         'pickup_datetime' => 'datetime',
         'price' => 'integer',
+        'invoice_number' => 'integer',
         'pickup_latitude' => 'float',
         'pickup_longitude' => 'float',
         'destination_latitude' => 'float',

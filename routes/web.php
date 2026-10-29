@@ -179,6 +179,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('orders/places/details', [PlaceSearchController::class, 'details'])->name('orders.places.details')
         ->middleware('permission:create-orders|edit-orders');
     Route::post('orders', [OrderController::class, 'store'])->name('orders.store')->middleware('permission:create-orders');
+    Route::get('orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice')->middleware('permission:show-orders');
     Route::get('orders/{order}/surat-jalan', [OrderController::class, 'suratJalan'])->name('orders.surat-jalan')->middleware('permission:show-orders');
     Route::post('orders/{order}/surat-jalan', [OrderController::class, 'saveSuratJalan'])->name('orders.surat-jalan.save')->middleware('permission:show-orders');
     Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show')->middleware('permission:show-orders');

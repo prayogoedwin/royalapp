@@ -17,6 +17,7 @@ use App\Models\Unit;
 use App\Services\Firebase\CrewPushNotifier;
 use App\Services\SuratJalanChecklistService;
 use App\Support\GoogleMapsLink;
+use App\Support\InvoiceData;
 use App\Support\OrderCategoryOptions;
 use App\Support\OrderOptions;
 use App\Support\UploadPath;
@@ -127,6 +128,7 @@ class OrderController extends Controller
                     if (auth()->user()->hasPermission('show-orders')) {
                         $actions .= '<a href="'.route('orders.show', $order).'" class="text-green-600 dark:text-green-400 hover:underline mr-3">Lihat</a>';
                         $actions .= '<a href="'.route('orders.surat-jalan', $order).'" class="text-indigo-600 dark:text-indigo-400 hover:underline mr-3" target="_blank">Surat Jalan</a>';
+                        $actions .= '<a href="'.route('orders.invoice', $order).'" class="text-amber-700 dark:text-amber-400 hover:underline mr-3" target="_blank">Invoice</a>';
                     }
 
                     if (auth()->user()->hasPermission('edit-orders')) {
@@ -353,6 +355,20 @@ class OrderController extends Controller
         return view('orders.show', compact('order'));
     }
 
+    public function invoice(Request $request, Order $order): View
+    {
+        $brand = (string) $request->query('brand', '');
+
+        if (! InvoiceData::isValidBrand($brand)) {
+            return view('orders.invoice-brand', [
+                'order' => $order,
+                'suggested' => InvoiceData::suggestedBrand($order),
+            ]);
+        }
+
+        return view('orders.pdf.invoice', InvoiceData::fromOrder($order, $brand));
+    }
+
     public function suratJalan(Order $order, SuratJalanChecklistService $suratJalan): View
     {
         return view('orders.pdf.surat_jalan', $suratJalan->viewPayload($order, [
@@ -477,6 +493,7 @@ class OrderController extends Controller
             ]);
             DB::beginTransaction();
             try {
+                $previousStatusId = (int) $order->order_status_id;
                 $deliverDatetime = $order->completionTimeForStatus((int) $validated['order_status_id']);
 
                 $order->update([
@@ -499,10 +516,12 @@ class OrderController extends Controller
                 );
                 DB::commit();
 
+                $fresh = $order->fresh(['orderStatus', 'orderCrews.employee']);
                 app(CrewPushNotifier::class)->notifyOrderUpdated(
-                    $order->fresh(['orderStatus', 'orderCrews.employee']),
+                    $fresh,
                     'Status order diubah'
                 );
+                app(CrewPushNotifier::class)->notifyCreatorOrderDone($fresh, $previousStatusId);
 
                 return redirect()->route('orders.edit', $order)->with('status', 'Order report berhasil diupdate.');
             } catch (\Exception $e) {
@@ -700,6 +719,7 @@ class OrderController extends Controller
         try {
             // Division is fixed at order creation; do not allow changing via request.
             $divisionId = $order->division_id;
+            $previousStatusId = (int) $order->order_status_id;
 
             $order->update([
                 'division_id' => $divisionId,
@@ -758,9 +778,9 @@ class OrderController extends Controller
 
             DB::commit();
 
-            app(CrewPushNotifier::class)->notifyOrderUpdated(
-                $order->fresh(['orderStatus', 'orderCrews.employee'])
-            );
+            $fresh = $order->fresh(['orderStatus', 'orderCrews.employee']);
+            app(CrewPushNotifier::class)->notifyOrderUpdated($fresh);
+            app(CrewPushNotifier::class)->notifyCreatorOrderDone($fresh, $previousStatusId);
 
             return redirect()->route('orders.edit', $order)->with('status', 'Order berhasil diupdate.');
         } catch (\Exception $e) {
