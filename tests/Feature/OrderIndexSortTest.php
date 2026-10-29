@@ -48,7 +48,9 @@ class OrderIndexSortTest extends TestCase
             ->assertOk()
             ->assertSee('id="order-status-filter"', false)
             ->assertSee('Semua status')
-            ->assertSee('Pending');
+            ->assertSee('Pending')
+            ->assertSee('Download PDF')
+            ->assertSee('Download Excel');
     }
 
     public function test_orders_index_can_filter_by_status_and_period(): void
@@ -91,6 +93,33 @@ class OrderIndexSortTest extends TestCase
         $this->assertContains($todayWaiting->id, $periodIds);
         $this->assertNotContains($oldWaiting->id, $periodIds);
         $this->assertNotContains($todayDone->id, $periodIds);
+    }
+
+    public function test_orders_pdf_and_excel_follow_status_filter(): void
+    {
+        $user = $this->userWithPermissions(['view-orders']);
+        $waiting = OrderStatus::query()->firstOrCreate(['name' => 'Waiting'], ['color' => 'gray']);
+        $done = OrderStatus::query()->firstOrCreate(['name' => 'Done'], ['color' => 'green']);
+        $this->makeOrder('RA.WAIT.EXPORT', $user, $waiting);
+        $this->makeOrder('RA.DONE.EXPORT', $user, $done);
+
+        $pdf = $this->actingAs($user)->get(route('orders.pdf', ['status' => 'Waiting']));
+        $pdf->assertOk();
+        $this->assertSame('application/pdf', $pdf->headers->get('content-type'));
+        $this->assertStringContainsString('pesanan-waiting-semua.pdf', (string) $pdf->headers->get('content-disposition'));
+
+        $excel = $this->actingAs($user)->get(route('orders.excel', ['status' => 'Waiting']));
+        $excel->assertOk();
+        $this->assertStringContainsString('.xlsx', (string) $excel->headers->get('content-disposition'));
+        $this->assertStringContainsString('pesanan-waiting-semua', (string) $excel->headers->get('content-disposition'));
+    }
+
+    public function test_user_without_view_orders_cannot_download_order_exports(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->get(route('orders.pdf'))->assertForbidden();
+        $this->actingAs($user)->get(route('orders.excel'))->assertForbidden();
     }
 
     /**

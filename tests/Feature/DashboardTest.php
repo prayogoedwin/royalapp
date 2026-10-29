@@ -162,7 +162,29 @@ class DashboardTest extends TestCase
             ->assertOk()
             ->assertSee('status=Waiting', false)
             ->assertSee('start_date=2026-10-29', false)
-            ->assertSee('end_date=2026-10-29', false);
+            ->assertSee('end_date=2026-10-29', false)
+            ->assertSee('Download PDF')
+            ->assertSee('Download Excel');
+    }
+
+    public function test_dashboard_pdf_and_excel_follow_the_active_period(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-29 12:00:00'));
+
+        $this->actingAs(User::factory()->create());
+        $division = Division::query()->create(['nama' => 'Royal Ambulance']);
+        $waiting = OrderStatus::query()->create(['name' => 'Waiting', 'color' => 'gray']);
+        $this->makeDashboardOrder($division->id, $waiting->id, 'RA.TODAY');
+
+        $pdf = $this->get(route('dashboard.pdf'));
+        $pdf->assertOk();
+        $this->assertSame('application/pdf', $pdf->headers->get('content-type'));
+        $this->assertStringContainsString('dashboard-2026-10-29.pdf', (string) $pdf->headers->get('content-disposition'));
+
+        $excel = $this->get(route('dashboard.excel', ['all_time' => 1]));
+        $excel->assertOk();
+        $this->assertStringContainsString('.xlsx', (string) $excel->headers->get('content-disposition'));
+        $this->assertStringContainsString('dashboard-semua', (string) $excel->headers->get('content-disposition'));
     }
 
     /**

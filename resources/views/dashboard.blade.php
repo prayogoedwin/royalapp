@@ -1,11 +1,21 @@
 <x-layouts.app>
 
-    <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ __('Dashboard')}}</h1>
-        <p class="text-gray-600 dark:text-gray-400 mt-1">{{ __('Welcome to the dashboard') }}</p>
-        <p class="mt-2 text-sm font-medium text-blue-700 dark:text-blue-300">
-            {{ __('Periode aktif:') }} <span class="font-semibold">{{ $periodLabel }}</span>
-        </p>
+    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ __('Dashboard')}}</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">{{ __('Welcome to the dashboard') }}</p>
+            <p class="mt-2 text-sm font-medium text-blue-700 dark:text-blue-300">
+                {{ __('Periode aktif:') }} <span class="font-semibold">{{ $periodLabel }}</span>
+            </p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ route('dashboard.pdf', $orderFilterQuery ?? []) }}" class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600">
+                {{ __('Download PDF') }}
+            </a>
+            <a href="{{ route('dashboard.excel', $orderFilterQuery ?? []) }}" class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-md text-sm hover:bg-emerald-700">
+                {{ __('Download Excel') }}
+            </a>
+        </div>
     </div>
 
     @include('leaderboard.partials.period-form', [

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\OrdersExport;
 use App\Models\Division;
 use App\Models\Employee;
 use App\Models\Order;
@@ -23,15 +24,20 @@ use App\Support\OrderOptions;
 use App\Support\ReportPeriod;
 use App\Support\UploadPath;
 use App\Support\WhatsAppLink;
+use Dompdf\Dompdf;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use InvalidArgumentException;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Yajra\DataTables\Facades\DataTables;
 
 class OrderController extends Controller
@@ -95,28 +101,10 @@ class OrderController extends Controller
 
     public function index(Request $request)
     {
-        $customerPhone = trim((string) $request->query('customer_phone', ''));
-        $statusFilter = trim((string) $request->query('status', ''));
-        $hasPeriodFilter = ReportPeriod::requestHasExplicitFilter($request);
-        $period = ReportPeriod::fromRequest($request);
+        $filters = $this->indexFilters($request);
 
         if ($request->ajax()) {
-            $orders = Order::with(['division', 'orderStatus', 'createdBy'])
-                ->select('orders.*')
-                ->when($customerPhone !== '', fn ($query) => $query->where('customer_phone', $customerPhone))
-                ->when($statusFilter !== '', function ($query) use ($statusFilter) {
-                    $query->whereHas('orderStatus', function ($statuses) use ($statusFilter): void {
-                        $statuses->whereRaw('LOWER(name) = ?', [strtolower($statusFilter)]);
-                    });
-                })
-                ->when($hasPeriodFilter && $period->bounds !== null, function ($query) use ($period) {
-                    $query->whereRaw('COALESCE(pickup_datetime, created_at) BETWEEN ? AND ?', [
-                        $period->bounds[0]->format('Y-m-d H:i:s'),
-                        $period->bounds[1]->format('Y-m-d H:i:s'),
-                    ]);
-                })
-                ->orderByDesc('created_at')
-                ->orderByDesc('id');
+            $orders = $this->filteredOrdersQuery($filters);
 
             return DataTables::of($orders)
                 ->orderColumn('created_at', function ($query, string $order): void {
@@ -182,12 +170,51 @@ class OrderController extends Controller
                 ->make(true);
         }
 
-        return view('orders.index', array_merge($period->viewData(), [
-            'customerPhone' => $customerPhone,
-            'statusFilter' => $statusFilter,
-            'hasPeriodFilter' => $hasPeriodFilter,
+        return view('orders.index', array_merge($filters['period']->viewData(), [
+            'customerPhone' => $filters['customerPhone'],
+            'statusFilter' => $filters['statusFilter'],
+            'hasPeriodFilter' => $filters['hasPeriodFilter'],
             'orderStatuses' => OrderStatus::query()->orderBy('id')->get(['id', 'name']),
         ]));
+    }
+
+    public function exportPdf(Request $request): Response
+    {
+        $filters = $this->indexFilters($request);
+        $orders = $this->filteredOrdersQuery($filters)->get();
+        $periodLabel = $filters['hasPeriodFilter']
+            ? $filters['period']->label
+            : __('Semua periode');
+
+        $html = view('orders.pdf.index', [
+            'orders' => $orders,
+            'statusFilter' => $filters['statusFilter'],
+            'customerPhone' => $filters['customerPhone'],
+            'periodLabel' => $periodLabel,
+        ])->render();
+
+        $dompdf = new Dompdf([
+            'isRemoteEnabled' => true,
+        ]);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('a4', 'landscape');
+        $dompdf->render();
+
+        return response($dompdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$this->ordersExportFilename($filters, 'pdf').'"',
+        ]);
+    }
+
+    public function exportExcel(Request $request): BinaryFileResponse
+    {
+        $filters = $this->indexFilters($request);
+        $orders = $this->filteredOrdersQuery($filters)->get();
+
+        return Excel::download(
+            new OrdersExport($orders),
+            $this->ordersExportFilename($filters, 'xlsx')
+        );
     }
 
     public function create(Request $request): View
@@ -976,6 +1003,72 @@ class OrderController extends Controller
             "{$prefix}_longitude" => $lng,
             "{$prefix}_maps_url" => $url,
         ];
+    }
+
+    /**
+     * @return array{
+     *     customerPhone: string,
+     *     statusFilter: string,
+     *     hasPeriodFilter: bool,
+     *     period: ReportPeriod
+     * }
+     */
+    private function indexFilters(Request $request): array
+    {
+        return [
+            'customerPhone' => trim((string) $request->query('customer_phone', '')),
+            'statusFilter' => trim((string) $request->query('status', '')),
+            'hasPeriodFilter' => ReportPeriod::requestHasExplicitFilter($request),
+            'period' => ReportPeriod::fromRequest($request),
+        ];
+    }
+
+    /**
+     * @param  array{
+     *     customerPhone: string,
+     *     statusFilter: string,
+     *     hasPeriodFilter: bool,
+     *     period: ReportPeriod
+     * }  $filters
+     */
+    private function filteredOrdersQuery(array $filters): Builder
+    {
+        return Order::with(['division', 'orderStatus', 'createdBy'])
+            ->select('orders.*')
+            ->when($filters['customerPhone'] !== '', fn (Builder $query) => $query->where('customer_phone', $filters['customerPhone']))
+            ->when($filters['statusFilter'] !== '', function (Builder $query) use ($filters) {
+                $query->whereHas('orderStatus', function ($statuses) use ($filters): void {
+                    $statuses->whereRaw('LOWER(name) = ?', [strtolower($filters['statusFilter'])]);
+                });
+            })
+            ->when($filters['hasPeriodFilter'] && $filters['period']->bounds !== null, function (Builder $query) use ($filters) {
+                $query->whereRaw('COALESCE(pickup_datetime, created_at) BETWEEN ? AND ?', [
+                    $filters['period']->bounds[0]->format('Y-m-d H:i:s'),
+                    $filters['period']->bounds[1]->format('Y-m-d H:i:s'),
+                ]);
+            })
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
+    }
+
+    /**
+     * @param  array{
+     *     customerPhone: string,
+     *     statusFilter: string,
+     *     hasPeriodFilter: bool,
+     *     period: ReportPeriod
+     * }  $filters
+     */
+    private function ordersExportFilename(array $filters, string $extension): string
+    {
+        $status = $filters['statusFilter'] !== ''
+            ? Str::slug($filters['statusFilter']).'-'
+            : '';
+        $period = $filters['hasPeriodFilter']
+            ? $filters['period']->fileSuffix()
+            : 'semua';
+
+        return 'pesanan-'.$status.$period.'.'.$extension;
     }
 
     private function storePaymentProof(Request $request, Order $order): void

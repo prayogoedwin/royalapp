@@ -9,6 +9,19 @@
         <span class="text-gray-500 dark:text-gray-400">Pesanan</span>
     </div>
 
+    @php
+        $orderFilterQuery = array_filter([
+            'customer_phone' => $customerPhone ?: null,
+            'status' => $statusFilter ?: null,
+            'all_time' => !empty($hasPeriodFilter) && !empty($allTime) ? 1 : null,
+            'start_date' => !empty($hasPeriodFilter) && empty($allTime) ? ($startDate ?? null) : null,
+            'end_date' => !empty($hasPeriodFilter) && empty($allTime) ? ($endDate ?? null) : null,
+            'year' => !empty($hasPeriodFilter) && empty($allTime) ? ($year ?? null) : null,
+            'month' => !empty($hasPeriodFilter) && empty($allTime) ? ($month ?? null) : null,
+        ], fn ($value) => $value !== null && $value !== '');
+        $statusFormQuery = collect($orderFilterQuery)->except('status')->all();
+    @endphp
+
     <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
         <div>
             <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Pesanan</h1>
@@ -28,7 +41,13 @@
                 </p>
             @endif
         </div>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ route('orders.pdf', $orderFilterQuery) }}" class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600">
+                {{ __('Download PDF') }}
+            </a>
+            <a href="{{ route('orders.excel', $orderFilterQuery) }}" class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-md text-sm hover:bg-emerald-700">
+                {{ __('Download Excel') }}
+            </a>
             @if(auth()->user()->hasPermission('create-orders'))
                 <a href="{{ route('orders.create') }}">
                     <x-button type="primary">Buat Pesanan</x-button>
@@ -36,19 +55,6 @@
             @endif
         </div>
     </div>
-
-    @php
-        $orderFilterQuery = array_filter([
-            'customer_phone' => $customerPhone ?: null,
-            'status' => $statusFilter ?: null,
-            'all_time' => !empty($hasPeriodFilter) && !empty($allTime) ? 1 : null,
-            'start_date' => !empty($hasPeriodFilter) && empty($allTime) ? ($startDate ?? null) : null,
-            'end_date' => !empty($hasPeriodFilter) && empty($allTime) ? ($endDate ?? null) : null,
-            'year' => !empty($hasPeriodFilter) && empty($allTime) ? ($year ?? null) : null,
-            'month' => !empty($hasPeriodFilter) && empty($allTime) ? ($month ?? null) : null,
-        ], fn ($value) => $value !== null && $value !== '');
-        $statusFormQuery = collect($orderFilterQuery)->except('status')->all();
-    @endphp
 
     <form method="GET" action="{{ route('orders.index') }}" class="mb-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
         @foreach($statusFormQuery as $name => $value)

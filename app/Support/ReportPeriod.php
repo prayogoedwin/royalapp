@@ -83,6 +83,18 @@ class ReportPeriod
         ], fn ($value) => $value !== null && $value !== '');
     }
 
+    public function fileSuffix(): string
+    {
+        if ($this->allTime || $this->bounds === null) {
+            return 'semua';
+        }
+
+        $start = $this->bounds[0]->toDateString();
+        $end = $this->bounds[1]->toDateString();
+
+        return $start === $end ? $start : $start.'_'.$end;
+    }
+
     public function cacheSuffix(): string
     {
         if ($this->allTime || $this->bounds === null) {

@@ -35,6 +35,12 @@ Route::get('/', function () {
 Route::get('dashboard', DashboardController::class)
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
+Route::get('dashboard/pdf', [DashboardController::class, 'exportPdf'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard.pdf');
+Route::get('dashboard/excel', [DashboardController::class, 'exportExcel'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard.excel');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('leaderboard', [LeaderboardController::class, 'index'])
@@ -173,6 +179,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Orders Management
     Route::get('orders', [OrderController::class, 'index'])->name('orders.index')->middleware('permission:view-orders');
+    Route::get('orders/pdf', [OrderController::class, 'exportPdf'])->name('orders.pdf')->middleware('permission:view-orders');
+    Route::get('orders/excel', [OrderController::class, 'exportExcel'])->name('orders.excel')->middleware('permission:view-orders');
     Route::get('orders/create', [OrderController::class, 'create'])->name('orders.create')->middleware('permission:create-orders');
     Route::get('orders/places', [PlaceSearchController::class, 'search'])->name('orders.places.search')
         ->middleware('permission:create-orders|edit-orders');
