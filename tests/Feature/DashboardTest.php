@@ -5,9 +5,13 @@ namespace Tests\Feature;
 use App\Models\Division;
 use App\Models\Order;
 use App\Models\OrderStatus;
+use App\Models\Permission;
+use App\Models\Role;
 use App\Models\Task;
 use App\Models\User;
 use App\Services\DashboardStatsService;
+use App\Support\ReportPeriod;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
@@ -58,10 +62,10 @@ class DashboardTest extends TestCase
             ->assertSee('Total Tasks')
             ->assertSee('Waiting');
 
-        $this->assertTrue(Cache::has('dashboard.stats.visible.v2'));
+        $this->assertTrue(Cache::has($this->dashboardCacheKey()));
 
         $this->get('/dashboard')->assertOk();
-        $this->assertSame(2, Cache::get('dashboard.stats.visible.v2')['total_tasks']);
+        $this->assertSame(2, Cache::get($this->dashboardCacheKey())['total_tasks']);
     }
 
     public function test_creating_a_task_refreshes_dashboard_cache(): void
@@ -109,17 +113,97 @@ class DashboardTest extends TestCase
         $this->assertSame(2, $statuses['Cancelled']['total']);
     }
 
+    public function test_dashboard_defaults_to_today_and_can_filter_period(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-29 12:00:00'));
+
+        $this->actingAs(User::factory()->create());
+        $division = Division::query()->create(['nama' => 'Royal Ambulance']);
+        $waiting = OrderStatus::query()->create(['name' => 'Waiting', 'color' => 'gray']);
+
+        $this->makeDashboardOrder($division->id, $waiting->id, 'RA.TODAY');
+        $yesterday = $this->makeDashboardOrder($division->id, $waiting->id, 'RA.YDAY');
+        $yesterday->forceFill([
+            'created_at' => now()->subDay(),
+            'pickup_datetime' => now()->subDay(),
+        ])->save();
+
+        Cache::flush();
+
+        $this->get('/dashboard')
+            ->assertOk()
+            ->assertSee('Hari ini (29 Oktober 2026)', false)
+            ->assertSee('name="start_date"', false)
+            ->assertSee('value="2026-10-29"', false)
+            ->assertViewHas('total_orders', 1);
+
+        $this->get('/dashboard?all_time=1')
+            ->assertOk()
+            ->assertSee('Sepanjang waktu')
+            ->assertViewHas('total_orders', 2);
+
+        $this->get('/dashboard?year=2026&month=10')
+            ->assertOk()
+            ->assertSee('Oktober 2026', false)
+            ->assertViewHas('total_orders', 2);
+    }
+
+    public function test_dashboard_status_cards_link_to_filtered_orders(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-29 12:00:00'));
+
+        $user = $this->userWithPermissions(['view-orders']);
+        $this->actingAs($user);
+        $division = Division::query()->create(['nama' => 'Royal Ambulance']);
+        $waiting = OrderStatus::query()->create(['name' => 'Waiting', 'color' => 'gray']);
+        $this->makeDashboardOrder($division->id, $waiting->id, 'RA.WAIT');
+
+        $this->get('/dashboard')
+            ->assertOk()
+            ->assertSee('status=Waiting', false)
+            ->assertSee('start_date=2026-10-29', false)
+            ->assertSee('end_date=2026-10-29', false);
+    }
+
     /**
      * @return array<string, mixed>
      */
     private function viewDataFromDashboard(): array
     {
-        return Cache::get('dashboard.stats.visible.v2');
+        return Cache::get($this->dashboardCacheKey());
     }
 
-    private function makeDashboardOrder(int $divisionId, int $statusId, string $orderNumber): void
+    private function dashboardCacheKey(): string
     {
-        Order::create([
+        $period = ReportPeriod::fromRequest(request());
+        $version = (int) Cache::get(DashboardStatsService::CACHE_VERSION_KEY, 1);
+
+        return 'dashboard.stats.v'.$version.'.visible.'.$period->cacheSuffix();
+    }
+
+    /**
+     * @param  list<string>  $permissions
+     */
+    private function userWithPermissions(array $permissions): User
+    {
+        $role = Role::query()->firstOrCreate(['name' => 'tester-'.implode('-', $permissions)]);
+        $permissionIds = [];
+
+        foreach ($permissions as $name) {
+            $permissionIds[] = Permission::query()->firstOrCreate(['name' => $name])->id;
+        }
+
+        $role->permissions()->syncWithoutDetaching($permissionIds);
+
+        $user = User::factory()->create();
+        $user->assignRole($role);
+
+        return $user;
+    }
+
+    private function makeDashboardOrder(int $divisionId, int $statusId, string $orderNumber): Order
+    {
+        return Order::create([
             'order_number' => $orderNumber,
             'division_id' => $divisionId,
             'order_status_id' => $statusId,

@@ -20,6 +20,7 @@ use App\Support\GoogleMapsLink;
 use App\Support\InvoiceData;
 use App\Support\OrderCategoryOptions;
 use App\Support\OrderOptions;
+use App\Support\ReportPeriod;
 use App\Support\UploadPath;
 use App\Support\WhatsAppLink;
 use Illuminate\Http\JsonResponse;
@@ -95,11 +96,25 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         $customerPhone = trim((string) $request->query('customer_phone', ''));
+        $statusFilter = trim((string) $request->query('status', ''));
+        $hasPeriodFilter = ReportPeriod::requestHasExplicitFilter($request);
+        $period = ReportPeriod::fromRequest($request);
 
         if ($request->ajax()) {
             $orders = Order::with(['division', 'orderStatus', 'createdBy'])
                 ->select('orders.*')
                 ->when($customerPhone !== '', fn ($query) => $query->where('customer_phone', $customerPhone))
+                ->when($statusFilter !== '', function ($query) use ($statusFilter) {
+                    $query->whereHas('orderStatus', function ($statuses) use ($statusFilter): void {
+                        $statuses->whereRaw('LOWER(name) = ?', [strtolower($statusFilter)]);
+                    });
+                })
+                ->when($hasPeriodFilter && $period->bounds !== null, function ($query) use ($period) {
+                    $query->whereRaw('COALESCE(pickup_datetime, created_at) BETWEEN ? AND ?', [
+                        $period->bounds[0]->format('Y-m-d H:i:s'),
+                        $period->bounds[1]->format('Y-m-d H:i:s'),
+                    ]);
+                })
                 ->orderByDesc('created_at')
                 ->orderByDesc('id');
 
@@ -167,9 +182,12 @@ class OrderController extends Controller
                 ->make(true);
         }
 
-        return view('orders.index', [
+        return view('orders.index', array_merge($period->viewData(), [
             'customerPhone' => $customerPhone,
-        ]);
+            'statusFilter' => $statusFilter,
+            'hasPeriodFilter' => $hasPeriodFilter,
+            'orderStatuses' => OrderStatus::query()->orderBy('id')->get(['id', 'name']),
+        ]));
     }
 
     public function create(Request $request): View

@@ -157,6 +157,6 @@
     <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
         {{ __('Default: hari ini. Klik Hari ini / Bulan ini / Tahun ini untuk memuat data, atau isi tanggal lalu Terapkan.') }}
         <br>
-        <span class="opacity-90">{{ __('Order: tanggal jemput (pickup), atau tanggal dibuat jika jemput kosong. Task: tanggal dibuat. Absensi: tanggal. Komentar & lampiran: waktu buat.') }}</span>
+        <span class="opacity-90">{{ $periodHint ?? __('Order: tanggal jemput (pickup), atau tanggal dibuat jika jemput kosong. Task: tanggal dibuat. Absensi: tanggal. Komentar & lampiran: waktu buat.') }}</span>
     </p>
 </form>

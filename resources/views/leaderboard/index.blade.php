@@ -34,7 +34,7 @@
                     </h2>
                     <p class="text-xs text-gray-500 dark:text-gray-400">
                         {{ $isAllDrivers
-                            ? __('Semua karyawan posisi driver, termasuk yang tidak sedang ongoing. Titik peta mengikuti daftar ini.')
+                            ? __('Semua karyawan posisi driver, termasuk yang tidak sedang ongoing. Kolom status menampilkan jumlah order sebagai driver. Titik peta mengikuti daftar ini.')
                             : __('Semua driver yang sedang punya order berstatus Ongoing. Tidak mengikuti filter tanggal.') }}
                     </p>
                 </div>
@@ -55,7 +55,15 @@
                 'valueLabel' => __('Order ongoing'),
                 'formatKm' => false,
                 'extraKey' => 'order_numbers',
-                'extraLabel' => __('Nomor order'),
+                'extraLabel' => $isAllDrivers ? __('Nomor order ongoing') : __('Nomor order'),
+                'statusCountColumns' => $isAllDrivers ? [
+                    ['key' => 'pending', 'label' => __('Pending')],
+                    ['key' => 'waiting', 'label' => __('Waiting')],
+                    ['key' => 'ongoing', 'label' => __('Ongoing')],
+                    ['key' => 'done', 'label' => __('Done')],
+                    ['key' => 'cancelled', 'label' => __('Cancelled')],
+                ] : [],
+                'hideValue' => $isAllDrivers,
                 'scroll' => true,
                 'showColor' => true,
             ])

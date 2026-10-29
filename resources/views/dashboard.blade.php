@@ -3,7 +3,15 @@
     <div class="mb-6">
         <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ __('Dashboard')}}</h1>
         <p class="text-gray-600 dark:text-gray-400 mt-1">{{ __('Welcome to the dashboard') }}</p>
+        <p class="mt-2 text-sm font-medium text-blue-700 dark:text-blue-300">
+            {{ __('Periode aktif:') }} <span class="font-semibold">{{ $periodLabel }}</span>
+        </p>
     </div>
+
+    @include('leaderboard.partials.period-form', [
+        'action' => route('dashboard'),
+        'periodHint' => __('Order: tanggal jemput (pickup), atau tanggal dibuat jika jemput kosong. Task: tanggal dibuat. Total pengguna tidak mengikuti filter tanggal.'),
+    ])
 
     @if(auth()->user()->hasPermission('view-units'))
         @php
@@ -63,11 +71,19 @@
             </div>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+        @php
+            $canViewOrders = auth()->user()->hasPermission('view-orders');
+            $ordersIndexUrl = $canViewOrders ? route('orders.index', $orderFilterQuery ?? []) : null;
+        @endphp
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700 {{ $ordersIndexUrl ? 'hover:border-blue-300 dark:hover:border-blue-600' : '' }}">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ __('Total Orders') }}</p>
-                    <p class="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-1">{{ number_format($total_orders) }}</p>
+                    @if($ordersIndexUrl)
+                        <a href="{{ $ordersIndexUrl }}" class="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-1 block hover:text-blue-700 dark:hover:text-blue-300">{{ number_format($total_orders) }}</a>
+                    @else
+                        <p class="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-1">{{ number_format($total_orders) }}</p>
+                    @endif
                 </div>
                 <div class="bg-purple-100 dark:bg-purple-900 p-3 rounded-full">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-500 dark:text-purple-300"
@@ -109,15 +125,22 @@
     @if(!empty($order_statuses))
         <div class="mb-2">
             <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">{{ __('Status Order') }}</h2>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ __('Jumlah order per status, termasuk yang dibatalkan.') }}</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ __('Jumlah order per status pada periode aktif. Klik kartu untuk membuka daftar pesanan.') }}</p>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-6">
             @foreach($order_statuses as $status)
                 @php
                     $tone = $statusCardColors[$status['color'] ?? 'gray'] ?? $statusCardColors['gray'];
+                    $statusUrl = $canViewOrders
+                        ? route('orders.index', array_merge($orderFilterQuery ?? [], ['status' => $status['name']]))
+                        : null;
                 @endphp
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
-                    <div class="flex items-center justify-between">
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700 {{ $statusUrl ? 'hover:border-blue-300 dark:hover:border-blue-600' : '' }}">
+                    @if($statusUrl)
+                        <a href="{{ $statusUrl }}" class="flex items-center justify-between">
+                    @else
+                        <div class="flex items-center justify-between">
+                    @endif
                         <div>
                             <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ $status['name'] }}</p>
                             <p class="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-1">{{ number_format($status['total']) }}</p>
@@ -127,7 +150,11 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                             </svg>
                         </div>
-                    </div>
+                    @if($statusUrl)
+                        </a>
+                    @else
+                        </div>
+                    @endif
                 </div>
             @endforeach
         </div>

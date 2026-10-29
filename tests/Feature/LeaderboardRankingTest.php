@@ -170,8 +170,10 @@ class LeaderboardRankingTest extends TestCase
             ->assertDontSee('-7.25%2C112.75', false)
             ->assertDontSee('-6.99%2C110.42', false);
 
-        $this->actingAs($viewer)
-            ->get(route('leaderboard.index', ['drivers' => 'all']))
+        $allDrivers = $this->actingAs($viewer)
+            ->get(route('leaderboard.index', ['drivers' => 'all']));
+
+        $allDrivers
             ->assertOk()
             ->assertSee('Semua driver')
             ->assertSee('name="drivers"', false)
@@ -182,6 +184,49 @@ class LeaderboardRankingTest extends TestCase
             ->assertSee('-6.21%2C106.8456', false)
             ->assertSee('-7.25%2C112.75', false)
             ->assertDontSee('-6.99%2C110.42', false);
+
+        $mapDrivers = collect($allDrivers->viewData('mapDrivers'))->keyBy('name');
+        $this->assertSame(1, (int) $mapDrivers['Driver Ongoing Peta']->ongoing);
+        $this->assertSame(0, (int) $mapDrivers['Driver Idle Peta']->ongoing);
+        $this->assertSame(0, (int) $mapDrivers['Driver Idle Peta']->pending);
+        $this->assertSame(0, (int) $mapDrivers['Driver Idle Peta']->waiting);
+        $this->assertSame(0, (int) $mapDrivers['Driver Idle Peta']->done);
+        $this->assertSame(0, (int) $mapDrivers['Driver Idle Peta']->cancelled);
+    }
+
+    public function test_all_drivers_table_shows_counts_per_status(): void
+    {
+        $viewer = $this->userWithPermissions(['view-leaderboard']);
+        $pending = $this->makeStatus('Pending');
+        $waiting = $this->makeStatus('Waiting');
+        $ongoing = $this->makeStatus('Ongoing');
+        $done = $this->makeStatus('Done');
+        $cancelled = $this->makeStatus('Cancelled');
+
+        $driver = $this->makeEmployee('Driver Status Mix', 'Driver');
+        $this->makeDoneOrder($pending, $driver, 'driver');
+        $this->makeDoneOrder($waiting, $driver, 'driver');
+        $this->makeDoneOrder($ongoing, $driver, 'driver');
+        $this->makeDoneOrder($done, $driver, 'driver');
+        $this->makeDoneOrder($cancelled, $driver, 'driver');
+
+        $response = $this->actingAs($viewer)
+            ->get(route('leaderboard.index', ['drivers' => 'all']))
+            ->assertOk()
+            ->assertSee('Pending')
+            ->assertSee('Waiting')
+            ->assertSee('Ongoing')
+            ->assertSee('Done')
+            ->assertSee('Cancelled')
+            ->assertSee('Driver Status Mix');
+
+        $row = collect($response->viewData('mapDrivers'))->firstWhere('name', 'Driver Status Mix');
+        $this->assertNotNull($row);
+        $this->assertSame(1, (int) $row->pending);
+        $this->assertSame(1, (int) $row->waiting);
+        $this->assertSame(1, (int) $row->ongoing);
+        $this->assertSame(1, (int) $row->done);
+        $this->assertSame(1, (int) $row->cancelled);
     }
 
     public function test_leaderboard_map_shows_ongoing_driver_points_with_latest_flag(): void

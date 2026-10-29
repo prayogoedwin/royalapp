@@ -6,6 +6,7 @@ use App\Models\Absensi;
 use App\Models\LokasiTerkini;
 use App\Models\OrderStatus;
 use App\Support\GoogleMapsLink;
+use App\Support\ReportPeriod;
 use Carbon\Carbon;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
@@ -16,151 +17,19 @@ use Illuminate\View\View;
 class LeaderboardController extends Controller
 {
     /**
-     * @return array{0: Carbon, 1: Carbon}|null null = all time
-     */
-    protected function resolvePeriodBounds(Request $request): ?array
-    {
-        if ($request->boolean('all_time')) {
-            return null;
-        }
-
-        $start = $this->parseDate($request->input('start_date'));
-        $end = $this->parseDate($request->input('end_date'), endOfDay: true);
-        if ($start !== null && $end !== null) {
-            if ($start->greaterThan($end)) {
-                [$start, $end] = [$end->copy()->startOfDay(), $start->copy()->endOfDay()];
-            }
-
-            return [$start, $end];
-        }
-
-        $year = (int) $request->input('year', 0);
-        if ($year >= 2000 && $year <= 2100) {
-            $monthRaw = $request->input('month');
-            if ($monthRaw !== null && $monthRaw !== '' && $monthRaw !== '0') {
-                $month = (int) $monthRaw;
-                if ($month >= 1 && $month <= 12) {
-                    $monthStart = Carbon::create($year, $month, 1)->startOfDay();
-
-                    return [$monthStart, (clone $monthStart)->endOfMonth()->endOfDay()];
-                }
-            }
-
-            return [
-                Carbon::create($year, 1, 1)->startOfDay(),
-                Carbon::create($year, 12, 31)->endOfDay(),
-            ];
-        }
-
-        $today = now();
-
-        return [$today->copy()->startOfDay(), $today->copy()->endOfDay()];
-    }
-
-    protected function parseDate(mixed $value, bool $endOfDay = false): ?Carbon
-    {
-        if (! is_string($value) || ! filled($value)) {
-            return null;
-        }
-
-        try {
-            $date = Carbon::createFromFormat('Y-m-d', $value);
-        } catch (\Throwable) {
-            return null;
-        }
-
-        if ($date === false) {
-            return null;
-        }
-
-        return $endOfDay ? $date->endOfDay() : $date->startOfDay();
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    protected function monthNames(): array
-    {
-        return [
-            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
-            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
-            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
-        ];
-    }
-
-    protected function formatDay(Carbon $date): string
-    {
-        $months = $this->monthNames();
-
-        return $date->day.' '.($months[$date->month] ?? $date->format('F')).' '.$date->year;
-    }
-
-    protected function periodLabel(?array $bounds): string
-    {
-        if ($bounds === null) {
-            return __('Sepanjang waktu');
-        }
-
-        [$start, $end] = $bounds;
-        $months = $this->monthNames();
-
-        if ($start->isSameDay($end)) {
-            if ($start->isToday()) {
-                return __('Hari ini (:date)', ['date' => $this->formatDay($start)]);
-            }
-
-            return $this->formatDay($start);
-        }
-
-        if ($start->isSameMonth($end) && $start->day === 1 && $end->isSameDay($start->copy()->endOfMonth())) {
-            return ($months[$start->month] ?? $start->format('F')).' '.$start->year;
-        }
-
-        if (
-            $start->month === 1 && $start->day === 1
-            && $end->month === 12 && $end->day === 31
-            && $start->year === $end->year
-        ) {
-            return __('Tahun :year', ['year' => (string) $start->year]);
-        }
-
-        return $this->formatDay($start).' – '.$this->formatDay($end);
-    }
-
-    /**
      * @return array<string, mixed>
      */
     protected function periodViewData(Request $request): array
     {
-        $bounds = $this->resolvePeriodBounds($request);
-        $allTime = $request->boolean('all_time');
-        $today = now()->toDateString();
-        $startDate = $bounds ? $bounds[0]->toDateString() : $today;
-        $endDate = $bounds ? $bounds[1]->toDateString() : $today;
-        $year = (int) $request->input('year', $bounds ? $bounds[0]->year : now()->year);
-        $year = max(2000, min(2100, $year));
-        $month = $request->input('month');
+        $period = ReportPeriod::fromRequest($request);
+        $data = $period->viewData();
+        $driverScope = $this->resolveDriverScope($request);
+        $data['driverScope'] = $driverScope;
+        $data['periodQuery'] = array_filter(array_merge($period->queryParams(), [
+            'drivers' => $driverScope === 'all' ? 'all' : null,
+        ]), fn ($value) => $value !== null && $value !== '');
 
-        return [
-            'bounds' => $bounds,
-            'periodLabel' => $this->periodLabel($bounds),
-            'allTime' => $allTime,
-            'startDate' => $startDate,
-            'endDate' => $endDate,
-            'year' => $year,
-            'month' => $month,
-            'yearOptionsFrom' => 2020,
-            'yearOptionsTo' => (int) now()->year + 1,
-            'driverScope' => $this->resolveDriverScope($request),
-            'periodQuery' => array_filter([
-                'all_time' => $allTime ? 1 : null,
-                'start_date' => $allTime ? null : $startDate,
-                'end_date' => $allTime ? null : $endDate,
-                'year' => $allTime ? null : $year,
-                'month' => $allTime ? null : $month,
-                'drivers' => $this->resolveDriverScope($request) === 'all' ? 'all' : null,
-            ], fn ($value) => $value !== null && $value !== ''),
-        ];
+        return $data;
     }
 
     protected function resolveDriverScope(Request $request): string
@@ -319,6 +188,7 @@ class LeaderboardController extends Controller
     protected function allDriversRanking(): Collection
     {
         $ongoing = $this->ongoingDriversRanking()->keyBy('id');
+        $statusCounts = $this->driverStatusCountsByUser();
 
         $positionDrivers = DB::table('employees')
             ->join('users', 'users.id', '=', 'employees.user_id')
@@ -352,9 +222,24 @@ class LeaderboardController extends Controller
             ->concat($crewDrivers)
             ->unique('id')
             ->values()
-            ->map(function ($row) use ($ongoing) {
+            ->map(function ($row) use ($ongoing, $statusCounts) {
                 $current = $ongoing->get($row->id) ?? $ongoing->get((string) $row->id);
-                $row->total = (int) ($current?->total ?? 0);
+                $counts = $statusCounts->get($row->id)
+                    ?? $statusCounts->get((string) $row->id)
+                    ?? [
+                        'pending' => 0,
+                        'waiting' => 0,
+                        'ongoing' => 0,
+                        'done' => 0,
+                        'cancelled' => 0,
+                    ];
+
+                $row->pending = (int) $counts['pending'];
+                $row->waiting = (int) $counts['waiting'];
+                $row->ongoing = (int) $counts['ongoing'];
+                $row->done = (int) $counts['done'];
+                $row->cancelled = (int) $counts['cancelled'];
+                $row->total = (int) ($current?->total ?? $row->ongoing);
                 $row->order_numbers = $current?->order_numbers ?? '';
 
                 return $row;
@@ -364,6 +249,47 @@ class LeaderboardController extends Controller
                 ['name', 'asc'],
             ])
             ->values();
+    }
+
+    /**
+     * @return Collection<int|string, array{pending: int, waiting: int, ongoing: int, done: int, cancelled: int}>
+     */
+    protected function driverStatusCountsByUser(): Collection
+    {
+        $rows = DB::table('order_crews')
+            ->join('orders', 'orders.id', '=', 'order_crews.order_id')
+            ->join('order_statuses', 'order_statuses.id', '=', 'orders.order_status_id')
+            ->join('employees', 'employees.id', '=', 'order_crews.employee_id')
+            ->whereNull('orders.deleted_at')
+            ->whereNull('order_crews.deleted_at')
+            ->whereNotNull('employees.user_id')
+            ->whereRaw('LOWER(order_crews.role) in (?, ?)', ['driver', 'sopir'])
+            ->select(
+                'employees.user_id',
+                DB::raw('LOWER(order_statuses.name) as status_name'),
+                DB::raw('COUNT(DISTINCT orders.id) as total')
+            )
+            ->groupBy('employees.user_id', DB::raw('LOWER(order_statuses.name)'))
+            ->get();
+
+        return $rows->groupBy('user_id')->map(function (Collection $group): array {
+            $counts = [
+                'pending' => 0,
+                'waiting' => 0,
+                'ongoing' => 0,
+                'done' => 0,
+                'cancelled' => 0,
+            ];
+
+            foreach ($group as $row) {
+                $key = strtolower((string) $row->status_name);
+                if (array_key_exists($key, $counts)) {
+                    $counts[$key] = (int) $row->total;
+                }
+            }
+
+            return $counts;
+        });
     }
 
     /**
@@ -429,7 +355,7 @@ class LeaderboardController extends Controller
                 'longitude' => $longitude,
                 'waktu_hp' => $waktu?->toDateTimeString() ?? '',
                 'waktu_label' => $waktu?->format('H:i') ?? '',
-                'tanggal_label' => $waktu ? $this->formatDay($waktu).' '.$waktu->format('H:i') : '',
+                'tanggal_label' => $waktu ? ReportPeriod::formatDay($waktu).' '.$waktu->format('H:i') : '',
                 'maps_url' => GoogleMapsLink::url($latitude, $longitude),
                 'is_latest' => $isLatest,
                 'has_previous' => $isLatest && (int) $counts->get($row->user_id, $counts->get((string) $row->user_id, 0)) > 1,

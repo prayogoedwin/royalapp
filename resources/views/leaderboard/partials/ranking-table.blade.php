@@ -4,9 +4,11 @@
     $tdClass = 'py-2 px-3 text-gray-800 dark:text-gray-100 border-b border-gray-100 dark:border-gray-700/50';
     $extraKey = $extraKey ?? null;
     $extraLabel = $extraLabel ?? __('Nomor order');
+    $statusCountColumns = $statusCountColumns ?? [];
     $scroll = $scroll ?? false;
     $showColor = $showColor ?? false;
-    $colspan = $extraKey ? 4 : 3;
+    $hideValue = $hideValue ?? false;
+    $colspan = 2 + ($extraKey ? 1 : 0) + count($statusCountColumns) + ($hideValue ? 0 : 1);
 @endphp
 
 <div class="overflow-x-auto {{ $scroll ? 'max-h-[32rem] overflow-y-auto' : '' }}">
@@ -18,7 +20,12 @@
                 @if($extraKey)
                     <th class="{{ $thClass }}">{{ $extraLabel }}</th>
                 @endif
-                <th class="{{ $thClass }} text-right">{{ $valueLabel }}</th>
+                @foreach($statusCountColumns as $statusColumn)
+                    <th class="{{ $thClass }} text-right">{{ $statusColumn['label'] }}</th>
+                @endforeach
+                @unless($hideValue)
+                    <th class="{{ $thClass }} text-right">{{ $valueLabel }}</th>
+                @endunless
             </tr>
         </thead>
         <tbody>
@@ -39,13 +46,18 @@
                     @if($extraKey)
                         <td class="{{ $tdClass }} text-xs text-gray-600 dark:text-gray-300">{{ $row->{$extraKey} }}</td>
                     @endif
-                    <td class="{{ $tdClass }} text-right font-semibold">
-                        @if(!empty($formatKm))
-                            {{ number_format((float) $row->{$valueKey}, 0, ',', '.') }}
-                        @else
-                            {{ number_format($row->{$valueKey}) }}
-                        @endif
-                    </td>
+                    @foreach($statusCountColumns as $statusColumn)
+                        <td class="{{ $tdClass }} text-right font-semibold">{{ number_format((int) ($row->{$statusColumn['key']} ?? 0)) }}</td>
+                    @endforeach
+                    @unless($hideValue)
+                        <td class="{{ $tdClass }} text-right font-semibold">
+                            @if(!empty($formatKm))
+                                {{ number_format((float) $row->{$valueKey}, 0, ',', '.') }}
+                            @else
+                                {{ number_format($row->{$valueKey}) }}
+                            @endif
+                        </td>
+                    @endunless
                 </tr>
             @empty
                 <tr><td colspan="{{ $colspan }}" class="{{ $tdClass }} text-gray-500">{{ __('Belum ada data.') }}</td></tr>

@@ -13,9 +13,17 @@
         <div>
             <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Pesanan</h1>
             <p class="text-gray-600 dark:text-gray-400 mt-1">Kelola pesanan</p>
-            @if(!empty($customerPhone))
+            @if(!empty($customerPhone) || !empty($statusFilter) || !empty($hasPeriodFilter))
                 <p class="mt-2 text-sm text-blue-700 dark:text-blue-300">
-                    {{ __('Filter nomor WA:') }} <span class="font-semibold">{{ $customerPhone }}</span>
+                    @if(!empty($customerPhone))
+                        {{ __('Filter nomor WA:') }} <span class="font-semibold">{{ $customerPhone }}</span>
+                    @endif
+                    @if(!empty($statusFilter))
+                        <span class="{{ !empty($customerPhone) ? 'ml-3' : '' }}">{{ __('Status:') }} <span class="font-semibold">{{ $statusFilter }}</span></span>
+                    @endif
+                    @if(!empty($hasPeriodFilter))
+                        <span class="{{ (!empty($customerPhone) || !empty($statusFilter)) ? 'ml-3' : '' }}">{{ __('Periode:') }} <span class="font-semibold">{{ $periodLabel }}</span></span>
+                    @endif
                     <a href="{{ route('orders.index') }}" class="ml-2 underline">{{ __('Hapus filter') }}</a>
                 </p>
             @endif
@@ -28,6 +36,44 @@
             @endif
         </div>
     </div>
+
+    @php
+        $orderFilterQuery = array_filter([
+            'customer_phone' => $customerPhone ?: null,
+            'status' => $statusFilter ?: null,
+            'all_time' => !empty($hasPeriodFilter) && !empty($allTime) ? 1 : null,
+            'start_date' => !empty($hasPeriodFilter) && empty($allTime) ? ($startDate ?? null) : null,
+            'end_date' => !empty($hasPeriodFilter) && empty($allTime) ? ($endDate ?? null) : null,
+            'year' => !empty($hasPeriodFilter) && empty($allTime) ? ($year ?? null) : null,
+            'month' => !empty($hasPeriodFilter) && empty($allTime) ? ($month ?? null) : null,
+        ], fn ($value) => $value !== null && $value !== '');
+        $statusFormQuery = collect($orderFilterQuery)->except('status')->all();
+    @endphp
+
+    <form method="GET" action="{{ route('orders.index') }}" class="mb-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+        @foreach($statusFormQuery as $name => $value)
+            <input type="hidden" name="{{ $name }}" value="{{ $value }}">
+        @endforeach
+        <div class="flex flex-col sm:flex-row sm:items-end gap-3">
+            <div>
+                <label for="order-status-filter" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{{ __('Status') }}</label>
+                <select
+                    id="order-status-filter"
+                    name="status"
+                    onchange="this.form.submit()"
+                    class="px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm min-w-[12rem]"
+                >
+                    <option value="">{{ __('Semua status') }}</option>
+                    @foreach($orderStatuses as $orderStatus)
+                        <option value="{{ $orderStatus->name }}" @selected(strcasecmp((string) $statusFilter, (string) $orderStatus->name) === 0)>{{ $orderStatus->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md w-fit">
+                {{ __('Terapkan') }}
+            </button>
+        </div>
+    </form>
 
     <div class="min-w-0 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         <div class="p-4 dt-scroll-x">
@@ -62,7 +108,7 @@
                 serverSide: true,
                 scrollX: true,
                 autoWidth: false,
-                ajax: '{{ route('orders.index', array_filter(['customer_phone' => $customerPhone ?? null])) }}',
+                ajax: @json(route('orders.index', $orderFilterQuery)),
                 columns: [
                     { data: 'order_number', name: 'order_number' },
                     { data: 'customer_name', name: 'customer_name' },
