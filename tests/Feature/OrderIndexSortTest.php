@@ -18,8 +18,8 @@ class OrderIndexSortTest extends TestCase
     public function test_web_order_list_returns_newest_first(): void
     {
         $user = $this->userWithPermissions(['view-orders']);
-        $older = $this->makeOrder('RA.0001');
-        $newer = $this->makeOrder('RA.0002');
+        $older = $this->makeOrder('RA.0001', $user);
+        $newer = $this->makeOrder('RA.0002', $user);
         $older->forceFill(['created_at' => now()->subDay()])->save();
         $newer->forceFill(['created_at' => now()])->save();
 
@@ -31,6 +31,10 @@ class OrderIndexSortTest extends TestCase
         $this->assertSame(
             [$newer->id, $older->id],
             collect($response->json('data'))->pluck('id')->all()
+        );
+        $this->assertSame(
+            [$user->name, $user->name],
+            collect($response->json('data'))->pluck('created_by_name')->all()
         );
     }
 
@@ -54,7 +58,7 @@ class OrderIndexSortTest extends TestCase
         return $user;
     }
 
-    private function makeOrder(string $orderNumber): Order
+    private function makeOrder(string $orderNumber, ?User $creator = null): Order
     {
         $division = Division::query()->firstOrCreate(['nama' => 'Royal Ambulance']);
         $status = OrderStatus::query()->firstOrCreate(['name' => 'Open'], ['color' => '#2563eb']);
@@ -69,6 +73,7 @@ class OrderIndexSortTest extends TestCase
             'destination_address' => 'Bandung',
             'pickup_datetime' => now(),
             'price' => 0,
+            'created_by' => $creator?->id,
         ]);
     }
 
@@ -84,6 +89,7 @@ class OrderIndexSortTest extends TestCase
             ['data' => 'pickup_datetime', 'name' => 'pickup_datetime'],
             ['data' => 'price', 'name' => 'price'],
             ['data' => 'status_badge', 'name' => 'order_status_id'],
+            ['data' => 'created_by_name', 'name' => 'created_by_name'],
             ['data' => 'created_at', 'name' => 'created_at'],
             ['data' => 'actions', 'name' => 'actions', 'orderable' => 'false', 'searchable' => 'false'],
         ];
@@ -94,7 +100,7 @@ class OrderIndexSortTest extends TestCase
             'length' => 10,
             'columns' => $columns,
             'order' => [
-                ['column' => 6, 'dir' => 'desc'],
+                ['column' => 7, 'dir' => 'desc'],
             ],
         ];
     }

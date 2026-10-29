@@ -177,6 +177,7 @@ class CustomerIndexTest extends TestCase
             ['data' => 'pickup_datetime', 'name' => 'pickup_datetime'],
             ['data' => 'price', 'name' => 'price'],
             ['data' => 'status_badge', 'name' => 'order_status_id'],
+            ['data' => 'created_by_name', 'name' => 'created_by_name'],
             ['data' => 'created_at', 'name' => 'created_at'],
             ['data' => 'actions', 'name' => 'actions', 'orderable' => 'false', 'searchable' => 'false'],
         ];
@@ -187,7 +188,7 @@ class CustomerIndexTest extends TestCase
             'length' => 10,
             'columns' => $columns,
             'order' => [
-                ['column' => 6, 'dir' => 'desc'],
+                ['column' => 7, 'dir' => 'desc'],
             ],
         ];
     }

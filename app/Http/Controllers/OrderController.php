@@ -97,7 +97,7 @@ class OrderController extends Controller
         $customerPhone = trim((string) $request->query('customer_phone', ''));
 
         if ($request->ajax()) {
-            $orders = Order::with(['division', 'orderStatus'])
+            $orders = Order::with(['division', 'orderStatus', 'createdBy'])
                 ->select('orders.*')
                 ->when($customerPhone !== '', fn ($query) => $query->where('customer_phone', $customerPhone))
                 ->orderByDesc('created_at')
@@ -109,6 +109,16 @@ class OrderController extends Controller
                 })
                 ->addColumn('division_name', function ($order) {
                     return $order->division->nama;
+                })
+                ->addColumn('created_by_name', function ($order) {
+                    $name = trim((string) ($order->createdBy?->name ?? ''));
+
+                    return $name !== '' ? $name : '-';
+                })
+                ->filterColumn('created_by_name', function ($query, $keyword): void {
+                    $query->whereHas('createdBy', function ($users) use ($keyword): void {
+                        $users->where('name', 'like', '%'.$keyword.'%');
+                    });
                 })
                 ->addColumn('status_badge', function ($order) {
                     $colors = [
