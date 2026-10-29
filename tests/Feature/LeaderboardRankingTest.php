@@ -117,10 +117,71 @@ class LeaderboardRankingTest extends TestCase
             ->get(route('leaderboard.index'))
             ->assertOk()
             ->assertSee('Driver ongoing saat ini')
+            ->assertSee('Semua driver')
             ->assertSee('Driver Ongoing')
             ->assertSee($order->order_number)
             ->assertSee('Driver Selesai')
             ->assertDontSee('Nurse Ongoing');
+    }
+
+    public function test_all_drivers_toggle_changes_list_and_map_points(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-10-28 15:30:00'));
+
+        $viewer = $this->userWithPermissions(['view-leaderboard']);
+        $ongoing = $this->makeStatus('Ongoing');
+
+        $busy = $this->makeEmployee('Driver Ongoing Peta', 'Driver');
+        $idle = $this->makeEmployee('Driver Idle Peta', 'Driver');
+        $nurse = $this->makeEmployee('Nurse Peta', 'Nurse');
+
+        $this->makeDoneOrder($ongoing, $busy, 'driver');
+        $this->makeDoneOrder($ongoing, $nurse, 'nurse');
+
+        LokasiTerkini::create([
+            'user_id' => $busy->user_id,
+            'employee_id' => $busy->id,
+            'latitude' => -6.2100,
+            'longitude' => 106.8456,
+            'waktu_hp' => now()->setTime(15, 20),
+        ]);
+        LokasiTerkini::create([
+            'user_id' => $idle->user_id,
+            'employee_id' => $idle->id,
+            'latitude' => -7.2500,
+            'longitude' => 112.7500,
+            'waktu_hp' => now()->setTime(15, 00),
+        ]);
+        LokasiTerkini::create([
+            'user_id' => $nurse->user_id,
+            'employee_id' => $nurse->id,
+            'latitude' => -6.9900,
+            'longitude' => 110.4200,
+            'waktu_hp' => now()->setTime(15, 10),
+        ]);
+
+        $this->actingAs($viewer)
+            ->get(route('leaderboard.index'))
+            ->assertOk()
+            ->assertSee('Driver ongoing saat ini')
+            ->assertSee('Driver Ongoing Peta')
+            ->assertDontSee('Driver Idle Peta')
+            ->assertSee('-6.21%2C106.8456', false)
+            ->assertDontSee('-7.25%2C112.75', false)
+            ->assertDontSee('-6.99%2C110.42', false);
+
+        $this->actingAs($viewer)
+            ->get(route('leaderboard.index', ['drivers' => 'all']))
+            ->assertOk()
+            ->assertSee('Semua driver')
+            ->assertSee('name="drivers"', false)
+            ->assertSee('value="all"', false)
+            ->assertSee('Driver Ongoing Peta')
+            ->assertSee('Driver Idle Peta')
+            ->assertDontSee('Nurse Peta')
+            ->assertSee('-6.21%2C106.8456', false)
+            ->assertSee('-7.25%2C112.75', false)
+            ->assertDontSee('-6.99%2C110.42', false);
     }
 
     public function test_leaderboard_map_shows_ongoing_driver_points_with_latest_flag(): void

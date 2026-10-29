@@ -151,14 +151,21 @@ class LeaderboardController extends Controller
             'month' => $month,
             'yearOptionsFrom' => 2020,
             'yearOptionsTo' => (int) now()->year + 1,
+            'driverScope' => $this->resolveDriverScope($request),
             'periodQuery' => array_filter([
                 'all_time' => $allTime ? 1 : null,
                 'start_date' => $allTime ? null : $startDate,
                 'end_date' => $allTime ? null : $endDate,
                 'year' => $allTime ? null : $year,
                 'month' => $allTime ? null : $month,
+                'drivers' => $this->resolveDriverScope($request) === 'all' ? 'all' : null,
             ], fn ($value) => $value !== null && $value !== ''),
         ];
+    }
+
+    protected function resolveDriverScope(Request $request): string
+    {
+        return $request->input('drivers') === 'all' ? 'all' : 'ongoing';
     }
 
     public function index(Request $request): View
@@ -170,8 +177,13 @@ class LeaderboardController extends Controller
         $ordersDone = collect();
         $kmDone = collect();
         $tasksDone = collect();
-        $ongoingDrivers = $this->assignDriverColors($this->ongoingDriversRanking());
-        $lokasiPoints = $this->ongoingDriversLocations($ongoingDrivers);
+        $driverScope = $period['driverScope'];
+        $mapDrivers = $this->assignDriverColors(
+            $driverScope === 'all'
+                ? $this->allDriversRanking()
+                : $this->ongoingDriversRanking()
+        );
+        $lokasiPoints = $this->driversLocations($mapDrivers);
 
         if ($doneStatusId) {
             $ordersDone = $this->ordersDoneRanking($bounds, (int) $doneStatusId);
@@ -184,7 +196,7 @@ class LeaderboardController extends Controller
         $taskAttachments = $this->taskAttachmentsRanking($bounds, 5);
 
         return view('leaderboard.index', array_merge($period, compact(
-            'ongoingDrivers',
+            'mapDrivers',
             'lokasiPoints',
             'ordersDone',
             'kmDone',
@@ -304,6 +316,56 @@ class LeaderboardController extends Controller
         });
     }
 
+    protected function allDriversRanking(): Collection
+    {
+        $ongoing = $this->ongoingDriversRanking()->keyBy('id');
+
+        $positionDrivers = DB::table('employees')
+            ->join('users', 'users.id', '=', 'employees.user_id')
+            ->leftJoin('positions', 'positions.id', '=', 'employees.position_id')
+            ->whereNull('employees.deleted_at')
+            ->whereNotNull('employees.user_id')
+            ->where(function ($query) {
+                $query->whereNull('employees.status')
+                    ->orWhere('employees.status', 'active');
+            })
+            ->where(function ($query) {
+                $query->whereRaw('LOWER(positions.nama) in (?, ?)', ['driver', 'sopir'])
+                    ->orWhereRaw('LOWER(COALESCE(positions.key, "")) in (?, ?)', ['driver', 'sopir']);
+            })
+            ->select('users.id', 'users.name', 'users.email')
+            ->distinct()
+            ->get();
+
+        $crewDrivers = DB::table('order_crews')
+            ->join('employees', 'employees.id', '=', 'order_crews.employee_id')
+            ->join('users', 'users.id', '=', 'employees.user_id')
+            ->whereNull('order_crews.deleted_at')
+            ->whereNull('employees.deleted_at')
+            ->whereNotNull('employees.user_id')
+            ->whereRaw('LOWER(order_crews.role) in (?, ?)', ['driver', 'sopir'])
+            ->select('users.id', 'users.name', 'users.email')
+            ->distinct()
+            ->get();
+
+        return $positionDrivers
+            ->concat($crewDrivers)
+            ->unique('id')
+            ->values()
+            ->map(function ($row) use ($ongoing) {
+                $current = $ongoing->get($row->id) ?? $ongoing->get((string) $row->id);
+                $row->total = (int) ($current?->total ?? 0);
+                $row->order_numbers = $current?->order_numbers ?? '';
+
+                return $row;
+            })
+            ->sortBy([
+                ['total', 'desc'],
+                ['name', 'asc'],
+            ])
+            ->values();
+    }
+
     /**
      * @return list<string>
      */
@@ -329,7 +391,7 @@ class LeaderboardController extends Controller
     /**
      * @return list<array{id: int, user_id: int, name: string, latitude: float, longitude: float, waktu_hp: string, waktu_label: string, tanggal_label: string, maps_url: string|null, is_latest: bool}>
      */
-    protected function ongoingDriversLocations(Collection $drivers): array
+    protected function driversLocations(Collection $drivers): array
     {
         $userIds = $drivers->pluck('id')->filter()->values();
         if ($userIds->isEmpty()) {

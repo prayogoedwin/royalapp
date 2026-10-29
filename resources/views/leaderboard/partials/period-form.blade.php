@@ -63,6 +63,9 @@
         }
     }"
 >
+    @if(($driverScope ?? 'ongoing') === 'all')
+        <input type="hidden" name="drivers" value="all">
+    @endif
     <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-4">
         <label class="inline-flex items-center gap-2 cursor-pointer text-sm text-gray-700 dark:text-gray-300">
             <input

@@ -10,7 +10,7 @@
     <div class="mb-4">
         <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ __('Leaderboard') }}</h1>
         <p class="text-gray-600 dark:text-gray-400 mt-1 text-sm">
-            {{ __('Driver ongoing saat ini, plus ranking Order Done dan Total KM untuk semua driver. Statistik lain menampilkan top 5.') }}
+            {{ __('Daftar driver (default: yang ongoing) plus ranking Order Done dan Total KM. Statistik lain menampilkan top 5.') }}
         </p>
         <p class="mt-2 text-sm font-medium text-blue-700 dark:text-blue-300">
             {{ __('Periode aktif:') }} <span class="font-semibold">{{ $periodLabel }}</span>
@@ -20,14 +20,37 @@
     @include('leaderboard.partials.period-form', ['action' => route('leaderboard.index')])
 
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {{-- Ongoing drivers --}}
+        {{-- Driver list + map --}}
+        @php
+            $driverScopeQuery = collect($periodQuery)->except('drivers')->all();
+            $isAllDrivers = ($driverScope ?? 'ongoing') === 'all';
+        @endphp
         <div class="xl:col-span-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
-            <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-1 flex items-center gap-2">
-                <span class="text-amber-500">①</span> {{ __('Driver ongoing saat ini') }}
-            </h2>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">{{ __('Semua driver yang sedang punya order berstatus Ongoing. Tidak mengikuti filter tanggal.') }}</p>
+            <div class="mb-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-1 flex items-center gap-2">
+                        <span class="text-amber-500">①</span>
+                        {{ $isAllDrivers ? __('Semua driver') : __('Driver ongoing saat ini') }}
+                    </h2>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                        {{ $isAllDrivers
+                            ? __('Semua karyawan posisi driver, termasuk yang tidak sedang ongoing. Titik peta mengikuti daftar ini.')
+                            : __('Semua driver yang sedang punya order berstatus Ongoing. Tidak mengikuti filter tanggal.') }}
+                    </p>
+                </div>
+                <div class="inline-flex shrink-0 rounded-lg border border-gray-200 dark:border-gray-600 p-0.5 text-sm">
+                    <a
+                        href="{{ route('leaderboard.index', $driverScopeQuery) }}"
+                        class="px-3 py-1.5 rounded-md font-medium {{ ! $isAllDrivers ? 'bg-blue-600 text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }}"
+                    >{{ __('Ongoing') }}</a>
+                    <a
+                        href="{{ route('leaderboard.index', array_merge($driverScopeQuery, ['drivers' => 'all'])) }}"
+                        class="px-3 py-1.5 rounded-md font-medium {{ $isAllDrivers ? 'bg-blue-600 text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }}"
+                    >{{ __('Semua driver') }}</a>
+                </div>
+            </div>
             @include('leaderboard.partials.ranking-table', [
-                'rows' => $ongoingDrivers,
+                'rows' => $mapDrivers,
                 'valueKey' => 'total',
                 'valueLabel' => __('Order ongoing'),
                 'formatKm' => false,
