@@ -20,7 +20,7 @@
         <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Buat Perawatan Kendaraan</h1>
     </div>
 
-    <form method="POST" action="{{ route('vehicle-maintenances.store') }}" class="space-y-6">
+    <form method="POST" action="{{ route('vehicle-maintenances.store') }}" class="space-y-6" enctype="multipart/form-data">
         @csrf
         <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 space-y-4">
             <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Informasi Umum</h2>
@@ -111,6 +111,12 @@
                     </template>
                 </div>
             </div>
+            <div>
+                <label class="block text-sm mb-1">Foto Kerusakan</label>
+                <input type="file" name="identification_photo" accept="image/*" class="block w-full text-sm text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer bg-white dark:bg-gray-700">
+                <p class="mt-1 text-xs text-gray-500">Opsional, maksimal 2 MB.</p>
+                @error('identification_photo')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+            </div>
         </div>
 
         <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 space-y-4">
@@ -146,6 +152,12 @@
                         </span>
                     </template>
                 </div>
+            </div>
+            <div>
+                <label class="block text-sm mb-1">Foto Perbaikan</label>
+                <input type="file" name="repair_photo" accept="image/*" class="block w-full text-sm text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer bg-white dark:bg-gray-700">
+                <p class="mt-1 text-xs text-gray-500">Opsional, maksimal 2 MB.</p>
+                @error('repair_photo')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
             </div>
         </div>
 

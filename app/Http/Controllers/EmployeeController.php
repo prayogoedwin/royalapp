@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\EmployeesExport;
 use App\Models\Division;
 use App\Models\Employee;
 use App\Models\EmployeeType;
@@ -10,12 +11,17 @@ use App\Models\Position;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\Firebase\FcmClient;
+use Dompdf\Dompdf;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Yajra\DataTables\Facades\DataTables;
 
 class EmployeeController extends Controller
@@ -97,6 +103,43 @@ class EmployeeController extends Controller
         }
 
         return view('employees.index');
+    }
+
+    public function exportPdf(): Response
+    {
+        $html = view('employees.pdf.index', [
+            'employees' => $this->employeesQuery()->get(),
+        ])->render();
+
+        $dompdf = new Dompdf([
+            'isRemoteEnabled' => true,
+        ]);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('a4', 'landscape');
+        $dompdf->render();
+
+        return response($dompdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="karyawan-'.now()->toDateString().'.pdf"',
+        ]);
+    }
+
+    public function exportExcel(): BinaryFileResponse
+    {
+        return Excel::download(
+            new EmployeesExport($this->employeesQuery()->get()),
+            'karyawan-'.now()->toDateString().'.xlsx'
+        );
+    }
+
+    /**
+     * @return Builder<Employee>
+     */
+    private function employeesQuery(): Builder
+    {
+        return Employee::query()
+            ->with(['position', 'division', 'employeeType'])
+            ->orderBy('full_name');
     }
 
     public function create(): View

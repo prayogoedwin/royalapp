@@ -47,6 +47,31 @@ class OrderVehicleIssueIndexTest extends TestCase
             ->assertSee('RA.0001 (terhapus)', false);
     }
 
+    public function test_issue_photos_can_be_zoomed_on_detail(): void
+    {
+        $user = $this->userWithPermissions(['show-order-vehicle-issues']);
+        $order = $this->makeOrder('RT.0084', 'RT02');
+        $issue = OrderVehicleIssue::create([
+            'order_id' => $order->id,
+            'unit_code' => 'RT02',
+            'issue_category' => 'safety',
+            'description' => 'Jack stean hidrolik lemah',
+            'priority' => 'urgent',
+            'issue_photo' => 'uploads/2026/10/order-issues/issue.jpg',
+            'repair_photo' => 'uploads/2026/10/order-issues/repair.jpg',
+            'created_by' => $user->id,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('order-vehicle-issues.show', $issue))
+            ->assertOk()
+            ->assertSee('cursor-zoom-in', false)
+            ->assertSee('Perkecil', false)
+            ->assertSee('Perbesar', false)
+            ->assertSee('Foto Masalah', false)
+            ->assertSee('Foto Perbaikan', false);
+    }
+
     public function test_index_still_links_to_active_orders(): void
     {
         $user = $this->userWithPermissions(['view-order-vehicle-issues']);

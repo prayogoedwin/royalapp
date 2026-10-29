@@ -110,14 +110,18 @@
             </div>
         </div>
 
-        <div class="space-y-6">
+        <div class="space-y-6" x-data="imageLightbox()">
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div class="p-4 border-b border-gray-200 dark:border-gray-700">
                     <h2 class="text-sm font-semibold text-gray-800 dark:text-gray-100">Foto Masalah</h2>
                 </div>
                 <div class="p-4">
                     @if($orderVehicleIssue->issue_photo)
-                        <img src="{{ asset('storage/'.$orderVehicleIssue->issue_photo) }}" alt="Issue photo" class="rounded-md max-h-64 w-full object-contain bg-gray-100 dark:bg-gray-900">
+                        @include('partials.zoomable-photo', [
+                            'src' => asset('storage/'.$orderVehicleIssue->issue_photo),
+                            'title' => 'Foto Masalah',
+                            'alt' => 'Foto masalah',
+                        ])
                     @else
                         <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada foto masalah.</p>
                     @endif
@@ -130,12 +134,17 @@
                 </div>
                 <div class="p-4">
                     @if($orderVehicleIssue->repair_photo)
-                        <img src="{{ asset('storage/'.$orderVehicleIssue->repair_photo) }}" alt="Repair photo" class="rounded-md max-h-64 w-full object-contain bg-gray-100 dark:bg-gray-900">
+                        @include('partials.zoomable-photo', [
+                            'src' => asset('storage/'.$orderVehicleIssue->repair_photo),
+                            'title' => 'Foto Perbaikan',
+                            'alt' => 'Foto perbaikan',
+                        ])
                     @else
                         <p class="text-sm text-gray-500 dark:text-gray-400">Belum ada foto perbaikan.</p>
                     @endif
                 </div>
             </div>
+            @include('orders.partials.image-lightbox')
         </div>
     </div>
 </x-layouts.app>

@@ -9,9 +9,19 @@
         <span class="text-gray-500 dark:text-gray-400">{{ __('Customers') }}</span>
     </div>
 
-    <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ __('Customers') }}</h1>
-        <p class="text-gray-600 dark:text-gray-400 mt-1">{{ __('Daftar customer dari nomor HP di order, termasuk yang sering repeat.') }}</p>
+    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ __('Customers') }}</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">{{ __('Daftar customer dari nomor HP di order, termasuk yang sering repeat.') }}</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ route('customers.pdf') }}" class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600">
+                {{ __('Download PDF') }}
+            </a>
+            <a href="{{ route('customers.excel') }}" class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-md text-sm hover:bg-emerald-700">
+                {{ __('Download Excel') }}
+            </a>
+        </div>
     </div>
 
     <div class="min-w-0 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">

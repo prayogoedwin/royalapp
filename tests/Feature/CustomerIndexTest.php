@@ -18,6 +18,8 @@ class CustomerIndexTest extends TestCase
     public function test_guest_is_redirected_from_customers(): void
     {
         $this->get(route('customers.index'))->assertRedirect('/login');
+        $this->get(route('customers.pdf'))->assertRedirect('/login');
+        $this->get(route('customers.excel'))->assertRedirect('/login');
         $this->get(route('customers.show', ['phone' => '08123456789']))->assertRedirect('/login');
     }
 
@@ -26,6 +28,29 @@ class CustomerIndexTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)->get(route('customers.index'))->assertForbidden();
+        $this->actingAs($user)->get(route('customers.pdf'))->assertForbidden();
+        $this->actingAs($user)->get(route('customers.excel'))->assertForbidden();
+    }
+
+    public function test_customers_index_has_pdf_and_excel_downloads(): void
+    {
+        $viewer = $this->userWithPermissions(['view-orders']);
+        $this->makeOrder('RA.4001', 'Budi', '08111111111');
+
+        $this->actingAs($viewer)
+            ->get(route('customers.index'))
+            ->assertOk()
+            ->assertSee('Download PDF')
+            ->assertSee('Download Excel');
+
+        $pdf = $this->actingAs($viewer)->get(route('customers.pdf'));
+        $pdf->assertOk();
+        $this->assertSame('application/pdf', $pdf->headers->get('content-type'));
+        $this->assertStringContainsString('.pdf', (string) $pdf->headers->get('content-disposition'));
+
+        $excel = $this->actingAs($viewer)->get(route('customers.excel'));
+        $excel->assertOk();
+        $this->assertStringContainsString('.xlsx', (string) $excel->headers->get('content-disposition'));
     }
 
     public function test_customers_are_grouped_by_phone(): void

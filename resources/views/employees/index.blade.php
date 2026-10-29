@@ -14,7 +14,13 @@
             <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Karyawan</h1>
             <p class="text-gray-600 dark:text-gray-400 mt-1">Kelola data karyawan</p>
         </div>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ route('employees.pdf') }}" class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600">
+                Download PDF
+            </a>
+            <a href="{{ route('employees.excel') }}" class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-md text-sm hover:bg-emerald-700">
+                Download Excel
+            </a>
             @if(auth()->user()->hasPermission('create-employees'))
                 <a href="{{ route('employees.create') }}">
                     <x-button type="primary">Buat Karyawan</x-button>

@@ -23,7 +23,7 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6" x-data="imageLightbox()">
         <div class="xl:col-span-2 space-y-6">
             <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
                 <h2 class="font-semibold mb-3 text-gray-800 dark:text-gray-100">Identifikasi Kerusakan</h2>
@@ -55,6 +55,19 @@
                     @endif
                 </div>
                 <div class="mt-4">
+                    <h3 class="font-medium text-gray-800 dark:text-gray-100 mb-1">Foto Kerusakan</h3>
+                    @if($vehicleMaintenance->identification_photo)
+                        @include('partials.zoomable-photo', [
+                            'src' => asset('storage/'.$vehicleMaintenance->identification_photo),
+                            'title' => 'Foto Kerusakan',
+                            'alt' => 'Foto kerusakan',
+                            'class' => 'rounded-md max-h-64 w-full object-contain bg-gray-100 dark:bg-gray-900',
+                        ])
+                    @else
+                        <p class="text-sm text-gray-500">Belum ada foto kerusakan.</p>
+                    @endif
+                </div>
+                <div class="mt-4">
                     <h3 class="font-medium text-gray-800 dark:text-gray-100 mb-1">PIC Identifikasi</h3>
                     <ul class="list-disc pl-5 text-sm">
                         @forelse($vehicleMaintenance->identificationPics as $pic)
@@ -72,6 +85,19 @@
                     <div><dt class="text-gray-500">ODO Perbaikan</dt><dd class="text-gray-900 dark:text-gray-100">{{ $vehicleMaintenance->odo_repair ?? '-' }}</dd></div>
                     <div><dt class="text-gray-500">Waktu Perbaikan</dt><dd class="text-gray-900 dark:text-gray-100">{{ $vehicleMaintenance->repaired_at?->format('d M Y H:i') ?? '-' }}</dd></div>
                 </dl>
+                <div class="mt-4">
+                    <h3 class="font-medium text-gray-800 dark:text-gray-100 mb-1">Foto Perbaikan</h3>
+                    @if($vehicleMaintenance->repair_photo)
+                        @include('partials.zoomable-photo', [
+                            'src' => asset('storage/'.$vehicleMaintenance->repair_photo),
+                            'title' => 'Foto Perbaikan',
+                            'alt' => 'Foto perbaikan',
+                            'class' => 'rounded-md max-h-64 w-full object-contain bg-gray-100 dark:bg-gray-900',
+                        ])
+                    @else
+                        <p class="text-sm text-gray-500">Belum ada foto perbaikan.</p>
+                    @endif
+                </div>
                 <div class="mt-4">
                     <h3 class="font-medium text-gray-800 dark:text-gray-100 mb-1">PIC Perbaikan</h3>
                     <ul class="list-disc pl-5 text-sm">
@@ -105,5 +131,6 @@
                 </div>
             </div>
         </div>
+        @include('orders.partials.image-lightbox')
     </div>
 </x-layouts.app>

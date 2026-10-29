@@ -9,10 +9,13 @@ use App\Models\Unit;
 use App\Models\VehicleMaintenance;
 use App\Models\VehicleMaintenanceCostDetail;
 use App\Models\VehicleMaintenancePic;
+use App\Support\UploadPath;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -27,20 +30,21 @@ class VehicleMaintenanceController extends Controller
                 ->addColumn('unit_code', fn (VehicleMaintenance $m) => e($m->unit?->code ?? '-'))
                 ->addColumn('order_ref', fn (VehicleMaintenance $m) => e($m->order?->order_number ?? '-'))
                 ->addColumn('status_name', fn (VehicleMaintenance $m) => e($m->orderStatus?->name ?? '-'))
-                ->editColumn('total_cost', fn (VehicleMaintenance $m) => 'Rp ' . number_format((float) $m->total_cost, 0, ',', '.'))
+                ->editColumn('total_cost', fn (VehicleMaintenance $m) => 'Rp '.number_format((float) $m->total_cost, 0, ',', '.'))
                 ->addColumn('actions', function (VehicleMaintenance $m) {
                     $actions = '';
                     if (auth()->user()->hasPermission('show-vehicle-maintenances')) {
-                        $actions .= '<a href="' . route('vehicle-maintenances.show', $m) . '" class="text-green-600 dark:text-green-400 hover:underline mr-3">Lihat</a>';
+                        $actions .= '<a href="'.route('vehicle-maintenances.show', $m).'" class="text-green-600 dark:text-green-400 hover:underline mr-3">Lihat</a>';
                     }
                     if (auth()->user()->hasPermission('edit-vehicle-maintenances')) {
-                        $actions .= '<a href="' . route('vehicle-maintenances.edit', $m) . '" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Ubah</a>';
+                        $actions .= '<a href="'.route('vehicle-maintenances.edit', $m).'" class="text-blue-600 dark:text-blue-400 hover:underline mr-3">Ubah</a>';
                     }
                     if (auth()->user()->hasPermission('delete-vehicle-maintenances')) {
-                        $actions .= '<form action="' . route('vehicle-maintenances.destroy', $m) . '" method="POST" class="inline" onsubmit="return confirm(\'Hapus perawatan kendaraan?\')">'
-                            . csrf_field() . method_field('DELETE')
-                            . '<button type="submit" class="text-red-600 dark:text-red-400 hover:underline">Hapus</button></form>';
+                        $actions .= '<form action="'.route('vehicle-maintenances.destroy', $m).'" method="POST" class="inline" onsubmit="return confirm(\'Hapus perawatan kendaraan?\')">'
+                            .csrf_field().method_field('DELETE')
+                            .'<button type="submit" class="text-red-600 dark:text-red-400 hover:underline">Hapus</button></form>';
                     }
+
                     return $actions ?: '-';
                 })
                 ->rawColumns(['actions'])
@@ -79,6 +83,8 @@ class VehicleMaintenanceController extends Controller
             'cost_details.*.type' => ['required_with:cost_details.*.amount', 'in:JASA,BARANG,LAINNYA'],
             'cost_details.*.description' => ['nullable', 'string'],
             'cost_details.*.amount' => ['nullable', 'numeric', 'min:0'],
+            'identification_photo' => ['nullable', 'image', 'max:2048'],
+            'repair_photo' => ['nullable', 'image', 'max:2048'],
         ]);
 
         DB::beginTransaction();
@@ -90,8 +96,10 @@ class VehicleMaintenanceController extends Controller
                 'unit_id' => $validated['unit_id'],
                 'odo_identification' => $validated['odo_identification'] ?? null,
                 'identified_at' => $validated['identified_at'] ?? null,
+                'identification_photo' => $this->storePublicPhoto($request->file('identification_photo')),
                 'odo_repair' => $validated['odo_repair'] ?? null,
                 'repaired_at' => $validated['repaired_at'] ?? null,
+                'repair_photo' => $this->storePublicPhoto($request->file('repair_photo')),
                 'order_status_id' => $validated['order_status_id'],
                 'total_cost' => 0,
                 'created_by' => auth()->id(),
@@ -115,7 +123,7 @@ class VehicleMaintenanceController extends Controller
 
             $totalCost = 0;
             foreach (($validated['cost_details'] ?? []) as $detail) {
-                if (!isset($detail['amount']) || $detail['amount'] === null) {
+                if (! isset($detail['amount']) || $detail['amount'] === null) {
                     continue;
                 }
                 VehicleMaintenanceCostDetail::create([
@@ -133,7 +141,8 @@ class VehicleMaintenanceController extends Controller
             return redirect()->route('vehicle-maintenances.show', $maintenance)->with('status', 'Vehicle maintenance created.');
         } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->withInput()->withErrors(['error' => 'Failed to create maintenance: ' . $e->getMessage()]);
+
+            return back()->withInput()->withErrors(['error' => 'Failed to create maintenance: '.$e->getMessage()]);
         }
     }
 
@@ -191,7 +200,7 @@ class VehicleMaintenanceController extends Controller
         return response()->json($employees->map(function (Employee $employee) {
             return [
                 'id' => $employee->id,
-                'name' => trim($employee->full_name . ($employee->position?->nama ? ' - ' . $employee->position->nama : '')),
+                'name' => trim($employee->full_name.($employee->position?->nama ? ' - '.$employee->position->nama : '')),
             ];
         })->values());
     }
@@ -216,6 +225,8 @@ class VehicleMaintenanceController extends Controller
             'cost_details.*.type' => ['required_with:cost_details.*.amount', 'in:JASA,BARANG,LAINNYA'],
             'cost_details.*.description' => ['nullable', 'string'],
             'cost_details.*.amount' => ['nullable', 'numeric', 'min:0'],
+            'identification_photo' => ['nullable', 'image', 'max:2048'],
+            'repair_photo' => ['nullable', 'image', 'max:2048'],
         ]);
 
         DB::beginTransaction();
@@ -227,8 +238,16 @@ class VehicleMaintenanceController extends Controller
                 'unit_id' => $validated['unit_id'],
                 'odo_identification' => $validated['odo_identification'] ?? null,
                 'identified_at' => $validated['identified_at'] ?? null,
+                'identification_photo' => $this->storePublicPhoto(
+                    $request->file('identification_photo'),
+                    $vehicleMaintenance->identification_photo
+                ),
                 'odo_repair' => $validated['odo_repair'] ?? null,
                 'repaired_at' => $validated['repaired_at'] ?? null,
+                'repair_photo' => $this->storePublicPhoto(
+                    $request->file('repair_photo'),
+                    $vehicleMaintenance->repair_photo
+                ),
                 'order_status_id' => $validated['order_status_id'],
                 'updated_by' => auth()->id(),
             ]);
@@ -252,7 +271,7 @@ class VehicleMaintenanceController extends Controller
             $vehicleMaintenance->costDetails()->delete();
             $totalCost = 0;
             foreach (($validated['cost_details'] ?? []) as $detail) {
-                if (!isset($detail['amount']) || $detail['amount'] === null) {
+                if (! isset($detail['amount']) || $detail['amount'] === null) {
                     continue;
                 }
                 VehicleMaintenanceCostDetail::create([
@@ -270,7 +289,8 @@ class VehicleMaintenanceController extends Controller
             return redirect()->route('vehicle-maintenances.show', $vehicleMaintenance)->with('status', 'Vehicle maintenance updated.');
         } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->withInput()->withErrors(['error' => 'Failed to update maintenance: ' . $e->getMessage()]);
+
+            return back()->withInput()->withErrors(['error' => 'Failed to update maintenance: '.$e->getMessage()]);
         }
     }
 
@@ -280,5 +300,18 @@ class VehicleMaintenanceController extends Controller
         $vehicleMaintenance->delete();
 
         return redirect()->route('vehicle-maintenances.index')->with('status', 'Vehicle maintenance deleted.');
+    }
+
+    private function storePublicPhoto(?UploadedFile $file, ?string $existing = null): ?string
+    {
+        if ($file === null) {
+            return $existing;
+        }
+
+        if ($existing) {
+            Storage::disk('public')->delete($existing);
+        }
+
+        return $file->store(UploadPath::dir('vehicle-maintenances'), 'public');
     }
 }

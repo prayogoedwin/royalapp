@@ -38,7 +38,7 @@
         })->values();
     @endphp
 
-    <form method="POST" action="{{ route('vehicle-maintenances.update', $vehicleMaintenance) }}" class="space-y-6"
+    <form method="POST" action="{{ route('vehicle-maintenances.update', $vehicleMaintenance) }}" class="space-y-6" enctype="multipart/form-data"
         x-data="vehiclePicForm({ identificationInitial: @js($identificationInitial), repairInitial: @js($repairInitial) })">
         @csrf
         @method('PUT')
@@ -130,6 +130,23 @@
                     </template>
                 </div>
             </div>
+            <div x-data="imageLightbox()">
+                <label class="block text-sm mb-1">Foto Kerusakan</label>
+                @if($vehicleMaintenance->identification_photo)
+                    <div class="mb-2">
+                        @include('partials.zoomable-photo', [
+                            'src' => asset('storage/'.$vehicleMaintenance->identification_photo),
+                            'title' => 'Foto Kerusakan',
+                            'alt' => 'Foto kerusakan',
+                            'class' => 'rounded-md max-h-40 w-full object-contain bg-gray-100 dark:bg-gray-900',
+                        ])
+                    </div>
+                @endif
+                <input type="file" name="identification_photo" accept="image/*" class="block w-full text-sm text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer bg-white dark:bg-gray-700">
+                <p class="mt-1 text-xs text-gray-500">Upload untuk mengganti foto kerusakan (opsional).</p>
+                @error('identification_photo')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                @include('orders.partials.image-lightbox')
+            </div>
         </div>
 
         <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 space-y-4">
@@ -165,6 +182,23 @@
                         </span>
                     </template>
                 </div>
+            </div>
+            <div x-data="imageLightbox()">
+                <label class="block text-sm mb-1">Foto Perbaikan</label>
+                @if($vehicleMaintenance->repair_photo)
+                    <div class="mb-2">
+                        @include('partials.zoomable-photo', [
+                            'src' => asset('storage/'.$vehicleMaintenance->repair_photo),
+                            'title' => 'Foto Perbaikan',
+                            'alt' => 'Foto perbaikan',
+                            'class' => 'rounded-md max-h-40 w-full object-contain bg-gray-100 dark:bg-gray-900',
+                        ])
+                    </div>
+                @endif
+                <input type="file" name="repair_photo" accept="image/*" class="block w-full text-sm text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer bg-white dark:bg-gray-700">
+                <p class="mt-1 text-xs text-gray-500">Upload foto setelah perbaikan (opsional).</p>
+                @error('repair_photo')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                @include('orders.partials.image-lightbox')
             </div>
         </div>
 

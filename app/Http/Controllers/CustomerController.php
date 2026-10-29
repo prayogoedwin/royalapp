@@ -2,12 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\CustomersExport;
 use App\Models\Order;
 use App\Support\WhatsAppLink;
 use Carbon\Carbon;
+use Dompdf\Dompdf;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Yajra\DataTables\Facades\DataTables;
 
 class CustomerController extends Controller
@@ -15,24 +21,7 @@ class CustomerController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $stats = Order::query()
-                ->selectRaw('customer_phone, COUNT(*) as total_orders, MAX(id) as last_order_id, MAX(created_at) as last_order_at')
-                ->whereNotNull('customer_phone')
-                ->where('customer_phone', '!=', '')
-                ->groupBy('customer_phone');
-
-            $query = DB::query()
-                ->fromSub($stats, 'customer_stats')
-                ->join('orders', 'orders.id', '=', 'customer_stats.last_order_id')
-                ->select([
-                    'customer_stats.customer_phone as customer_phone',
-                    'orders.customer_name as customer_name',
-                    'customer_stats.total_orders as total_orders',
-                    'customer_stats.last_order_at as last_order_at',
-                    'customer_stats.last_order_id as last_order_id',
-                ]);
-
-            return DataTables::of($query)
+            return DataTables::of($this->customersQuery())
                 ->filterColumn('customer_phone', function ($query, string $keyword): void {
                     $query->where('customer_stats.customer_phone', 'like', '%'.$keyword.'%');
                 })
@@ -78,6 +67,41 @@ class CustomerController extends Controller
         return view('customers.index');
     }
 
+    public function exportPdf(): Response
+    {
+        $customers = $this->customersQuery()
+            ->orderByDesc('customer_stats.last_order_at')
+            ->get();
+
+        $html = view('customers.pdf.index', [
+            'customers' => $customers,
+        ])->render();
+
+        $dompdf = new Dompdf([
+            'isRemoteEnabled' => true,
+        ]);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('a4', 'portrait');
+        $dompdf->render();
+
+        return response($dompdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="customers-'.now()->toDateString().'.pdf"',
+        ]);
+    }
+
+    public function exportExcel(): BinaryFileResponse
+    {
+        $customers = $this->customersQuery()
+            ->orderByDesc('customer_stats.last_order_at')
+            ->get();
+
+        return Excel::download(
+            new CustomersExport($customers),
+            'customers-'.now()->toDateString().'.xlsx'
+        );
+    }
+
     public function show(Request $request): View
     {
         $phone = trim((string) $request->query('phone', ''));
@@ -99,5 +123,25 @@ class CustomerController extends Controller
             'totalOrders' => $totalOrders,
             'lastOrder' => $latest,
         ]);
+    }
+
+    private function customersQuery(): Builder
+    {
+        $stats = Order::query()
+            ->selectRaw('customer_phone, COUNT(*) as total_orders, MAX(id) as last_order_id, MAX(created_at) as last_order_at')
+            ->whereNotNull('customer_phone')
+            ->where('customer_phone', '!=', '')
+            ->groupBy('customer_phone');
+
+        return DB::query()
+            ->fromSub($stats, 'customer_stats')
+            ->join('orders', 'orders.id', '=', 'customer_stats.last_order_id')
+            ->select([
+                'customer_stats.customer_phone as customer_phone',
+                'orders.customer_name as customer_name',
+                'customer_stats.total_orders as total_orders',
+                'customer_stats.last_order_at as last_order_at',
+                'customer_stats.last_order_id as last_order_id',
+            ]);
     }
 }

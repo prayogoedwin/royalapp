@@ -117,6 +117,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Employees Management
     Route::get('employees', [EmployeeController::class, 'index'])->name('employees.index')->middleware('permission:view-employees');
+    Route::get('employees/pdf', [EmployeeController::class, 'exportPdf'])->name('employees.pdf')->middleware('permission:view-employees');
+    Route::get('employees/excel', [EmployeeController::class, 'exportExcel'])->name('employees.excel')->middleware('permission:view-employees');
     Route::get('employees/create', [EmployeeController::class, 'create'])->name('employees.create')->middleware('permission:create-employees');
     Route::post('employees', [EmployeeController::class, 'store'])->name('employees.store')->middleware('permission:create-employees');
     Route::get('employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show')->middleware('permission:show-employees');
@@ -175,6 +177,8 @@ Route::middleware(['auth'])->group(function () {
         ->where(['year' => '[0-9]{4}', 'month' => '[0-9]{2}']);
 
     Route::get('customers', [CustomerController::class, 'index'])->name('customers.index')->middleware('permission:view-orders');
+    Route::get('customers/pdf', [CustomerController::class, 'exportPdf'])->name('customers.pdf')->middleware('permission:view-orders');
+    Route::get('customers/excel', [CustomerController::class, 'exportExcel'])->name('customers.excel')->middleware('permission:view-orders');
     Route::get('customers/detail', [CustomerController::class, 'show'])->name('customers.show')->middleware('permission:view-orders');
 
     // Orders Management

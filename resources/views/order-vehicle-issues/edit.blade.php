@@ -57,11 +57,18 @@
                 @error('description')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6" x-data="imageLightbox()">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Foto Masalah</label>
                     @if($orderVehicleIssue->issue_photo)
-                        <img src="{{ asset('storage/'.$orderVehicleIssue->issue_photo) }}" alt="Issue photo" class="mb-2 rounded-md max-h-40 w-full object-contain bg-gray-100 dark:bg-gray-900">
+                        <div class="mb-2">
+                            @include('partials.zoomable-photo', [
+                                'src' => asset('storage/'.$orderVehicleIssue->issue_photo),
+                                'title' => 'Foto Masalah',
+                                'alt' => 'Foto masalah',
+                                'class' => 'rounded-md max-h-40 w-full object-contain bg-gray-100 dark:bg-gray-900',
+                            ])
+                        </div>
                     @endif
                     <input type="file" name="issue_photo" accept="image/*" class="block w-full text-sm text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Upload untuk mengganti foto kerusakan (opsional).</p>
@@ -71,12 +78,20 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Foto Perbaikan</label>
                     @if($orderVehicleIssue->repair_photo)
-                        <img src="{{ asset('storage/'.$orderVehicleIssue->repair_photo) }}" alt="Repair photo" class="mb-2 rounded-md max-h-40 w-full object-contain bg-gray-100 dark:bg-gray-900">
+                        <div class="mb-2">
+                            @include('partials.zoomable-photo', [
+                                'src' => asset('storage/'.$orderVehicleIssue->repair_photo),
+                                'title' => 'Foto Perbaikan',
+                                'alt' => 'Foto perbaikan',
+                                'class' => 'rounded-md max-h-40 w-full object-contain bg-gray-100 dark:bg-gray-900',
+                            ])
+                        </div>
                     @endif
                     <input type="file" name="repair_photo" accept="image/*" class="block w-full text-sm text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-md cursor-pointer bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Upload foto setelah perbaikan (opsional).</p>
                     @error('repair_photo')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
+                @include('orders.partials.image-lightbox')
             </div>
 
             <div class="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-3">
