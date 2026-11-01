@@ -130,6 +130,36 @@ class OrderInvoiceTest extends TestCase
             ->assertSee('B 2101 UNS', false);
     }
 
+    public function test_new_invoice_skips_numbers_still_held_by_deleted_orders(): void
+    {
+        $user = $this->userWithPermissions(['show-orders']);
+        $kept = $this->makeOrder('RA.INV.8', 'RA01', 'Ambulance', ['price' => 100000]);
+        $deleted = $this->makeOrder('RA.INV.9', 'RA01', 'Ambulance', ['price' => 200000]);
+        $fresh = $this->makeOrder('RA.INV.10', 'RA01', 'Ambulance', ['price' => 300000]);
+
+        $this->actingAs($user)
+            ->get(route('orders.invoice', [$kept, 'brand' => 'ambulance']))
+            ->assertOk()
+            ->assertSee('data-invoice-number="1"', false);
+
+        $this->actingAs($user)
+            ->get(route('orders.invoice', [$deleted, 'brand' => 'ambulance']))
+            ->assertOk()
+            ->assertSee('data-invoice-number="2"', false);
+
+        $deleted->delete();
+
+        $this->actingAs($user)
+            ->get(route('orders.invoice', [$fresh, 'brand' => 'ambulance']))
+            ->assertOk()
+            ->assertSee('data-invoice-number="3"', false)
+            ->assertDontSee('data-invoice-number="2"', false);
+
+        $this->assertSame(1, (int) $kept->fresh()->invoice_number);
+        $this->assertSame(2, (int) Order::withTrashed()->findOrFail($deleted->id)->invoice_number);
+        $this->assertSame(3, (int) $fresh->fresh()->invoice_number);
+    }
+
     public function test_one_order_keeps_the_same_invoice_number_on_reprint(): void
     {
         $user = $this->userWithPermissions(['show-orders']);

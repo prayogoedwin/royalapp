@@ -110,7 +110,12 @@ class InvoiceData
                 return (int) $locked->invoice_number;
             }
 
-            $next = (int) Order::query()->max('invoice_number') + 1;
+            $next = (int) Order::withTrashed()->max('invoice_number') + 1;
+
+            while (Order::withTrashed()->where('invoice_number', $next)->exists()) {
+                $next++;
+            }
+
             $locked->forceFill(['invoice_number' => $next])->save();
             $order->setAttribute('invoice_number', $next);
 
