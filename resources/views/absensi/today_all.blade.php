@@ -7,21 +7,58 @@
         <span class="text-gray-500 dark:text-gray-400">{{ __('Absensi - Semua Pegawai') }}</span>
     </div>
 
-    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
+    <div class="mb-6 flex flex-col gap-3 lg:flex-row lg:justify-between lg:items-start">
         <div>
             <h1 class="text-2xl font-bold text-gray-800 dark:text-gray-100">{{ __('Absensi Semua Pegawai') }}</h1>
             <p class="text-gray-600 dark:text-gray-400 mt-1">
                 {{ \Carbon\Carbon::parse($tanggal)->format('d M Y') }}
             </p>
         </div>
-        <div class="flex flex-wrap gap-2">
-            <a href="{{ route('absensi.today.pdf', ['tanggal' => $tanggal]) }}" class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600">
-                {{ __('Download PDF') }}
-            </a>
-            <a href="{{ route('absensi.today.excel', ['tanggal' => $tanggal]) }}" class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-md text-sm hover:bg-emerald-700">
-                {{ __('Download Excel') }}
-            </a>
-        </div>
+        <form method="GET" class="flex flex-col sm:flex-row sm:flex-wrap sm:items-end gap-2">
+            <input type="hidden" name="tanggal" value="{{ $tanggal }}">
+            <div>
+                <label for="download_start" class="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">{{ __('Dari') }}</label>
+                <input
+                    type="date"
+                    id="download_start"
+                    name="start"
+                    value="{{ old('start', $tanggal) }}"
+                    class="block w-full sm:w-auto px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
+                >
+            </div>
+            <div>
+                <label for="download_end" class="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">{{ __('Sampai') }}</label>
+                <input
+                    type="date"
+                    id="download_end"
+                    name="end"
+                    value="{{ old('end', $tanggal) }}"
+                    class="block w-full sm:w-auto px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
+                >
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <button
+                    type="submit"
+                    formaction="{{ route('absensi.today.pdf') }}"
+                    class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600"
+                >
+                    {{ __('Download PDF') }}
+                </button>
+                <button
+                    type="submit"
+                    formaction="{{ route('absensi.today.excel') }}"
+                    class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-md text-sm hover:bg-emerald-700"
+                >
+                    {{ __('Download Excel') }}
+                </button>
+            </div>
+            <p class="w-full text-xs text-gray-500 dark:text-gray-400">
+                {{ __('PDF: 1 halaman per tanggal. Excel: 1 sheet per tanggal. Maksimal 62 hari.') }}
+            </p>
+            @error('end')
+                <p class="w-full text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+            @enderror
+        </form>
     </div>
 
     <div

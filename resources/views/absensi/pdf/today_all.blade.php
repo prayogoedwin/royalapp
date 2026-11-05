@@ -9,41 +9,50 @@
         th, td { border: 1px solid #ddd; padding: 4px; vertical-align: top; }
         th { background: #f5f5f5; text-align: left; }
         .nowrap { white-space: nowrap; }
+        .day-page { page-break-after: always; }
+        .day-page:last-child { page-break-after: auto; }
     </style>
 </head>
 <body>
-    <h1>Absensi Semua Pegawai</h1>
-    <div class="meta">
-        Tanggal: {{ \Carbon\Carbon::parse($tanggal)->format('d M Y') }}
-    </div>
+    @foreach($days as $day)
+        <div class="day-page">
+            <h1>Absensi Semua Pegawai</h1>
+            <div class="meta">
+                Tanggal: {{ \Carbon\Carbon::parse($day['tanggal'])->format('d M Y') }}
+                @if(count($days) > 1)
+                    <span> ({{ $loop->iteration }}/{{ count($days) }})</span>
+                @endif
+            </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th class="nowrap">No</th>
-                <th>Pegawai</th>
-                <th>Pool</th>
-                <th class="nowrap">Jam Masuk</th>
-                <th class="nowrap">Jam Pulang</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($rows as $index => $row)
-                <tr>
-                    <td class="nowrap">{{ $index + 1 }}</td>
-                    <td>{{ $row['pegawai'] }}</td>
-                    <td>{{ $row['pool'] }}</td>
-                    <td class="nowrap">{{ $row['jam_masuk'] }}</td>
-                    <td class="nowrap">{{ $row['jam_pulang'] }}</td>
-                    <td>{{ $row['status'] ? ($statusOptions[$row['status']] ?? $row['status']) : '-' }}</td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="6">Belum ada data pegawai.</td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
+            <table>
+                <thead>
+                    <tr>
+                        <th class="nowrap">No</th>
+                        <th>Pegawai</th>
+                        <th>Pool</th>
+                        <th class="nowrap">Jam Masuk</th>
+                        <th class="nowrap">Jam Pulang</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($day['rows'] as $index => $row)
+                        <tr>
+                            <td class="nowrap">{{ $index + 1 }}</td>
+                            <td>{{ $row['pegawai'] }}</td>
+                            <td>{{ $row['pool'] }}</td>
+                            <td class="nowrap">{{ $row['jam_masuk'] }}</td>
+                            <td class="nowrap">{{ $row['jam_pulang'] }}</td>
+                            <td>{{ $row['status'] ? ($statusOptions[$row['status']] ?? $row['status']) : '-' }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6">Belum ada data pegawai.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    @endforeach
 </body>
 </html>

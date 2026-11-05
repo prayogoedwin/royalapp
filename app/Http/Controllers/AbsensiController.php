@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\AbsensiTodayAllExport;
+use App\Exports\AbsensiTodayAllRangeExport;
 use App\Models\Absensi;
 use App\Models\Employee;
 use App\Support\UploadPath;
@@ -12,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -260,13 +262,11 @@ class AbsensiController extends Controller
 
     public function exportAllEmployeesTodayPdf(Request $request): Response
     {
-        $tanggal = $this->resolveAbsensiAllTanggal($request);
-        $payload = $this->absensiAllEmployeesPayload($tanggal);
-        $rows = $this->absensiAllEmployeeRows($payload);
+        [$start, $end] = $this->resolveAbsensiAllDateRange($request);
+        $payload = $this->absensiAllEmployeesRangePayload($start, $end);
 
         $html = view('absensi.pdf.today_all', [
-            'tanggal' => $tanggal,
-            'rows' => $rows,
+            'days' => $payload['days'],
             'statusOptions' => $payload['statusOptions'],
         ])->render();
 
@@ -277,7 +277,9 @@ class AbsensiController extends Controller
         $dompdf->setPaper('a4', 'landscape');
         $dompdf->render();
 
-        $fileName = 'absensi-semua-pegawai-'.$tanggal.'.pdf';
+        $fileName = $start === $end
+            ? 'absensi-semua-pegawai-'.$start.'.pdf'
+            : 'absensi-semua-pegawai-'.$start.'_'.$end.'.pdf';
 
         return response($dompdf->output(), 200, [
             'Content-Type' => 'application/pdf',
@@ -287,13 +289,25 @@ class AbsensiController extends Controller
 
     public function exportAllEmployeesTodayExcel(Request $request): BinaryFileResponse
     {
-        $tanggal = $this->resolveAbsensiAllTanggal($request);
-        $payload = $this->absensiAllEmployeesPayload($tanggal);
-        $rows = $this->absensiAllEmployeeRows($payload);
+        [$start, $end] = $this->resolveAbsensiAllDateRange($request);
+        $payload = $this->absensiAllEmployeesRangePayload($start, $end);
+
+        $fileName = $start === $end
+            ? 'absensi-semua-pegawai-'.$start.'.xlsx'
+            : 'absensi-semua-pegawai-'.$start.'_'.$end.'.xlsx';
+
+        if ($start === $end) {
+            $day = $payload['days'][0];
+
+            return Excel::download(
+                new AbsensiTodayAllExport($day['tanggal'], $day['rows'], $payload['statusOptions']),
+                $fileName
+            );
+        }
 
         return Excel::download(
-            new AbsensiTodayAllExport($tanggal, $rows, $payload['statusOptions']),
-            'absensi-semua-pegawai-'.$tanggal.'.xlsx'
+            new AbsensiTodayAllRangeExport($payload['days'], $payload['statusOptions']),
+            $fileName
         );
     }
 
@@ -306,6 +320,42 @@ class AbsensiController extends Controller
         return isset($validated['tanggal'])
             ? Carbon::parse($validated['tanggal'])->toDateString()
             : Carbon::today()->toDateString();
+    }
+
+    /**
+     * @return array{0: string, 1: string}
+     */
+    private function resolveAbsensiAllDateRange(Request $request): array
+    {
+        $validated = $request->validate([
+            'tanggal' => ['nullable', 'date'],
+            'start' => ['nullable', 'date'],
+            'end' => ['nullable', 'date'],
+        ]);
+
+        $fallback = isset($validated['tanggal'])
+            ? Carbon::parse($validated['tanggal'])->toDateString()
+            : Carbon::today()->toDateString();
+
+        $start = isset($validated['start'])
+            ? Carbon::parse($validated['start'])->toDateString()
+            : $fallback;
+        $end = isset($validated['end'])
+            ? Carbon::parse($validated['end'])->toDateString()
+            : $start;
+
+        if (Carbon::parse($start)->gt(Carbon::parse($end))) {
+            [$start, $end] = [$end, $start];
+        }
+
+        $dayCount = Carbon::parse($start)->diffInDays(Carbon::parse($end)) + 1;
+        if ($dayCount > 62) {
+            throw ValidationException::withMessages([
+                'end' => 'Rentang unduhan maksimal 62 hari.',
+            ]);
+        }
+
+        return [$start, $end];
     }
 
     /**
@@ -391,6 +441,62 @@ class AbsensiController extends Controller
         }
 
         return $rows;
+    }
+
+    /**
+     * @return array{
+     *     days: list<array{tanggal: string, rows: list<array{pegawai: string, pool: string, jam_masuk: string, jam_pulang: string, status: string|null}>}>,
+     *     statusOptions: array<string, string>
+     * }
+     */
+    private function absensiAllEmployeesRangePayload(string $start, string $end): array
+    {
+        $employees = Employee::query()
+            ->with(['pool'])
+            ->orderBy('full_name')
+            ->get();
+
+        $employeeIds = $employees->pluck('id');
+
+        $absensisByDate = Absensi::query()
+            ->whereIn('employee_id', $employeeIds)
+            ->whereBetween('tanggal', [$start, $end])
+            ->get()
+            ->groupBy(fn (Absensi $absensi) => $absensi->tanggal->format('Y-m-d'));
+
+        $days = [];
+        $cursor = Carbon::parse($start)->startOfDay();
+        $endDate = Carbon::parse($end)->startOfDay();
+
+        while ($cursor->lte($endDate)) {
+            $tanggal = $cursor->toDateString();
+            $byEmployee = ($absensisByDate->get($tanggal) ?? collect())->keyBy('employee_id');
+            $rows = [];
+
+            foreach ($employees as $employee) {
+                $absensi = $byEmployee->get($employee->id);
+
+                $rows[] = [
+                    'pegawai' => $employee->full_name,
+                    'pool' => $employee->pool?->pool_name ?? '-',
+                    'jam_masuk' => $absensi?->jam_masuk?->format('H:i') ?? '-',
+                    'jam_pulang' => $absensi?->jam_pulang?->format('H:i') ?? '-',
+                    'status' => $absensi?->status,
+                ];
+            }
+
+            $days[] = [
+                'tanggal' => $tanggal,
+                'rows' => $rows,
+            ];
+
+            $cursor->addDay();
+        }
+
+        return [
+            'days' => $days,
+            'statusOptions' => Absensi::STATUS_OPTIONS,
+        ];
     }
 
     public function storeMasuk(Request $request): RedirectResponse
