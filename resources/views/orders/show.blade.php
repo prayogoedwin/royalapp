@@ -55,8 +55,12 @@
                         <div>
                             <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Telepon</dt>
                             <dd class="text-base text-gray-900 dark:text-gray-100">
-                                @if($order->whatsappUrl())
-                                    <a href="{{ $order->whatsappUrl() }}" target="_blank" rel="noopener noreferrer" class="text-green-600 dark:text-green-400 hover:underline">{{ $order->customer_phone }}</a>
+                                @if($order->whatsappAppUrl())
+                                    <a href="{{ $order->whatsappAppUrl() }}" target="_blank" rel="noopener noreferrer" class="text-green-600 dark:text-green-400 hover:underline">{{ $order->customer_phone }}</a>
+                                    <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                                        <a href="{{ $order->whatsappAppUrl() }}" target="_blank" rel="noopener noreferrer" class="text-green-600 dark:text-green-400 hover:underline">Buka aplikasi WhatsApp</a>
+                                        <a href="{{ $order->whatsappUrl() }}" target="_blank" rel="noopener noreferrer" class="text-gray-500 dark:text-gray-400 hover:underline">Buka WhatsApp Web</a>
+                                    </div>
                                 @else
                                     {{ $order->customer_phone }}
                                 @endif

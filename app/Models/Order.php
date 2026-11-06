@@ -158,6 +158,11 @@ class Order extends Model
         return WhatsAppLink::url($this->customer_phone);
     }
 
+    public function whatsappAppUrl(): ?string
+    {
+        return WhatsAppLink::appUrl($this->customer_phone);
+    }
+
     public function getCustomerPhoneAttribute(?string $value): string
     {
         return WhatsAppLink::localDisplay($value);

@@ -15,7 +15,7 @@ class OrderWhatsAppLinkTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_order_detail_phone_opens_whatsapp_web(): void
+    public function test_order_detail_phone_opens_whatsapp_app_and_web(): void
     {
         $user = $this->userWithPermissions(['show-orders']);
         $order = $this->makeOrder('0813-2356-7354');
@@ -23,12 +23,15 @@ class OrderWhatsAppLinkTest extends TestCase
         $this->actingAs($user)
             ->get(route('orders.show', $order))
             ->assertOk()
+            ->assertSee('https://api.whatsapp.com/send?phone=6281323567354', false)
             ->assertSee('https://web.whatsapp.com/send?phone=6281323567354', false)
+            ->assertSee('Buka aplikasi WhatsApp', false)
+            ->assertSee('Buka WhatsApp Web', false)
             ->assertSee('081323567354')
             ->assertDontSee('0813-2356-7354');
     }
 
-    public function test_edit_order_shows_whatsapp_button(): void
+    public function test_edit_order_shows_whatsapp_app_and_web_buttons(): void
     {
         $user = $this->userWithPermissions(['edit-orders', 'show-orders']);
         $order = $this->makeOrder('0813-2356-7354');
@@ -37,7 +40,10 @@ class OrderWhatsAppLinkTest extends TestCase
             ->get(route('orders.edit', $order))
             ->assertOk()
             ->assertSee('WhatsApp')
-            ->assertSee('Buka WhatsApp Web')
+            ->assertSee('WA Web')
+            ->assertSee('Buka aplikasi WhatsApp', false)
+            ->assertSee('Buka WhatsApp Web', false)
+            ->assertSee('https://api.whatsapp.com/send?phone=6281323567354', false)
             ->assertSee('https://web.whatsapp.com/send?phone=6281323567354', false);
     }
 

@@ -17,10 +17,14 @@
             <p class="text-gray-600 dark:text-gray-400 mt-1">Perbarui data pesanan</p>
         </div>
         <div class="flex flex-wrap gap-2">
-            @if($order->whatsappUrl())
-                <a href="{{ $order->whatsappUrl() }}" target="_blank" rel="noopener noreferrer"
+            @if($order->whatsappAppUrl())
+                <a href="{{ $order->whatsappAppUrl() }}" target="_blank" rel="noopener noreferrer"
                     class="inline-flex items-center justify-center px-4 py-2 rounded-lg text-white font-medium bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                     WhatsApp
+                </a>
+                <a href="{{ $order->whatsappUrl() }}" target="_blank" rel="noopener noreferrer"
+                    class="inline-flex items-center justify-center px-4 py-2 rounded-lg text-green-700 dark:text-green-300 font-medium bg-white dark:bg-gray-800 border border-green-600 hover:bg-green-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    WA Web
                 </a>
             @endif
             @if(auth()->user()->hasPermission('show-orders'))
@@ -93,10 +97,15 @@
 
                 <div>
                     <x-forms.input label="No. HP Pelanggan" name="customer_phone" type="text" value="{{ old('customer_phone', $order->customer_phone) }}" required />
-                    @if($order->whatsappUrl())
-                        <a href="{{ $order->whatsappUrl() }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center mt-2 text-sm font-medium text-green-600 dark:text-green-400 hover:underline">
-                            Buka WhatsApp Web
-                        </a>
+                    @if($order->whatsappAppUrl())
+                        <div class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm">
+                            <a href="{{ $order->whatsappAppUrl() }}" target="_blank" rel="noopener noreferrer" class="font-medium text-green-600 dark:text-green-400 hover:underline">
+                                Buka aplikasi WhatsApp
+                            </a>
+                            <a href="{{ $order->whatsappUrl() }}" target="_blank" rel="noopener noreferrer" class="font-medium text-gray-500 dark:text-gray-400 hover:underline">
+                                Buka WhatsApp Web
+                            </a>
+                        </div>
                     @endif
                 </div>
 
